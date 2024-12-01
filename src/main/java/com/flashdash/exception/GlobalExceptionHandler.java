@@ -1,17 +1,19 @@
 package com.flashdash.exception;
 
 import com.flashdash.dto.ErrorResponse;
+import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
     private final ErrorDetailsProvider errorDetailsProvider;
+
+    private static final String CORRELATION_ID_KEY = "correlationId";
 
     public GlobalExceptionHandler(ErrorDetailsProvider errorDetailsProvider) {
         this.errorDetailsProvider = errorDetailsProvider;
@@ -19,7 +21,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(FlashDashException.class)
     public ResponseEntity<ErrorResponse> handleFlashDashException(FlashDashException ex) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = MDC.get(CORRELATION_ID_KEY);
         var errorCode = ex.getErrorCode();
 
         ErrorResponse errorResponse = new ErrorResponse(
