@@ -3,6 +3,7 @@ package com.flashdash.config;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
@@ -11,7 +12,8 @@ import java.util.function.Function;
 @Component
 public class JwtManager {
 
-    private final String SECRET_KEY = "3Pe5nT+8yBjfsrQbMI8KvOY2oNQpbB1/ot1zLphN5Mk=";
+    @Value("${jwt.secret}")
+    private String secretKey;
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -24,9 +26,9 @@ public class JwtManager {
 
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
-                .setSigningKey(SECRET_KEY)
+                .setSigningKey(secretKey)
                 .parseClaimsJws(token)
-                .getBody(); // Claims zamiast Map
+                .getBody();
     }
 
     public String generateToken(String username) {
@@ -38,7 +40,7 @@ public class JwtManager {
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
-                .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
+                .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
     }
 
