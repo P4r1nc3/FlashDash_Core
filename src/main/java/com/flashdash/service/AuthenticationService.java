@@ -39,7 +39,7 @@ public class AuthenticationService {
         return new AuthenticationResponse(token);
     }
 
-    public void register(RegisterRequest request) {
+    public AuthenticationResponse register(RegisterRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new RuntimeException("Email is already registered");
         }
@@ -48,10 +48,13 @@ public class AuthenticationService {
                 request.getEmail(),
                 passwordEncoder.encode(request.getPassword()),
                 request.getFirstName(),
-                request.getLastName(),
-                "ROLE_USER"
+                request.getLastName()
         );
 
         userRepository.save(user);
+
+        String token = jwtManager.generateToken(user.getUsername());
+        return new AuthenticationResponse(token);
     }
 }
+

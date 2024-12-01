@@ -14,51 +14,32 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
-    private String email;
-
-    @Column(nullable = false)
-    private String password;
-
     @Column(nullable = false)
     private String firstName;
 
     @Column(nullable = false)
     private String lastName;
 
-    @Column(nullable = false)
-    private String role;
+    @Column(unique = true, nullable = false)
+    private String email;
 
-    public User(String email, String password, String firstName, String lastName, String role) {
-        this.email = email;
-        this.password = password;
+    @Column(nullable = false)
+    private String password;
+
+    public User(String firstName, String lastName, String email, String password) {
         this.firstName = firstName;
         this.lastName = lastName;
-        this.role = role;
+        this.email = email;
+        this.password = password;
     }
 
-    protected User() {
-    }
+    public User() {
 
-    public Long getId() {
-        return id;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public String getRole() {
-        return role;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(() -> role);
+        return Collections.emptyList();
     }
 
     @Override
