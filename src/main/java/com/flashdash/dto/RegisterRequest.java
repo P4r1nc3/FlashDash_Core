@@ -1,10 +1,10 @@
 package com.flashdash.dto;
 
 public class RegisterRequest {
-    private String email;
-    private String password;
-    private String firstName;
-    private String lastName;
+    private final String email;
+    private final String password;
+    private final String firstName;
+    private final String lastName;
 
     public RegisterRequest(String email, String password, String firstName, String lastName) {
         this.email = email;
