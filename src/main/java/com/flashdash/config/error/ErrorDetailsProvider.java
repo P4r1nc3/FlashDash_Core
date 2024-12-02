@@ -3,6 +3,7 @@ package com.flashdash.config.error;
 import com.flashdash.dto.ErrorResponse;
 import org.slf4j.MDC;
 import org.springframework.context.support.ResourceBundleMessageSource;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -31,6 +32,11 @@ public class ErrorDetailsProvider {
         );
     }
 
+    public String createErrorResponseJson(ErrorCode errorCode) {
+        ErrorResponse errorResponse = createErrorResponse(errorCode);
+        return toJson(errorResponse);
+    }
+
     private int getStatus(ErrorCode errorCode) {
         return Integer.parseInt(getMessage(errorCode.name() + ".status"));
     }
@@ -45,5 +51,15 @@ public class ErrorDetailsProvider {
 
     private String getMessage(String key) {
         return messageSource.getMessage(key, null, Locale.getDefault());
+    }
+
+    private String toJson(ErrorResponse errorResponse) {
+        return String.format("{\"status\":%d,\"error\":\"%s\",\"cause\":\"%s\",\"action\":\"%s\",\"timestamp\":\"%s\",\"correlationId\":\"%s\"}",
+                errorResponse.getStatus(),
+                errorResponse.getError(),
+                errorResponse.getCause(),
+                errorResponse.getAction(),
+                errorResponse.getTimestamp(),
+                errorResponse.getCorrelationId());
     }
 }
