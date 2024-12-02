@@ -37,13 +37,13 @@ public class AuthenticationService {
 
         if (userOptional.isEmpty()) {
             logger.warn("Login failed: User with email {} not found", request.getEmail());
-            throw new FlashDashException(ErrorCode.E401001); // Invalid credentials
+            throw new FlashDashException(ErrorCode.E404001);
         }
 
         User user = userOptional.get();
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             logger.warn("Login failed: Invalid password for email {}", request.getEmail());
-            throw new FlashDashException(ErrorCode.E401001); // Invalid credentials
+            throw new FlashDashException(ErrorCode.E401001);
         }
 
         String token = jwtManager.generateToken(user.getUsername());
@@ -56,7 +56,7 @@ public class AuthenticationService {
 
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             logger.warn("Registration failed: User with email {} already exists", request.getEmail());
-            throw new FlashDashException(ErrorCode.E400001); // User already exists
+            throw new FlashDashException(ErrorCode.E400001);
         }
 
         User user = new User(
