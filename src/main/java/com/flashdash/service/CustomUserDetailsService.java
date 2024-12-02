@@ -22,5 +22,4 @@ public class CustomUserDetailsService implements UserDetailsService {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new FlashDashException(ErrorCode.E404001));
     }
-
 }
