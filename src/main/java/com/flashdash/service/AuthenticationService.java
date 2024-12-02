@@ -42,7 +42,7 @@ public class AuthenticationService {
         User user = userOptional.get();
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             logger.warn("Login failed: Invalid password for email {}", request.getEmail());
-            throw new FlashDashException(ErrorCode.E401001);
+            throw new FlashDashException(ErrorCode.E401002);
         }
 
         String token = jwtManager.generateToken(user.getUsername());
