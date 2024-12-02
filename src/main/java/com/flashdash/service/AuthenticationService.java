@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -33,6 +34,7 @@ public class AuthenticationService {
         logger.info("Login attempt for email: {}", request.getEmail());
 
         Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
+
         if (userOptional.isEmpty()) {
             logger.warn("Login failed: User with email {} not found", request.getEmail());
             throw new FlashDashException(ErrorCode.E401001); // Invalid credentials
@@ -58,10 +60,10 @@ public class AuthenticationService {
         }
 
         User user = new User(
-                request.getEmail(),
-                passwordEncoder.encode(request.getPassword()),
                 request.getFirstName(),
-                request.getLastName()
+                request.getLastName(),
+                request.getEmail().trim().toLowerCase(),
+                passwordEncoder.encode(request.getPassword())
         );
 
         userRepository.save(user);
