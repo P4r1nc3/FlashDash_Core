@@ -1,4 +1,4 @@
-package com.flashdash.config.error;
+package com.flashdash.exception;
 
 import com.flashdash.dto.ErrorResponse;
 import org.springframework.http.ResponseEntity;

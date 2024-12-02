@@ -1,7 +1,7 @@
-package com.flashdash.config;
+package com.flashdash.service;
 
-import com.flashdash.config.error.ErrorCode;
-import com.flashdash.config.error.FlashDashException;
+import com.flashdash.exception.ErrorCode;
+import com.flashdash.exception.FlashDashException;
 import com.flashdash.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

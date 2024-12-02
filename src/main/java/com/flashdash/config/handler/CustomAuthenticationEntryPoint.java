@@ -1,7 +1,7 @@
-package com.flashdash.config;
+package com.flashdash.config.handler;
 
-import com.flashdash.config.error.ErrorCode;
-import com.flashdash.config.error.ErrorDetailsProvider;
+import com.flashdash.exception.ErrorCode;
+import com.flashdash.exception.ErrorDetailsProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.MediaType;

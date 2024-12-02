@@ -4,8 +4,8 @@ import com.flashdash.config.JwtManager;
 import com.flashdash.dto.AuthenticationResponse;
 import com.flashdash.dto.LoginRequest;
 import com.flashdash.dto.RegisterRequest;
-import com.flashdash.config.error.FlashDashException;
-import com.flashdash.config.error.ErrorCode;
+import com.flashdash.exception.FlashDashException;
+import com.flashdash.exception.ErrorCode;
 import com.flashdash.model.User;
 import com.flashdash.repository.UserRepository;
 import org.slf4j.Logger;
@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service

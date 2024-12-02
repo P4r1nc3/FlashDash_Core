@@ -1,4 +1,4 @@
-package com.flashdash.config.error;
+package com.flashdash.exception;
 
 public class FlashDashException extends RuntimeException {
 
