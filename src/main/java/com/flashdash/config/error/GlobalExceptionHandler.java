@@ -1,4 +1,4 @@
-package com.flashdash.exception;
+package com.flashdash.config.error;
 
 import com.flashdash.dto.ErrorResponse;
 import org.slf4j.MDC;
