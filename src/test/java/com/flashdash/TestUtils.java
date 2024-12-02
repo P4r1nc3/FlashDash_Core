@@ -3,7 +3,7 @@ package com.flashdash;
 import com.flashdash.model.User;
 
 public class TestUtils {
-    public static User createDefaultTestUser() {
+    public static User createUser() {
         User user = new User();
         user.setUsername("test@example.com");
         user.setPassword("password123");
