@@ -7,7 +7,6 @@ import com.flashdash.service.AuthenticationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-
 @RestController
 @RequestMapping("/auth")
 public class AuthenticationController {
@@ -29,4 +28,3 @@ public class AuthenticationController {
         return ResponseEntity.ok(response);
     }
 }
-

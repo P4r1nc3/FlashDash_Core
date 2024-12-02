@@ -1,5 +1,6 @@
 package com.flashdash;
 
+import com.flashdash.dto.AuthenticationResponse;
 import com.flashdash.dto.LoginRequest;
 import com.flashdash.dto.RegisterRequest;
 import com.flashdash.model.User;
@@ -29,5 +30,11 @@ public class TestUtils {
         registerRequest.setEmail("test@example.com");
         registerRequest.setPassword("password123");
         return registerRequest;
+    }
+
+    public static AuthenticationResponse createAuthenticationResponse() {
+        AuthenticationResponse response = new AuthenticationResponse();
+        response.setToken("mockToken");
+        return response;
     }
 }
