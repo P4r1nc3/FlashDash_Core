@@ -11,6 +11,9 @@ public class ErrorResponse {
     private LocalDateTime timestamp;
     private String correlationId;
 
+    public ErrorResponse() {
+    }
+
     public ErrorResponse(int status, String error, String cause, String action, LocalDateTime timestamp, String correlationId) {
         this.status = status;
         this.error = error;
