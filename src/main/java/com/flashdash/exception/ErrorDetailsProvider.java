@@ -1,9 +1,8 @@
-package com.flashdash.config.error;
+package com.flashdash.exception;
 
 import com.flashdash.dto.ErrorResponse;
 import org.slf4j.MDC;
 import org.springframework.context.support.ResourceBundleMessageSource;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;

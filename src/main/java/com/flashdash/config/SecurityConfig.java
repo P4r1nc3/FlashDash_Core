@@ -1,5 +1,9 @@
 package com.flashdash.config;
 
+import com.flashdash.config.filter.CorrelationIdFilter;
+import com.flashdash.config.filter.JwtAuthenticationFilter;
+import com.flashdash.config.handler.CustomAccessDeniedHandler;
+import com.flashdash.config.handler.CustomAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;

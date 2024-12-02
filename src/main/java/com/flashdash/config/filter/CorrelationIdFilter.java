@@ -1,4 +1,4 @@
-package com.flashdash.config;
+package com.flashdash.config.filter;
 
 import jakarta.servlet.*;
 import org.slf4j.MDC;
