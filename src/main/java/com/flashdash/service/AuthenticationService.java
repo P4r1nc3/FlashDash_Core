@@ -56,7 +56,7 @@ public class AuthenticationService {
 
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             logger.warn("Registration failed: User with email {} already exists", request.getEmail());
-            throw new FlashDashException(ErrorCode.E400001);
+            throw new FlashDashException(ErrorCode.E409001);
         }
 
         User user = new User(
