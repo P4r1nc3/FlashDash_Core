@@ -1,4 +1,4 @@
-package com.flashdash.exception;
+package com.flashdash.config.error;
 
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.stereotype.Component;
