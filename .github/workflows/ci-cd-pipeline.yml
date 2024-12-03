@@ -90,7 +90,7 @@ jobs:
           path: target/site/jacoco
 
   security-scan:
-    needs: test
+    needs: analyze
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
