@@ -105,25 +105,14 @@ jobs:
           path: target/site/jacoco
 
   security-scan-simple:
-    needs: test
+    needs: analyze
     runs-on: ubuntu-24.04
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Trivy
-        run: |
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
-          echo "Trivy installed"
-
       - name: Run Trivy vulnerability scan
-        run: ./trivy fs --severity HIGH,CRITICAL --format json --output trivy-report.json
-
-      - name: Upload Trivy report
-        uses: actions/upload-artifact@v3
+        uses: aquasecurity/trivy-action@v0.11.0
         with:
-          name: trivy-report
-          path: trivy-report.json
+          scan-type: 'fs'
+          severity: 'HIGH,CRITICAL'
 
 #  security-scan:
 #    needs: analyze
