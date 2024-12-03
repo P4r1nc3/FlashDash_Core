@@ -1,4 +1,4 @@
-name: Build, Test and Deploy
+name: CI/CD pipeline
 
 on:
   push:
@@ -58,8 +58,60 @@ jobs:
           JWT_KEY: ${{ secrets.JWT_KEY }}
         run: mvn -B test --file pom.xml
 
+  analyze:
+    needs: test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Run static analysis (SpotBugs)
+        run: mvn spotbugs:check --file pom.xml
+
+      - name: Generate code coverage report (JaCoCo)
+        run: mvn test jacoco:report
+
+      - name: Upload JaCoCo report
+        uses: actions/upload-artifact@v3
+        with:
+          name: jacoco-report
+          path: target/site/jacoco
+
+  security-scan:
+    needs: analyze
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Run OWASP Dependency Check
+        run: mvn org.owasp:dependency-check-maven:check
+
+      - name: Upload Dependency Check report
+        uses: actions/upload-artifact@v3
+        with:
+          name: dependency-check-report
+          path: target/dependency-check-report.html
+
 #  deploy:
-#    needs: test
+#    needs: security-scan
 #    if: (github.ref == 'refs/heads/master' && github.event_name == 'push') || github.event_name == 'workflow_dispatch'
 #    runs-on: ubuntu-latest
 #    steps:
