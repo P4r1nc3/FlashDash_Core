@@ -51,7 +51,8 @@ class AuthenticationControllerTest {
     public void testLoginUserNotFound() {
         // Arrange
         LoginRequest loginRequest = TestUtils.createLoginRequest();
-        doThrow(new FlashDashException(ErrorCode.E404001))
+        String expectedMessage = "User with email not found. Please check the email and try again.";
+        doThrow(new FlashDashException(ErrorCode.E404001, expectedMessage))
                 .when(authenticationService)
                 .login(loginRequest);
 
@@ -61,13 +62,15 @@ class AuthenticationControllerTest {
                 () -> authenticationController.login(loginRequest)
         );
         assertEquals(ErrorCode.E404001, exception.getErrorCode());
+        assertEquals(expectedMessage, exception.getMessage());
     }
 
     @Test
     public void testLoginInvalidPassword() {
         // Arrange
         LoginRequest loginRequest = TestUtils.createLoginRequest();
-        doThrow(new FlashDashException(ErrorCode.E401002))
+        String expectedMessage = "Invalid password for email. Please check your credentials and try again.";
+        doThrow(new FlashDashException(ErrorCode.E401002, expectedMessage))
                 .when(authenticationService)
                 .login(loginRequest);
 
@@ -77,6 +80,7 @@ class AuthenticationControllerTest {
                 () -> authenticationController.login(loginRequest)
         );
         assertEquals(ErrorCode.E401002, exception.getErrorCode());
+        assertEquals(expectedMessage, exception.getMessage());
     }
 
     @Test
@@ -100,7 +104,8 @@ class AuthenticationControllerTest {
     public void testRegisterUserAlreadyExists() {
         // Arrange
         RegisterRequest registerRequest = TestUtils.createRegisterRequest();
-        doThrow(new FlashDashException(ErrorCode.E409001))
+        String expectedMessage = "User with email already exists. Please use a different email to register.";
+        doThrow(new FlashDashException(ErrorCode.E409001, expectedMessage))
                 .when(authenticationService)
                 .register(registerRequest);
 
@@ -110,5 +115,6 @@ class AuthenticationControllerTest {
                 () -> authenticationController.register(registerRequest)
         );
         assertEquals(ErrorCode.E409001, exception.getErrorCode());
+        assertEquals(expectedMessage, exception.getMessage());
     }
 }
