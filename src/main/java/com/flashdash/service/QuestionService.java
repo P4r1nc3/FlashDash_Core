@@ -1,5 +1,7 @@
 package com.flashdash.service;
 
+import com.flashdash.exception.ErrorCode;
+import com.flashdash.exception.FlashDashException;
 import com.flashdash.model.Deck;
 import com.flashdash.model.User;
 import com.flashdash.model.question.Question;
@@ -38,13 +40,19 @@ public class QuestionService {
     public Question getQuestionById(Long deckId, Long questionId, User user) {
         Deck deck = deckService.getDeckById(deckId, user);
         return questionRepository.findByDeckAndQuestionId(validateDeckIsQuestionDeck(deck), questionId)
-                .orElseThrow(() -> new RuntimeException("Question not found with id: " + questionId));
+                .orElseThrow(() -> new FlashDashException(
+                        ErrorCode.E404004,
+                        "Question with id " + questionId + " not found in deck with id " + deckId
+                ));
     }
 
     public Question updateQuestion(Long deckId, Long questionId, Question questionDetails, User user) {
         Deck deck = deckService.getDeckById(deckId, user);
         Question question = questionRepository.findByDeckAndQuestionId(validateDeckIsQuestionDeck(deck), questionId)
-                .orElseThrow(() -> new RuntimeException("Question not found with id: " + questionId));
+                .orElseThrow(() -> new FlashDashException(
+                        ErrorCode.E404004,
+                        "Question with id " + questionId + " not found in deck with id " + deckId
+                ));
 
         question.setQuestion(questionDetails.getQuestion());
         question.setCorrectAnswers(questionDetails.getCorrectAnswers());
@@ -58,14 +66,20 @@ public class QuestionService {
     public void deleteQuestion(Long deckId, Long questionId, User user) {
         Deck deck = deckService.getDeckById(deckId, user);
         Question question = questionRepository.findByDeckAndQuestionId(validateDeckIsQuestionDeck(deck), questionId)
-                .orElseThrow(() -> new RuntimeException("Question not found with id: " + questionId));
+                .orElseThrow(() -> new FlashDashException(
+                        ErrorCode.E404004,
+                        "Question with id " + questionId + " not found in deck with id " + deckId
+                ));
 
         questionRepository.delete(question);
     }
 
     private QuestionDeck validateDeckIsQuestionDeck(Deck deck) {
         if (!(deck instanceof QuestionDeck)) {
-            throw new RuntimeException("Provided deck is not a QUESTION deck.");
+            throw new FlashDashException(
+                    ErrorCode.E400003,
+                    "Provided deck with id " + deck.getId() + " is not a QUESTION deck."
+            );
         }
         return (QuestionDeck) deck;
     }

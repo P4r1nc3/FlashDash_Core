@@ -1,6 +1,8 @@
 package com.flashdash.service;
 
 import org.springframework.stereotype.Service;
+import com.flashdash.exception.ErrorCode;
+import com.flashdash.exception.FlashDashException;
 import com.flashdash.model.card.Card;
 import com.flashdash.model.card.CardDeck;
 import com.flashdash.model.Deck;
@@ -38,13 +40,19 @@ public class CardService {
     public Card getCardById(Long deckId, Long cardId, User user) {
         Deck deck = deckService.getDeckById(deckId, user);
         return cardRepository.findByDeckAndCardId(validateDeckIsCardDeck(deck), cardId)
-                .orElseThrow(() -> new RuntimeException("Card not found with id: " + cardId));
+                .orElseThrow(() -> new FlashDashException(
+                        ErrorCode.E404003,
+                        "Card with id " + cardId + " not found in deck with id " + deckId
+                ));
     }
 
     public Card updateCard(Long deckId, Long cardId, Card cardDetails, User user) {
         Deck deck = deckService.getDeckById(deckId, user);
         Card card = cardRepository.findByDeckAndCardId(validateDeckIsCardDeck(deck), cardId)
-                .orElseThrow(() -> new RuntimeException("Card not found with id: " + cardId));
+                .orElseThrow(() -> new FlashDashException(
+                        ErrorCode.E404003,
+                        "Card with id " + cardId + " not found in deck with id " + deckId
+                ));
 
         card.setQuestion(cardDetails.getQuestion());
         card.setAnswer(cardDetails.getAnswer());
@@ -57,14 +65,20 @@ public class CardService {
     public void deleteCard(Long deckId, Long cardId, User user) {
         Deck deck = deckService.getDeckById(deckId, user);
         Card card = cardRepository.findByDeckAndCardId(validateDeckIsCardDeck(deck), cardId)
-                .orElseThrow(() -> new RuntimeException("Card not found with id: " + cardId));
+                .orElseThrow(() -> new FlashDashException(
+                        ErrorCode.E404003,
+                        "Card with id " + cardId + " not found in deck with id " + deckId
+                ));
 
         cardRepository.delete(card);
     }
 
     private CardDeck validateDeckIsCardDeck(Deck deck) {
         if (!(deck instanceof CardDeck)) {
-            throw new RuntimeException("Provided deck is not a CARD deck.");
+            throw new FlashDashException(
+                    ErrorCode.E400002,
+                    "Provided deck with id " + deck.getId() + " is not a CARD deck."
+            );
         }
         return (CardDeck) deck;
     }
