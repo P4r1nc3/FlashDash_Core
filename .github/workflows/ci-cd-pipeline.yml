@@ -90,7 +90,7 @@ jobs:
           path: target/site/jacoco
 
   security-scan:
-    needs: analyze
+    needs: test
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -102,7 +102,9 @@ jobs:
           distribution: 'temurin'
 
       - name: Run OWASP Dependency Check
-        run: mvn org.owasp:dependency-check-maven:check
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: mvn org.owasp:dependency-check-maven:check -Ddependency-check.nvd.apiKey=${{ secrets.NVD_API_KEY }}
 
       - name: Upload Dependency Check report
         uses: actions/upload-artifact@v3
