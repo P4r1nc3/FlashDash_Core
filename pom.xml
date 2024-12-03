@@ -113,17 +113,6 @@
 			<version>1.18.34</version>
 			<scope>provided</scope>
 		</dependency>
-		<!-- Gatling -->
-		<dependency>
-			<groupId>io.gatling</groupId>
-			<artifactId>gatling-core</artifactId>
-			<version>3.13.1</version>
-		</dependency>
-		<dependency>
-			<groupId>io.gatling</groupId>
-			<artifactId>gatling-http</artifactId>
-			<version>3.13.1</version>
-		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
@@ -176,20 +165,6 @@
 						<include>**/*Test.java</include>
 					</includes>
 				</configuration>
-			</plugin>
-			<!-- Gatling Plugin -->
-			<plugin>
-				<groupId>io.gatling</groupId>
-				<artifactId>gatling-maven-plugin</artifactId>
-				<version>4.0.0</version>
-				<executions>
-					<execution>
-						<phase>test</phase>
-						<goals>
-							<goal>test</goal>
-						</goals>
-					</execution>
-				</executions>
 			</plugin>
 			<!-- Checkstyle Plugin -->
 			<plugin>
