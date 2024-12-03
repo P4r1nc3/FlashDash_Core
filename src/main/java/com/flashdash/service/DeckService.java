@@ -2,6 +2,8 @@ package com.flashdash.service;
 
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import com.flashdash.exception.ErrorCode;
+import com.flashdash.exception.FlashDashException;
 import com.flashdash.model.Deck;
 import com.flashdash.model.User;
 import com.flashdash.model.card.CardDeck;
@@ -39,15 +41,24 @@ public class DeckService {
 
     public Deck getDeckById(Long deckId, User user) {
         return deckRepository.findByIdAndUser(deckId, user)
-                .orElseThrow(() -> new RuntimeException("Deck not found with id: " + deckId));
+                .orElseThrow(() -> new FlashDashException(
+                        ErrorCode.E404002,
+                        "Deck with id " + deckId + " not found for the user."
+                ));
     }
 
     public Deck updateDeck(Long deckId, Deck deckDetails, User user) {
         Deck deck = deckRepository.findByIdAndUser(deckId, user)
-                .orElseThrow(() -> new RuntimeException("Deck not found with id: " + deckId));
+                .orElseThrow(() -> new FlashDashException(
+                        ErrorCode.E404002,
+                        "Deck with id " + deckId + " not found for the user."
+                ));
 
         if (!deck.getClass().equals(deckDetails.getClass())) {
-            throw new RuntimeException("Changing deckType is not allowed.");
+            throw new FlashDashException(
+                    ErrorCode.E400001,
+                    "Changing deck type is not allowed."
+            );
         }
 
         deck.setName(deckDetails.getName());
@@ -60,7 +71,10 @@ public class DeckService {
     @Transactional
     public void deleteDeck(Long deckId, User user) {
         Deck deck = deckRepository.findByIdAndUser(deckId, user)
-                .orElseThrow(() -> new RuntimeException("Deck not found with id: " + deckId));
+                .orElseThrow(() -> new FlashDashException(
+                        ErrorCode.E404002,
+                        "Deck with id " + deckId + " not found for the user."
+                ));
 
         if (deck instanceof CardDeck) cardRepository.deleteAllByDeck(deck);
         if (deck instanceof QuestionDeck) questionRepository.deleteAllByDeck(deck);
