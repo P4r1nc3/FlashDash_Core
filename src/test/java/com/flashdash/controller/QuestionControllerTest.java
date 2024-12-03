@@ -27,7 +27,7 @@ import static org.mockito.Mockito.*;
 @SpringBootTest(classes = FlashDashApplication.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class QuestionControllerTest {
+class QuestionControllerTest {
 
     @Autowired
     private QuestionController questionController;
