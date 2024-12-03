@@ -20,6 +20,9 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new FlashDashException(ErrorCode.E404001));
+                .orElseThrow(() -> new FlashDashException(
+                        ErrorCode.E404001,
+                        "User with email " + email + " not found. Please check the email and try again."
+                ));
     }
 }
