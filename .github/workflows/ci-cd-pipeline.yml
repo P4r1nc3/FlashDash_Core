@@ -105,7 +105,7 @@ jobs:
         run: mvn test jacoco:report
 
       - name: Upload JaCoCo report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: jacoco-report
           path: target/site/jacoco
@@ -126,7 +126,7 @@ jobs:
           severity: 'HIGH,CRITICAL'
 
       - name: Upload Trivy scan results as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: trivy-results
           path: trivy-results.sarif
