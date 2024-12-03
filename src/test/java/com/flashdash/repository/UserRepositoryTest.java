@@ -3,6 +3,7 @@ package com.flashdash.repository;
 import com.flashdash.FlashDashApplication;
 import com.flashdash.model.User;
 import com.flashdash.TestUtils;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,11 @@ class UserRepositoryTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @BeforeEach
+    void setUp() {
+        userRepository.deleteAll();
+    }
 
     @Test
     void shouldFindUserByEmail() {
