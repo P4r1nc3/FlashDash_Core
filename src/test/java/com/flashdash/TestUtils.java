@@ -1,8 +1,8 @@
 package com.flashdash;
 
-import com.flashdash.dto.AuthenticationResponse;
-import com.flashdash.dto.LoginRequest;
-import com.flashdash.dto.RegisterRequest;
+import com.flashdash.dto.response.AuthenticationResponse;
+import com.flashdash.dto.request.LoginRequest;
+import com.flashdash.dto.request.RegisterRequest;
 import com.flashdash.model.User;
 import com.flashdash.model.question.Question;
 import com.flashdash.model.question.QuestionDeck;

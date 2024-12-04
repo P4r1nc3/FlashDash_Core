@@ -1,4 +1,4 @@
-package com.flashdash.dto;
+package com.flashdash.dto.response;
 
 public class AuthenticationResponse {
     private String token;

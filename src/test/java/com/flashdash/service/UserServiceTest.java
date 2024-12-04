@@ -2,6 +2,7 @@ package com.flashdash.service;
 
 import com.flashdash.FlashDashApplication;
 import com.flashdash.TestUtils;
+import com.flashdash.dto.response.UserResponse;
 import com.flashdash.exception.FlashDashException;
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.model.User;
@@ -20,13 +21,46 @@ import static org.mockito.Mockito.*;
 
 @SpringBootTest(classes = FlashDashApplication.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class CustomUserDetailsServiceTest {
+class UserServiceTest {
 
     @Autowired
-    private CustomUserDetailsService customUserDetailsService;
+    private UserService userService;
 
     @MockBean
     private UserRepository userRepository;
+
+    @Test
+    void shouldReturnCurrentUserSuccessfully() {
+        // Arrange
+        User user = TestUtils.createUser();
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
+
+        // Act
+        UserResponse userResponse = userService.getCurrentUser("test@example.com");
+
+        // Assert
+        assertThat(userResponse).isNotNull();
+        assertThat(userResponse.getFirstName()).isEqualTo(user.getFirstName());
+        assertThat(userResponse.getLastName()).isEqualTo(user.getLastName());
+        assertThat(userResponse.getEmail()).isEqualTo(user.getUsername());
+        assertThat(userResponse.getCreatedAt()).isEqualTo(user.getCreatedAt());
+        assertThat(userResponse.getUpdatedAt()).isEqualTo(user.getUpdatedAt());
+
+        verify(userRepository).findByEmail("test@example.com");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenCurrentUserNotFound() {
+        // Arrange
+        when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.getCurrentUser("nonexistent@example.com"))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404001);
+
+        verify(userRepository).findByEmail("nonexistent@example.com");
+    }
 
     @Test
     void shouldLoadUserByUsernameSuccessfully() {
@@ -35,7 +69,7 @@ class CustomUserDetailsServiceTest {
         when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
 
         // Act
-        User loadedUser = (User) customUserDetailsService.loadUserByUsername("test@example.com");
+        User loadedUser = (User) userService.loadUserByUsername("test@example.com");
 
         // Assert
         assertThat(loadedUser).isNotNull();
@@ -51,7 +85,7 @@ class CustomUserDetailsServiceTest {
         when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThatThrownBy(() -> customUserDetailsService.loadUserByUsername("nonexistent@example.com"))
+        assertThatThrownBy(() -> userService.loadUserByUsername("nonexistent@example.com"))
                 .isInstanceOf(FlashDashException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404001);
 
