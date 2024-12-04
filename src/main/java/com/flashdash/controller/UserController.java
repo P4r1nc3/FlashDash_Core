@@ -1,6 +1,6 @@
 package com.flashdash.controller;
 
-import com.flashdash.model.User;
+import com.flashdash.dto.UserResponse;
 import com.flashdash.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -19,10 +19,11 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<User> getUser() {
+    public ResponseEntity<UserResponse> getUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User user = (User) authentication.getPrincipal();
+        String email = authentication.getName();
 
-        return ResponseEntity.ok(user);
+        UserResponse userResponse = userService.getCurrentUser(email);
+        return ResponseEntity.ok(userResponse);
     }
 }
