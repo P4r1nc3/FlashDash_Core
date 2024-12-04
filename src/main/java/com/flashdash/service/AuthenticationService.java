@@ -70,7 +70,7 @@ public class AuthenticationService {
         User user = new User();
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
-        user.setUsername(request.getEmail());
+        user.setUsername(request.getEmail().trim().toLowerCase());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         userRepository.save(user);
