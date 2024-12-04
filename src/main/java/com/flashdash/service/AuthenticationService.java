@@ -1,9 +1,9 @@
 package com.flashdash.service;
 
 import com.flashdash.config.JwtManager;
-import com.flashdash.dto.AuthenticationResponse;
-import com.flashdash.dto.LoginRequest;
-import com.flashdash.dto.RegisterRequest;
+import com.flashdash.dto.response.AuthenticationResponse;
+import com.flashdash.dto.request.LoginRequest;
+import com.flashdash.dto.request.RegisterRequest;
 import com.flashdash.exception.FlashDashException;
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.model.User;
