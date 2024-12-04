@@ -1,6 +1,8 @@
 package com.flashdash.config.filter;
 
 import com.flashdash.config.JwtManager;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -55,7 +57,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                 }
             }
-        } catch (io.jsonwebtoken.security.SignatureException e) {
+        } catch (ExpiredJwtException e) {
+            logger.warn("JWT token has expired: {}", e.getMessage());
+        } catch (SignatureException e) {
             logger.warn("Invalid JWT signature: {}", e.getMessage());
         } catch (Exception e) {
             logger.error("Error validating JWT token", e);
