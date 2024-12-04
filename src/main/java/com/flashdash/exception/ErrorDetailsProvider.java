@@ -1,6 +1,6 @@
 package com.flashdash.exception;
 
-import com.flashdash.dto.ErrorResponse;
+import com.flashdash.dto.response.ErrorResponse;
 import org.slf4j.MDC;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.stereotype.Component;
