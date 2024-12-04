@@ -1,4 +1,4 @@
-package com.flashdash.dto;
+package com.flashdash.dto.request;
 
 public class LoginRequest {
     private String email;

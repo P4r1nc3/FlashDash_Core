@@ -1,9 +1,9 @@
 package com.flashdash.service;
 
 import com.flashdash.config.JwtManager;
-import com.flashdash.dto.AuthenticationResponse;
-import com.flashdash.dto.LoginRequest;
-import com.flashdash.dto.RegisterRequest;
+import com.flashdash.dto.response.AuthenticationResponse;
+import com.flashdash.dto.request.LoginRequest;
+import com.flashdash.dto.request.RegisterRequest;
 import com.flashdash.exception.FlashDashException;
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.model.User;
@@ -67,12 +67,11 @@ public class AuthenticationService {
             );
         }
 
-        User user = new User(
-                request.getFirstName(),
-                request.getLastName(),
-                request.getEmail().trim().toLowerCase(),
-                passwordEncoder.encode(request.getPassword())
-        );
+        User user = new User();
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setUsername(request.getEmail().trim().toLowerCase());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         userRepository.save(user);
         logger.info("User registered successfully: {}", request.getEmail());

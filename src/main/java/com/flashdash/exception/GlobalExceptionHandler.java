@@ -1,6 +1,6 @@
 package com.flashdash.exception;
 
-import com.flashdash.dto.ErrorResponse;
+import com.flashdash.dto.response.ErrorResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
