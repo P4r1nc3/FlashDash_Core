@@ -18,6 +18,8 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest(classes = FlashDashApplication.class)
@@ -89,7 +91,11 @@ class UserControllerTest {
         ));
 
         // Act & Assert
-        Assertions.assertThrows(FlashDashException.class, () -> userController.getUser());
+        FlashDashException exception = assertThrows(
+                FlashDashException.class,
+                () -> userController.getUser()
+        );
+        assertEquals(ErrorCode.E404001, exception.getErrorCode());
         verify(userService).getCurrentUser(user.getUsername());
     }
 }
