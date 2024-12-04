@@ -67,12 +67,11 @@ public class AuthenticationService {
             );
         }
 
-        User user = new User(
-                request.getFirstName(),
-                request.getLastName(),
-                request.getEmail().trim().toLowerCase(),
-                passwordEncoder.encode(request.getPassword())
-        );
+        User user = new User();
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setUsername(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         userRepository.save(user);
         logger.info("User registered successfully: {}", request.getEmail());
