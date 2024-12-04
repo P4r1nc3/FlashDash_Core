@@ -20,10 +20,10 @@ import static org.mockito.Mockito.*;
 
 @SpringBootTest(classes = FlashDashApplication.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class CustomUserDetailsServiceTest {
+class UserServiceTest {
 
     @Autowired
-    private CustomUserDetailsService customUserDetailsService;
+    private UserService userService;
 
     @MockBean
     private UserRepository userRepository;
@@ -35,7 +35,7 @@ class CustomUserDetailsServiceTest {
         when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
 
         // Act
-        User loadedUser = (User) customUserDetailsService.loadUserByUsername("test@example.com");
+        User loadedUser = (User) userService.loadUserByUsername("test@example.com");
 
         // Assert
         assertThat(loadedUser).isNotNull();
@@ -51,7 +51,7 @@ class CustomUserDetailsServiceTest {
         when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThatThrownBy(() -> customUserDetailsService.loadUserByUsername("nonexistent@example.com"))
+        assertThatThrownBy(() -> userService.loadUserByUsername("nonexistent@example.com"))
                 .isInstanceOf(FlashDashException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404001);
 
