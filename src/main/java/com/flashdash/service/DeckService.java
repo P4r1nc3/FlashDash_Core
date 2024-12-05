@@ -1,6 +1,8 @@
 package com.flashdash.service;
 
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
@@ -17,6 +19,9 @@ import java.util.List;
 
 @Service
 public class DeckService {
+
+    private static final Logger logger = LoggerFactory.getLogger(DeckService.class);
+
     private final DeckRepository deckRepository;
     private final CardRepository cardRepository;
     private final QuestionRepository questionRepository;
@@ -28,33 +33,52 @@ public class DeckService {
     }
 
     public Deck createDeck(Deck deck, User user) {
+        logger.info("Attempting to create a new deck for user with email: {}", user.getUsername());
+
         deck.setUser(user);
         deck.setCreatedAt(LocalDateTime.now());
         deck.setUpdatedAt(LocalDateTime.now());
+        Deck savedDeck = deckRepository.save(deck);
 
-        return deckRepository.save(deck);
+        logger.info("Successfully created deck with id: {} for user with email: {}", savedDeck.getId(), user.getUsername());
+        return savedDeck;
     }
 
     public List<Deck> getAllDecks(User user) {
-        return deckRepository.findAllByUser(user);
+        logger.info("Fetching all decks for user with email: {}", user.getUsername());
+        List<Deck> decks = deckRepository.findAllByUser(user);
+
+        logger.info("Retrieved {} decks for user with email: {}", decks.size(), user.getUsername());
+        return decks;
     }
 
     public Deck getDeckById(Long deckId, User user) {
+        logger.info("Fetching deck with id: {} for user with email: {}", deckId, user.getUsername());
+
         return deckRepository.findByIdAndUser(deckId, user)
-                .orElseThrow(() -> new FlashDashException(
-                        ErrorCode.E404002,
-                        "Deck with id " + deckId + " not found for the user."
-                ));
+                .orElseThrow(() -> {
+                    logger.warn("Deck with id: {} not found for user with email: {}", deckId, user.getUsername());
+                    return new FlashDashException(
+                            ErrorCode.E404002,
+                            "Deck with id " + deckId + " not found for the user."
+                    );
+                });
     }
 
     public Deck updateDeck(Long deckId, Deck deckDetails, User user) {
+        logger.info("Attempting to update deck with id: {} for user with email: {}", deckId, user.getUsername());
+
         Deck deck = deckRepository.findByIdAndUser(deckId, user)
-                .orElseThrow(() -> new FlashDashException(
-                        ErrorCode.E404002,
-                        "Deck with id " + deckId + " not found for the user."
-                ));
+                .orElseThrow(() -> {
+                    logger.warn("Deck with id: {} not found for user with email: {}", deckId, user.getUsername());
+                    return new FlashDashException(
+                            ErrorCode.E404002,
+                            "Deck with id " + deckId + " not found for the user."
+                    );
+                });
 
         if (!deck.getClass().equals(deckDetails.getClass())) {
+            logger.error("Attempted to change deck type for deck with id: {}", deckId);
             throw new FlashDashException(
                     ErrorCode.E400001,
                     "Changing deck type is not allowed."
@@ -65,19 +89,34 @@ public class DeckService {
         deck.setDescription(deckDetails.getDescription());
         deck.setUpdatedAt(LocalDateTime.now());
 
-        return deckRepository.save(deck);
+        Deck updatedDeck = deckRepository.save(deck);
+        logger.info("Successfully updated deck with id: {} for user with email: {}", deckId, user.getUsername());
+        return updatedDeck;
     }
 
     @Transactional
     public void deleteDeck(Long deckId, User user) {
-        Deck deck = deckRepository.findByIdAndUser(deckId, user)
-                .orElseThrow(() -> new FlashDashException(
-                        ErrorCode.E404002,
-                        "Deck with id " + deckId + " not found for the user."
-                ));
+        logger.info("Attempting to delete deck with id: {} for user with email: {}", deckId, user.getUsername());
 
-        if (deck instanceof CardDeck) cardRepository.deleteAllByDeck(deck);
-        if (deck instanceof QuestionDeck) questionRepository.deleteAllByDeck(deck);
+        Deck deck = deckRepository.findByIdAndUser(deckId, user)
+                .orElseThrow(() -> {
+                    logger.warn("Deck with id: {} not found for user with email: {}", deckId, user.getUsername());
+                    return new FlashDashException(
+                            ErrorCode.E404002,
+                            "Deck with id " + deckId + " not found for the user."
+                    );
+                });
+
+        if (deck instanceof CardDeck) {
+            logger.info("Deleting all cards associated with CardDeck id: {}", deckId);
+            cardRepository.deleteAllByDeck(deck);
+        }
+        if (deck instanceof QuestionDeck) {
+            logger.info("Deleting all questions associated with QuestionDeck id: {}", deckId);
+            questionRepository.deleteAllByDeck(deck);
+        }
+
         deckRepository.delete(deck);
+        logger.info("Successfully deleted deck with id: {} for user with email: {}", deckId, user.getUsername());
     }
 }
