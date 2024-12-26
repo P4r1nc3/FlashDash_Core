@@ -1,4 +1,4 @@
-package com.flashdash.model.question;
+package com.flashdash.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -32,14 +32,14 @@ public class Question {
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "deck_id")
-    private QuestionDeck deck;
+    private Deck deck;
 
     public Question() {
 
     }
 
     public Question(Long questionId, String question, List<String> correctAnswers, List<String> incorrectAnswers,
-                    String difficulty, LocalDateTime createdAt, LocalDateTime updatedAt, QuestionDeck deck) {
+                    String difficulty, LocalDateTime createdAt, LocalDateTime updatedAt, Deck deck) {
         this.questionId = questionId;
         this.question = question;
         this.correctAnswers = correctAnswers;
@@ -106,11 +106,11 @@ public class Question {
         this.updatedAt = updatedAt;
     }
 
-    public QuestionDeck getDeck() {
+    public Deck getDeck() {
         return deck;
     }
 
-    public void setDeck(QuestionDeck deck) {
+    public void setDeck(Deck deck) {
         this.deck = deck;
     }
 }
