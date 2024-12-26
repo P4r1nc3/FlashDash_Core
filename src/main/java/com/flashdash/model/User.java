@@ -55,7 +55,9 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "sentBy", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<FriendInvitation> sentInvitations = new HashSet<>();
 
-    public User() {}
+    public User() {
+
+    }
 
     public User(String firstName, String lastName, String email, String password) {
         this.firstName = firstName;
