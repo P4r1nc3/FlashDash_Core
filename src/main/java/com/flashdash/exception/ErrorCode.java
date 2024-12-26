@@ -8,6 +8,7 @@ public enum ErrorCode {
     E401002,
     // 403 Forbidden
     E403001,
+    E403002,
     // 404 Not Found
     E404001,
     E404002,
