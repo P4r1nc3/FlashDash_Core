@@ -56,7 +56,7 @@ public class QuestionService {
                 .orElseThrow(() -> {
                     logger.warn("Question with id: {} not found in deck with id: {}", questionId, deckId);
                     return new FlashDashException(
-                            ErrorCode.E404004,
+                            ErrorCode.E404003,
                             "Question with id " + questionId + " not found in deck with id " + deckId
                     );
                 });
@@ -73,7 +73,7 @@ public class QuestionService {
                 .orElseThrow(() -> {
                     logger.warn("Question with id: {} not found in deck with id: {}", questionId, deckId);
                     return new FlashDashException(
-                            ErrorCode.E404004,
+                            ErrorCode.E404003,
                             "Question with id " + questionId + " not found in deck with id " + deckId
                     );
                 });
@@ -97,7 +97,7 @@ public class QuestionService {
                 .orElseThrow(() -> {
                     logger.warn("Question with id: {} not found in deck with id: {}", questionId, deckId);
                     return new FlashDashException(
-                            ErrorCode.E404004,
+                            ErrorCode.E404003,
                             "Question with id " + questionId + " not found in deck with id " + deckId
                     );
                 });

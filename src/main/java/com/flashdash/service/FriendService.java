@@ -63,7 +63,7 @@ public class FriendService {
 
     public void respondToFriendInvitation(Long invitationId, String recipientEmail, FriendInvitation.InvitationStatus status) {
         FriendInvitation invitation = friendInvitationRepository.findById(invitationId)
-                .orElseThrow(() -> new FlashDashException(ErrorCode.E404005, "Invitation not found"));
+                .orElseThrow(() -> new FlashDashException(ErrorCode.E404004, "Invitation not found"));
 
         if (!invitation.getSentTo().getUsername().equals(recipientEmail)) {
             throw new FlashDashException(ErrorCode.E403001, "Unauthorized to respond to this invitation.");

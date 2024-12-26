@@ -13,7 +13,6 @@ public enum ErrorCode {
     E404002,
     E404003,
     E404004,
-    E404005,
     // 409 Conflict
     E409001,
     E409002
