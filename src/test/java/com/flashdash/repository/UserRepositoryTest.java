@@ -49,4 +49,30 @@ class UserRepositoryTest {
         // Assert
         assertThat(foundUser).isNotPresent();
     }
+
+    @Test
+    void shouldFindUserByActivationToken() {
+        // Arrange
+        User user = TestUtils.createUser();
+        String activationToken = "some-activation-token";
+        user.setActivationToken(activationToken);
+        userRepository.save(user);
+
+        // Act
+        Optional<User> foundUser = userRepository.findByActivationToken(activationToken);
+
+        // Assert
+        assertThat(foundUser).isPresent();
+        assertThat(foundUser.get().getActivationToken()).isEqualTo(activationToken);
+        assertThat(foundUser.get().getUsername()).isEqualTo("test@example.com");
+    }
+
+    @Test
+    void shouldReturnEmptyWhenActivationTokenDoesNotExist() {
+        // Act
+        Optional<User> foundUser = userRepository.findByActivationToken("nonexistent-token");
+
+        // Assert
+        assertThat(foundUser).isNotPresent();
+    }
 }
