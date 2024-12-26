@@ -35,6 +35,12 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(nullable = false)
+    private boolean enabled = false;
+
+    @Column(unique = true)
+    private String activationToken;
+
     @ManyToMany
     @JoinTable(
             name = "user_friends",
@@ -49,8 +55,7 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "sentBy", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<FriendInvitation> sentInvitations = new HashSet<>();
 
-    public User() {
-    }
+    public User() {}
 
     public User(String firstName, String lastName, String email, String password) {
         this.firstName = firstName;
@@ -116,6 +121,22 @@ public class User implements UserDetails {
         return updatedAt;
     }
 
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public String getActivationToken() {
+        return activationToken;
+    }
+
+    public void setActivationToken(String activationToken) {
+        this.activationToken = activationToken;
+    }
+
     public Set<User> getFriends() {
         return friends;
     }
@@ -157,11 +178,6 @@ public class User implements UserDetails {
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
         return true;
     }
 }
