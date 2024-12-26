@@ -72,14 +72,6 @@ public class DeckService {
                     );
                 });
 
-        if (!deck.getClass().equals(deckDetails.getClass())) {
-            logger.error("Attempted to change deck type for deck with id: {}", deckId);
-            throw new FlashDashException(
-                    ErrorCode.E400001,
-                    "Changing deck type is not allowed."
-            );
-        }
-
         deck.setName(deckDetails.getName());
         deck.setDescription(deckDetails.getDescription());
         deck.setUpdatedAt(LocalDateTime.now());
