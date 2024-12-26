@@ -7,6 +7,7 @@ import com.flashdash.model.User;
 import com.flashdash.model.Question;
 import com.flashdash.model.Deck;
 import com.flashdash.model.FriendInvitation;
+import org.springframework.mail.SimpleMailMessage;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -80,5 +81,23 @@ public class TestUtils {
         invitation.setSentBy(sender);
         invitation.setSentTo(recipient);
         return invitation;
+    }
+
+    public static SimpleMailMessage createSimpleMailMessageForAccountActivation(String to, String activationToken) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(to);
+        message.setSubject("Account Activation");
+        message.setText("Click the link to activate your account: http://localhost:8080/auth/activate?token=" + activationToken);
+        message.setFrom("flashdashservice@gmail.com");
+        return message;
+    }
+
+    public static SimpleMailMessage createSimpleMailMessageForDailyNotification(String to) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(to);
+        message.setSubject("Reminder: Time to Learn!");
+        message.setText("Hi there! Don't forget to continue your learning journey with FlashDash. Let's make today productive!");
+        message.setFrom("flashdashservice@gmail.com");
+        return message;
     }
 }
