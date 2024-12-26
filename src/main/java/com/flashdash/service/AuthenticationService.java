@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class AuthenticationService {
@@ -22,33 +23,35 @@ public class AuthenticationService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtManager jwtManager;
+    private final EmailService emailService;
 
-    public AuthenticationService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtManager jwtManager) {
+    public AuthenticationService(UserRepository userRepository,
+                                 PasswordEncoder passwordEncoder,
+                                 JwtManager jwtManager,
+                                 EmailService emailService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtManager = jwtManager;
+        this.emailService = emailService;
     }
 
     public AuthenticationResponse login(LoginRequest request) {
         logger.info("Login attempt for email: {}", request.getEmail());
 
-        Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> {
+                    logger.warn("Login failed: User with email {} not found", request.getEmail());
+                    return new FlashDashException(ErrorCode.E404001, "User not found.");
+                });
 
-        if (userOptional.isEmpty()) {
-            logger.warn("Login failed: User with email {} not found", request.getEmail());
-            throw new FlashDashException(
-                    ErrorCode.E404001,
-                    "User with email " + request.getEmail() + " not found. Please check the email and try again."
-            );
+        if (!user.isEnabled()) {
+            logger.warn("Login failed: Account not activated for email {}", request.getEmail());
+            throw new FlashDashException(ErrorCode.E403002, "Account not activated.");
         }
 
-        User user = userOptional.get();
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             logger.warn("Login failed: Invalid password for email {}", request.getEmail());
-            throw new FlashDashException(
-                    ErrorCode.E401002,
-                    "Invalid password for email " + request.getEmail() + ". Please check your credentials and try again."
-            );
+            throw new FlashDashException(ErrorCode.E401002, "Invalid password.");
         }
 
         String token = jwtManager.generateToken(user.getUsername());
@@ -60,11 +63,7 @@ public class AuthenticationService {
         logger.info("Registration attempt for email: {}", request.getEmail());
 
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            logger.warn("Registration failed: User with email {} already exists", request.getEmail());
-            throw new FlashDashException(
-                    ErrorCode.E409001,
-                    "User with email " + request.getEmail() + " already exists. Please use a different email to register."
-            );
+            throw new FlashDashException(ErrorCode.E409001, "User already exists.");
         }
 
         User user = new User();
@@ -73,11 +72,36 @@ public class AuthenticationService {
         user.setUsername(request.getEmail().trim().toLowerCase());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        userRepository.save(user);
-        logger.info("User registered successfully: {}", request.getEmail());
+        // Generate activation token
+        String activationToken = UUID.randomUUID().toString();
+        user.setActivationToken(activationToken);
 
-        String token = jwtManager.generateToken(user.getUsername());
-        logger.info("Token generated for registered user: {}", request.getEmail());
-        return new AuthenticationResponse(token);
+        userRepository.save(user);
+
+        // Send activation email
+        String activationLink = "http://localhost:8080/auth/activate?token=" + activationToken;
+        emailService.sendEmail(user.getUsername(), "Account Activation",
+                "Click the link to activate your account: " + activationLink);
+
+        return new AuthenticationResponse("Account created. Please check your email to activate.");
     }
+
+    public void activateAccount(String token) {
+        logger.info("Activating account with token: {}", token);
+
+        User user = userRepository.findByActivationToken(token)
+                .orElseThrow(() -> new FlashDashException(ErrorCode.E404001, "Invalid activation token."));
+
+        if (user.isEnabled()) {
+            logger.warn("Account already activated for email: {}", user.getUsername());
+            throw new FlashDashException(ErrorCode.E400001, "Account is already activated.");
+        }
+
+        user.setEnabled(true);
+        user.setActivationToken("activated");
+        userRepository.save(user);
+
+        logger.info("Account activated successfully for email: {}", user.getUsername());
+    }
+
 }

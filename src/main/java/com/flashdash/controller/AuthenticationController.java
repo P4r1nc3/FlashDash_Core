@@ -27,4 +27,10 @@ public class AuthenticationController {
         AuthenticationResponse response = authenticationService.register(request);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/activate")
+    public ResponseEntity<String> activateAccount(@RequestParam String token) {
+        authenticationService.activateAccount(token);
+        return ResponseEntity.ok("Account activated successfully!");
+    }
 }
