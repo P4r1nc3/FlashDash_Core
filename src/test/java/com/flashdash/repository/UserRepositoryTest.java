@@ -1,14 +1,15 @@
 package com.flashdash.repository;
 
 import com.flashdash.FlashDashApplication;
-import com.flashdash.model.User;
 import com.flashdash.TestUtils;
+import com.flashdash.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -74,5 +75,39 @@ class UserRepositoryTest {
 
         // Assert
         assertThat(foundUser).isNotPresent();
+    }
+
+    @Test
+    void shouldFindUsersWithDailyNotificationsTrue() {
+        // Arrange
+        User userWithNotifications = TestUtils.createUser();
+        userWithNotifications.setDailyNotifications(true);
+        userRepository.save(userWithNotifications);
+
+        User userWithoutNotifications = TestUtils.createFriendUser();
+        userWithoutNotifications.setDailyNotifications(false);
+        userRepository.save(userWithoutNotifications);
+
+        // Act
+        List<User> usersWithNotifications = userRepository.findByDailyNotificationsTrue();
+
+        // Assert
+        assertThat(usersWithNotifications).hasSize(1);
+        assertThat(usersWithNotifications.get(0).getUsername()).isEqualTo(userWithNotifications.getUsername());
+        assertThat(usersWithNotifications.get(0).isDailyNotifications()).isTrue();
+    }
+
+    @Test
+    void shouldReturnEmptyListWhenNoUsersHaveDailyNotificationsTrue() {
+        // Arrange
+        User userWithoutNotifications = TestUtils.createUser();
+        userWithoutNotifications.setDailyNotifications(false);
+        userRepository.save(userWithoutNotifications);
+
+        // Act
+        List<User> usersWithNotifications = userRepository.findByDailyNotificationsTrue();
+
+        // Assert
+        assertThat(usersWithNotifications).isEmpty();
     }
 }

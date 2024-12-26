@@ -66,22 +66,18 @@ public class AuthenticationService {
             throw new FlashDashException(ErrorCode.E409001, "User already exists.");
         }
 
+        String activationToken = UUID.randomUUID().toString();
+
         User user = new User();
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
         user.setUsername(request.getEmail().trim().toLowerCase());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-
-        // Generate activation token
-        String activationToken = UUID.randomUUID().toString();
         user.setActivationToken(activationToken);
+        user.setDailyNotifications(true);
 
         userRepository.save(user);
-
-        // Send activation email
-        String activationLink = "http://localhost:8080/auth/activate?token=" + activationToken;
-        emailService.sendEmail(user.getUsername(), "Account Activation",
-                "Click the link to activate your account: " + activationLink);
+        emailService.sendActivationEmail(user.getUsername(), activationToken);
 
         return new AuthenticationResponse("Account created. Please check your email to activate.");
     }
@@ -103,5 +99,4 @@ public class AuthenticationService {
 
         logger.info("Account activated successfully for email: {}", user.getUsername());
     }
-
 }
