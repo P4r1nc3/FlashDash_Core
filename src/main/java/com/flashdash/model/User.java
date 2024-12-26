@@ -7,6 +7,8 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -33,8 +35,21 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    public User() {
+    @ManyToMany
+    @JoinTable(
+            name = "user_friends",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "friend_id")
+    )
+    private Set<User> friends = new HashSet<>();
 
+    @OneToMany(mappedBy = "sentTo", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<FriendInvitation> receivedInvitations = new HashSet<>();
+
+    @OneToMany(mappedBy = "sentBy", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<FriendInvitation> sentInvitations = new HashSet<>();
+
+    public User() {
     }
 
     public User(String firstName, String lastName, String email, String password) {
@@ -99,6 +114,30 @@ public class User implements UserDetails {
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    public Set<User> getFriends() {
+        return friends;
+    }
+
+    public void setFriends(Set<User> friends) {
+        this.friends = friends;
+    }
+
+    public Set<FriendInvitation> getReceivedInvitations() {
+        return receivedInvitations;
+    }
+
+    public void setReceivedInvitations(Set<FriendInvitation> receivedInvitations) {
+        this.receivedInvitations = receivedInvitations;
+    }
+
+    public Set<FriendInvitation> getSentInvitations() {
+        return sentInvitations;
+    }
+
+    public void setSentInvitations(Set<FriendInvitation> sentInvitations) {
+        this.sentInvitations = sentInvitations;
     }
 
     @Override
