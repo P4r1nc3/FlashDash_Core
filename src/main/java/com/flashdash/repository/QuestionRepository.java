@@ -2,7 +2,7 @@ package com.flashdash.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import com.flashdash.model.Deck;
-import com.flashdash.model.question.Question;
+import com.flashdash.model.Question;
 
 import java.util.List;
 import java.util.Optional;
