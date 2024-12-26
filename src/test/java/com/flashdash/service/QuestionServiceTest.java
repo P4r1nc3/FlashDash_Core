@@ -108,7 +108,7 @@ class QuestionServiceTest {
         // Act & Assert
         assertThatThrownBy(() -> questionService.getQuestionById(1L, 1L, user))
                 .isInstanceOf(FlashDashException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404004);
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404003);
 
         verify(deckService).getDeckById(1L, user);
         verify(questionRepository).findByDeckAndQuestionId(deck, 1L);
