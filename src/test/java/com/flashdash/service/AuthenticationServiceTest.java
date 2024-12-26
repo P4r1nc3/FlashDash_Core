@@ -35,6 +35,9 @@ class AuthenticationServiceTest {
     @MockBean
     private PasswordEncoder passwordEncoder;
 
+    @MockBean
+    private EmailService emailService;
+
     @Test
     void shouldLoginSuccessfully() {
         // Arrange
@@ -106,10 +109,10 @@ class AuthenticationServiceTest {
 
         verify(userRepository).findByEmail(registerRequest.getEmail());
         verify(userRepository).save(any(User.class));
+        verify(emailService).sendActivationEmail(eq(registerRequest.getEmail()), anyString());
     }
-
     @Test
-    void shouldThrowExceptionWhenUserAlreadyExistsDuringRegistration() {
+    void shouldNotSendActivationEmailWhenUserAlreadyExists() {
         // Arrange
         User existingUser = TestUtils.createUser();
         when(userRepository.findByEmail(existingUser.getUsername())).thenReturn(Optional.of(existingUser));
@@ -123,7 +126,7 @@ class AuthenticationServiceTest {
 
         verify(userRepository).findByEmail(registerRequest.getEmail());
         verifyNoMoreInteractions(userRepository);
-        verifyNoInteractions(passwordEncoder);
+        verifyNoInteractions(emailService);
     }
 
     @Test
