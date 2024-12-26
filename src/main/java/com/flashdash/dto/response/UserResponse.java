@@ -16,10 +16,12 @@ public class UserResponse {
 
     }
 
-    public UserResponse(String firstName, String lastName, String email) {
+    public UserResponse(String firstName, String lastName, String email, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
     public String getFirstName() {
