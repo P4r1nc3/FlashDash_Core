@@ -117,4 +117,59 @@ class AuthenticationControllerTest {
         assertEquals(ErrorCode.E409001, exception.getErrorCode());
         assertEquals(expectedMessage, exception.getMessage());
     }
+
+    @Test
+    public void testActivateAccountSuccessful() {
+        // Arrange
+        String activationToken = "validActivationToken";
+
+        // Nie musimy mockować, bo metoda `activateAccount` w serwisie nic nie zwraca.
+        // Po prostu weryfikujemy, że została wywołana.
+
+        // Act
+        ResponseEntity<String> responseEntity = authenticationController.activateAccount(activationToken);
+
+        // Assert
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals("Account activated successfully!", responseEntity.getBody());
+    }
+
+    @Test
+    public void testActivateAccountInvalidToken() {
+        // Arrange
+        String invalidToken = "invalidActivationToken";
+        String expectedMessage = "Invalid activation token.";
+        doThrow(new FlashDashException(ErrorCode.E404001, expectedMessage))
+                .when(authenticationService)
+                .activateAccount(invalidToken);
+
+        // Act & Assert
+        FlashDashException exception = assertThrows(
+                FlashDashException.class,
+                () -> authenticationController.activateAccount(invalidToken)
+        );
+
+        assertEquals(ErrorCode.E404001, exception.getErrorCode());
+        assertEquals(expectedMessage, exception.getMessage());
+    }
+
+    @Test
+    public void testActivateAccountAlreadyActivated() {
+        // Arrange
+        String alreadyActivatedToken = "alreadyActivatedToken";
+        String expectedMessage = "Account is already activated.";
+        doThrow(new FlashDashException(ErrorCode.E400001, expectedMessage))
+                .when(authenticationService)
+                .activateAccount(alreadyActivatedToken);
+
+        // Act & Assert
+        FlashDashException exception = assertThrows(
+                FlashDashException.class,
+                () -> authenticationController.activateAccount(alreadyActivatedToken)
+        );
+
+        assertEquals(ErrorCode.E400001, exception.getErrorCode());
+        assertEquals(expectedMessage, exception.getMessage());
+    }
+
 }
