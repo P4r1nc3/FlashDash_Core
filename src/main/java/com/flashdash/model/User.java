@@ -41,6 +41,9 @@ public class User implements UserDetails {
     @Column(unique = true)
     private String activationToken;
 
+    @Column(nullable = false)
+    private boolean dailyNotifications;
+
     @ManyToMany
     @JoinTable(
             name = "user_friends",
@@ -137,6 +140,14 @@ public class User implements UserDetails {
 
     public void setActivationToken(String activationToken) {
         this.activationToken = activationToken;
+    }
+
+    public boolean isDailyNotifications() {
+        return dailyNotifications;
+    }
+
+    public void setDailyNotifications(boolean dailyNotifications) {
+        this.dailyNotifications = dailyNotifications;
     }
 
     public Set<User> getFriends() {
