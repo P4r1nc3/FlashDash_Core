@@ -8,9 +8,6 @@ import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
 import com.flashdash.model.Deck;
 import com.flashdash.model.User;
-import com.flashdash.model.card.CardDeck;
-import com.flashdash.model.question.QuestionDeck;
-import com.flashdash.repository.CardRepository;
 import com.flashdash.repository.DeckRepository;
 import com.flashdash.repository.QuestionRepository;
 
@@ -23,12 +20,10 @@ public class DeckService {
     private static final Logger logger = LoggerFactory.getLogger(DeckService.class);
 
     private final DeckRepository deckRepository;
-    private final CardRepository cardRepository;
     private final QuestionRepository questionRepository;
 
-    public DeckService(DeckRepository deckRepository, CardRepository cardRepository, QuestionRepository questionRepository) {
+    public DeckService(DeckRepository deckRepository, QuestionRepository questionRepository) {
         this.deckRepository = deckRepository;
-        this.cardRepository = cardRepository;
         this.questionRepository = questionRepository;
     }
 
@@ -107,16 +102,9 @@ public class DeckService {
                     );
                 });
 
-        if (deck instanceof CardDeck) {
-            logger.info("Deleting all cards associated with CardDeck id: {}", deckId);
-            cardRepository.deleteAllByDeck(deck);
-        }
-        if (deck instanceof QuestionDeck) {
-            logger.info("Deleting all questions associated with QuestionDeck id: {}", deckId);
-            questionRepository.deleteAllByDeck(deck);
-        }
-
+        questionRepository.deleteAllByDeck(deck);
         deckRepository.delete(deck);
+
         logger.info("Successfully deleted deck with id: {} for user with email: {}", deckId, user.getUsername());
     }
 }

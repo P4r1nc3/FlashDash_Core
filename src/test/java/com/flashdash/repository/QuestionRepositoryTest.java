@@ -3,8 +3,8 @@ package com.flashdash.repository;
 import com.flashdash.FlashDashApplication;
 import com.flashdash.TestUtils;
 import com.flashdash.model.User;
-import com.flashdash.model.question.Question;
-import com.flashdash.model.question.QuestionDeck;
+import com.flashdash.model.Question;
+import com.flashdash.model.Deck;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -44,7 +44,7 @@ class QuestionRepositoryTest {
         User user = TestUtils.createUser();
         userRepository.save(user);
 
-        QuestionDeck deck = TestUtils.createQuestionDeck(user);
+        Deck deck = TestUtils.createDeck(user);
         deckRepository.save(deck);
 
         Question question1 = TestUtils.createQuestion(deck, "What is Java?");
@@ -61,14 +61,13 @@ class QuestionRepositoryTest {
                 .containsExactlyInAnyOrder("What is Java?", "What is Spring?");
     }
 
-
     @Test
     void shouldFindSpecificQuestionByDeckAndId() {
         // Arrange
         User user = TestUtils.createUser();
         userRepository.save(user);
 
-        QuestionDeck deck = TestUtils.createQuestionDeck(user);
+        Deck deck = TestUtils.createDeck(user);
         deckRepository.save(deck);
 
         Question question = TestUtils.createQuestion(deck, "What is Java?");
@@ -88,7 +87,7 @@ class QuestionRepositoryTest {
         User user = TestUtils.createUser();
         userRepository.save(user);
 
-        QuestionDeck deck = TestUtils.createQuestionDeck(user);
+        Deck deck = TestUtils.createDeck(user);
         deckRepository.save(deck);
 
         // Act
@@ -104,7 +103,7 @@ class QuestionRepositoryTest {
         User user = TestUtils.createUser();
         userRepository.save(user);
 
-        QuestionDeck deck = TestUtils.createQuestionDeck(user);
+        Deck deck = TestUtils.createDeck(user);
         deckRepository.save(deck);
 
         Question question1 = TestUtils.createQuestion(deck, "What is Java?");

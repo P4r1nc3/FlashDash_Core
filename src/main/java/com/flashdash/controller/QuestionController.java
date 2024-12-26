@@ -1,7 +1,7 @@
 package com.flashdash.controller;
 
 import com.flashdash.model.User;
-import com.flashdash.model.question.Question;
+import com.flashdash.model.Question;
 import com.flashdash.service.QuestionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;

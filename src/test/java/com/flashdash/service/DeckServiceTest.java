@@ -6,9 +6,6 @@ import com.flashdash.exception.FlashDashException;
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.model.Deck;
 import com.flashdash.model.User;
-import com.flashdash.model.card.CardDeck;
-import com.flashdash.model.question.QuestionDeck;
-import com.flashdash.repository.CardRepository;
 import com.flashdash.repository.DeckRepository;
 import com.flashdash.repository.QuestionRepository;
 import org.junit.jupiter.api.Test;
@@ -35,32 +32,29 @@ class DeckServiceTest {
     private DeckRepository deckRepository;
 
     @MockBean
-    private CardRepository cardRepository;
-
-    @MockBean
     private QuestionRepository questionRepository;
 
     @Test
     void shouldCreateDeckSuccessfully() {
         // Arrange
         User user = TestUtils.createUser();
-        CardDeck cardDeck = TestUtils.createCardDeck(user);
-        when(deckRepository.save(any(Deck.class))).thenReturn(cardDeck);
+        Deck deck = TestUtils.createDeck(user);
+        when(deckRepository.save(any(Deck.class))).thenReturn(deck);
 
         // Act
-        Deck createdDeck = deckService.createDeck(cardDeck, user);
+        Deck createdDeck = deckService.createDeck(deck, user);
 
         // Assert
         assertThat(createdDeck).isNotNull();
-        assertThat(createdDeck).isEqualTo(cardDeck);
-        verify(deckRepository).save(cardDeck);
+        assertThat(createdDeck).isEqualTo(deck);
+        verify(deckRepository).save(deck);
     }
 
     @Test
     void shouldGetAllDecksSuccessfully() {
         // Arrange
         User user = TestUtils.createUser();
-        List<Deck> decks = List.of(TestUtils.createCardDeck(user), TestUtils.createQuestionDeck(user));
+        List<Deck> decks = List.of(TestUtils.createDeck(user));
         when(deckRepository.findAllByUser(user)).thenReturn(decks);
 
         // Act
@@ -76,14 +70,14 @@ class DeckServiceTest {
     void shouldGetDeckByIdSuccessfully() {
         // Arrange
         User user = TestUtils.createUser();
-        CardDeck cardDeck = TestUtils.createCardDeck(user);
-        when(deckRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(cardDeck));
+        Deck deck = TestUtils.createDeck(user);
+        when(deckRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(deck));
 
         // Act
         Deck retrievedDeck = deckService.getDeckById(1L, user);
 
         // Assert
-        assertThat(retrievedDeck).isEqualTo(cardDeck);
+        assertThat(retrievedDeck).isEqualTo(deck);
         verify(deckRepository).findByIdAndUser(1L, user);
     }
 
@@ -105,13 +99,13 @@ class DeckServiceTest {
     void shouldUpdateDeckSuccessfully() {
         // Arrange
         User user = TestUtils.createUser();
-        CardDeck cardDeck = TestUtils.createCardDeck(user);
-        CardDeck updatedDetails = TestUtils.createCardDeck(user);
+        Deck deck = TestUtils.createDeck(user);
+        Deck updatedDetails = TestUtils.createDeck(user);
         updatedDetails.setName("Updated Name");
         updatedDetails.setDescription("Updated Description");
 
-        when(deckRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(cardDeck));
-        when(deckRepository.save(any(Deck.class))).thenReturn(cardDeck);
+        when(deckRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(deck));
+        when(deckRepository.save(any(Deck.class))).thenReturn(deck);
 
         // Act
         Deck updatedDeck = deckService.updateDeck(1L, updatedDetails, user);
@@ -120,14 +114,14 @@ class DeckServiceTest {
         assertThat(updatedDeck.getName()).isEqualTo("Updated Name");
         assertThat(updatedDeck.getDescription()).isEqualTo("Updated Description");
         verify(deckRepository).findByIdAndUser(1L, user);
-        verify(deckRepository).save(cardDeck);
+        verify(deckRepository).save(deck);
     }
 
     @Test
     void shouldThrowExceptionWhenUpdatingNonExistentDeck() {
         // Arrange
         User user = TestUtils.createUser();
-        CardDeck updatedDetails = TestUtils.createCardDeck(user);
+        Deck updatedDetails = TestUtils.createDeck(user);
         when(deckRepository.findByIdAndUser(1L, user)).thenReturn(Optional.empty());
 
         // Act & Assert
@@ -139,39 +133,22 @@ class DeckServiceTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenChangingDeckTypeDuringUpdate() {
-        // Arrange
-        User user = TestUtils.createUser();
-        CardDeck cardDeck = TestUtils.createCardDeck(user);
-        QuestionDeck questionDeck = TestUtils.createQuestionDeck(user);
-
-        when(deckRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(cardDeck));
-
-        // Act & Assert
-        assertThatThrownBy(() -> deckService.updateDeck(1L, questionDeck, user))
-                .isInstanceOf(FlashDashException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E400001);
-
-        verify(deckRepository).findByIdAndUser(1L, user);
-    }
-
-    @Test
     void shouldDeleteDeckSuccessfully() {
         // Arrange
         User user = TestUtils.createUser();
-        CardDeck cardDeck = TestUtils.createCardDeck(user);
+        Deck deck = TestUtils.createDeck(user);
 
-        when(deckRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(cardDeck));
-        doNothing().when(cardRepository).deleteAllByDeck(cardDeck);
-        doNothing().when(deckRepository).delete(cardDeck);
+        when(deckRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(deck));
+        doNothing().when(questionRepository).deleteAllByDeck(deck);
+        doNothing().when(deckRepository).delete(deck);
 
         // Act
         deckService.deleteDeck(1L, user);
 
         // Assert
         verify(deckRepository).findByIdAndUser(1L, user);
-        verify(cardRepository).deleteAllByDeck(cardDeck);
-        verify(deckRepository).delete(cardDeck);
+        verify(questionRepository).deleteAllByDeck(deck);
+        verify(deckRepository).delete(deck);
     }
 
     @Test
