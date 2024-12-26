@@ -6,6 +6,7 @@ import com.flashdash.dto.request.RegisterRequest;
 import com.flashdash.model.User;
 import com.flashdash.model.Question;
 import com.flashdash.model.Deck;
+import com.flashdash.model.FriendInvitation;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,6 +18,15 @@ public class TestUtils {
         user.setUsername("test@example.com");
         user.setPassword("password123");
         user.setFirstName("Test");
+        user.setLastName("User");
+        return user;
+    }
+
+    public static User createFriendUser() {
+        User user = new User();
+        user.setUsername("friend@example.com");
+        user.setPassword("password123");
+        user.setFirstName("Friend");
         user.setLastName("User");
         return user;
     }
@@ -63,5 +73,12 @@ public class TestUtils {
         question.setUpdatedAt(LocalDateTime.now());
         question.setDeck(deck);
         return question;
+    }
+
+    public static FriendInvitation createFriendInvitation(User sender, User recipient) {
+        FriendInvitation invitation = new FriendInvitation();
+        invitation.setSentBy(sender);
+        invitation.setSentTo(recipient);
+        return invitation;
     }
 }
