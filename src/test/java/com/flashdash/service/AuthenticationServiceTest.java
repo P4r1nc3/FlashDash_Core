@@ -56,7 +56,6 @@ class AuthenticationServiceTest {
         verify(passwordEncoder).matches(loginRequest.getPassword(), user.getPassword());
     }
 
-
     @Test
     void shouldThrowExceptionWhenUserNotFoundDuringLogin() {
         // Arrange
@@ -76,6 +75,7 @@ class AuthenticationServiceTest {
     void shouldThrowExceptionWhenPasswordDoesNotMatch() {
         // Arrange
         User user = TestUtils.createUser();
+        user.setEnabled(true);
         when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
 
@@ -164,17 +164,36 @@ class AuthenticationServiceTest {
     void shouldNotAllowActivationIfUserIsAlreadyActivated() {
         // Arrange
         User user = TestUtils.createUser();
-        user.setEnabled(true);
+        user.setEnabled(true);  // User is already activated
         user.setActivationToken("activated");
         when(userRepository.findByActivationToken("alreadyActivatedToken")).thenReturn(Optional.of(user));
 
         // Act & Assert
         assertThatThrownBy(() -> authenticationService.activateAccount("alreadyActivatedToken"))
                 .isInstanceOf(FlashDashException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E400001);
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E400001)
+                .hasMessage("Account is already activated.");
 
         verify(userRepository).findByActivationToken("alreadyActivatedToken");
         verifyNoMoreInteractions(userRepository);
     }
 
+    @Test
+    void shouldThrowExceptionWhenAccountIsNotActivated() {
+        // Arrange
+        User user = TestUtils.createUser();
+        user.setEnabled(false);
+        when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
+
+        LoginRequest loginRequest = TestUtils.createLoginRequest();
+
+        // Act & Assert
+        assertThatThrownBy(() -> authenticationService.login(loginRequest))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E403002)
+                .hasMessage("Account not activated.");
+
+        verify(userRepository).findByEmail(user.getUsername());
+        verifyNoInteractions(passwordEncoder);
+    }
 }

@@ -44,14 +44,14 @@ public class AuthenticationService {
                     return new FlashDashException(ErrorCode.E404001, "User not found.");
                 });
 
+        if (!user.isEnabled()) {
+            logger.warn("Login failed: Account not activated for email {}", request.getEmail());
+            throw new FlashDashException(ErrorCode.E403002, "Account not activated.");
+        }
+
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             logger.warn("Login failed: Invalid password for email {}", request.getEmail());
             throw new FlashDashException(ErrorCode.E401002, "Invalid password.");
-        }
-
-        if (!user.isEnabled()) {
-            logger.warn("Login failed: Account not activated for email {}", request.getEmail());
-            throw new FlashDashException(ErrorCode.E403001, "Account not activated.");
         }
 
         String token = jwtManager.generateToken(user.getUsername());
