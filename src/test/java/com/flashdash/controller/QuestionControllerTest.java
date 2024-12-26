@@ -5,8 +5,8 @@ import com.flashdash.TestUtils;
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
 import com.flashdash.model.User;
-import com.flashdash.model.question.Question;
-import com.flashdash.model.question.QuestionDeck;
+import com.flashdash.model.Question;
+import com.flashdash.model.Deck;
 import com.flashdash.service.QuestionService;
 import org.junit.jupiter.api.*;
 import org.mockito.MockedStatic;
@@ -61,8 +61,8 @@ class QuestionControllerTest {
     @Order(1)
     void testAddQuestionToDeckSuccessful() {
         // Arrange
-        QuestionDeck questionDeck = TestUtils.createQuestionDeck(user);
-        Question question = TestUtils.createQuestion(questionDeck, "What is Java?");
+        Deck deck = TestUtils.createDeck(user);
+        Question question = TestUtils.createQuestion(deck, "What is Java?");
         when(questionService.addQuestionToDeck(eq(1L), any(Question.class), eq(user))).thenReturn(question);
 
         // Act
@@ -77,10 +77,10 @@ class QuestionControllerTest {
     @Order(2)
     void testGetAllQuestionsInDeckSuccessful() {
         // Arrange
-        QuestionDeck questionDeck = TestUtils.createQuestionDeck(user);
+        Deck deck = TestUtils.createDeck(user);
         List<Question> questions = List.of(
-                TestUtils.createQuestion(questionDeck, "What is Java?"),
-                TestUtils.createQuestion(questionDeck, "What is Spring?")
+                TestUtils.createQuestion(deck, "What is Java?"),
+                TestUtils.createQuestion(deck, "What is Spring?")
         );
         when(questionService.getAllQuestionsInDeck(eq(1L), eq(user))).thenReturn(questions);
 
@@ -96,8 +96,8 @@ class QuestionControllerTest {
     @Order(3)
     void testGetQuestionSuccessful() {
         // Arrange
-        QuestionDeck questionDeck = TestUtils.createQuestionDeck(user);
-        Question question = TestUtils.createQuestion(questionDeck, "What is Java?");
+        Deck deck = TestUtils.createDeck(user);
+        Question question = TestUtils.createQuestion(deck, "What is Java?");
         when(questionService.getQuestionById(eq(1L), eq(1L), eq(user))).thenReturn(question);
 
         // Act
@@ -128,8 +128,8 @@ class QuestionControllerTest {
     @Order(5)
     void testUpdateQuestionSuccessful() {
         // Arrange
-        QuestionDeck questionDeck = TestUtils.createQuestionDeck(user);
-        Question updatedQuestion = TestUtils.createQuestion(questionDeck, "Updated Question?");
+        Deck deck = TestUtils.createDeck(user);
+        Question updatedQuestion = TestUtils.createQuestion(deck, "Updated Question?");
         when(questionService.updateQuestion(eq(1L), eq(1L), any(Question.class), eq(user))).thenReturn(updatedQuestion);
 
         // Act
@@ -144,8 +144,8 @@ class QuestionControllerTest {
     @Order(6)
     void testUpdateQuestionNotFound() {
         // Arrange
-        QuestionDeck questionDeck = TestUtils.createQuestionDeck(user);
-        Question updatedQuestion = TestUtils.createQuestion(questionDeck, "Updated Question?");
+        Deck deck = TestUtils.createDeck(user);
+        Question updatedQuestion = TestUtils.createQuestion(deck, "Updated Question?");
         doThrow(new FlashDashException(ErrorCode.E404004, "Question not found"))
                 .when(questionService).updateQuestion(eq(1L), eq(1L), any(Question.class), eq(user));
 

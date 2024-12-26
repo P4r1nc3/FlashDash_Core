@@ -4,8 +4,6 @@ import com.flashdash.FlashDashApplication;
 import com.flashdash.TestUtils;
 import com.flashdash.model.Deck;
 import com.flashdash.model.User;
-import com.flashdash.model.card.CardDeck;
-import com.flashdash.model.question.QuestionDeck;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -41,11 +39,13 @@ class DeckRepositoryTest {
         User user = TestUtils.createUser();
         userRepository.save(user);
 
-        CardDeck cardDeck = TestUtils.createCardDeck(user);
-        deckRepository.save(cardDeck);
+        Deck deck1 = TestUtils.createDeck(user);
+        deck1.setName("Deck 1");
+        deckRepository.save(deck1);
 
-        QuestionDeck questionDeck = TestUtils.createQuestionDeck(user);
-        deckRepository.save(questionDeck);
+        Deck deck2 = TestUtils.createDeck(user);
+        deck2.setName("Deck 2");
+        deckRepository.save(deck2);
 
         // Act
         List<Deck> decks = deckRepository.findAllByUser(user);
@@ -53,7 +53,7 @@ class DeckRepositoryTest {
         // Assert
         assertThat(decks).hasSize(2);
         assertThat(decks).extracting(Deck::getName)
-                .containsExactlyInAnyOrder(cardDeck.getName(), questionDeck.getName());
+                .containsExactlyInAnyOrder(deck1.getName(), deck2.getName());
     }
 
     @Test
@@ -62,15 +62,15 @@ class DeckRepositoryTest {
         User user = TestUtils.createUser();
         userRepository.save(user);
 
-        QuestionDeck questionDeck = TestUtils.createQuestionDeck(user);
-        deckRepository.save(questionDeck);
+        Deck deck = TestUtils.createDeck(user);
+        deckRepository.save(deck);
 
         // Act
-        Optional<Deck> foundDeck = deckRepository.findByIdAndUser(questionDeck.getId(), user);
+        Optional<Deck> foundDeck = deckRepository.findByIdAndUser(deck.getId(), user);
 
         // Assert
         assertThat(foundDeck).isPresent();
-        assertThat(foundDeck.get().getName()).isEqualTo(questionDeck.getName());
+        assertThat(foundDeck.get().getName()).isEqualTo(deck.getName());
     }
 
     @Test
@@ -86,11 +86,11 @@ class DeckRepositoryTest {
         user2.setLastName("User");
         userRepository.save(user2);
 
-        CardDeck cardDeck = TestUtils.createCardDeck(user1);
-        deckRepository.save(cardDeck);
+        Deck deck = TestUtils.createDeck(user1);
+        deckRepository.save(deck);
 
         // Act
-        Optional<Deck> foundDeck = deckRepository.findByIdAndUser(cardDeck.getId(), user2);
+        Optional<Deck> foundDeck = deckRepository.findByIdAndUser(deck.getId(), user2);
 
         // Assert
         assertThat(foundDeck).isNotPresent();
@@ -102,11 +102,11 @@ class DeckRepositoryTest {
         User user = TestUtils.createUser();
         userRepository.save(user);
 
-        CardDeck cardDeck = TestUtils.createCardDeck(user);
-        deckRepository.save(cardDeck);
+        Deck deck1 = TestUtils.createDeck(user);
+        deckRepository.save(deck1);
 
-        QuestionDeck questionDeck = TestUtils.createQuestionDeck(user);
-        deckRepository.save(questionDeck);
+        Deck deck2 = TestUtils.createDeck(user);
+        deckRepository.save(deck2);
 
         // Act
         deckRepository.deleteAll(deckRepository.findAllByUser(user));

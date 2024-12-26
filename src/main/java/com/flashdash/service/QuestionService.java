@@ -4,8 +4,7 @@ import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
 import com.flashdash.model.Deck;
 import com.flashdash.model.User;
-import com.flashdash.model.question.Question;
-import com.flashdash.model.question.QuestionDeck;
+import com.flashdash.model.Question;
 import com.flashdash.repository.QuestionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +31,7 @@ public class QuestionService {
         Deck deck = deckService.getDeckById(deckId, user);
         logger.info("Deck with id: {} successfully retrieved for adding question", deckId);
 
-        question.setDeck(validateDeckIsQuestionDeck(deck));
+        question.setDeck(deck);
         question.setCreatedAt(LocalDateTime.now());
         question.setUpdatedAt(LocalDateTime.now());
         Question savedQuestion = questionRepository.save(question);
@@ -44,7 +43,7 @@ public class QuestionService {
     public List<Question> getAllQuestionsInDeck(Long deckId, User user) {
         logger.info("Fetching all questions for deck with id: {} and user with email: {}", deckId, user.getUsername());
         Deck deck = deckService.getDeckById(deckId, user);
-        List<Question> questions = questionRepository.findAllByDeck(validateDeckIsQuestionDeck(deck));
+        List<Question> questions = questionRepository.findAllByDeck(deck);
 
         logger.info("Retrieved {} questions for deck with id: {}", questions.size(), deckId);
         return questions;
@@ -53,7 +52,7 @@ public class QuestionService {
     public Question getQuestionById(Long deckId, Long questionId, User user) {
         logger.info("Fetching question with id: {} from deck with id: {} for user with email: {}", questionId, deckId, user.getUsername());
         Deck deck = deckService.getDeckById(deckId, user);
-        Question question = questionRepository.findByDeckAndQuestionId(validateDeckIsQuestionDeck(deck), questionId)
+        Question question = questionRepository.findByDeckAndQuestionId(deck, questionId)
                 .orElseThrow(() -> {
                     logger.warn("Question with id: {} not found in deck with id: {}", questionId, deckId);
                     return new FlashDashException(
@@ -70,7 +69,7 @@ public class QuestionService {
         logger.info("Attempting to update question with id: {} in deck with id: {} for user with email: {}", questionId, deckId, user.getUsername());
         Deck deck = deckService.getDeckById(deckId, user);
 
-        Question question = questionRepository.findByDeckAndQuestionId(validateDeckIsQuestionDeck(deck), questionId)
+        Question question = questionRepository.findByDeckAndQuestionId(deck, questionId)
                 .orElseThrow(() -> {
                     logger.warn("Question with id: {} not found in deck with id: {}", questionId, deckId);
                     return new FlashDashException(
@@ -94,7 +93,7 @@ public class QuestionService {
         logger.info("Attempting to delete question with id: {} from deck with id: {} for user with email: {}", questionId, deckId, user.getUsername());
         Deck deck = deckService.getDeckById(deckId, user);
 
-        Question question = questionRepository.findByDeckAndQuestionId(validateDeckIsQuestionDeck(deck), questionId)
+        Question question = questionRepository.findByDeckAndQuestionId(deck, questionId)
                 .orElseThrow(() -> {
                     logger.warn("Question with id: {} not found in deck with id: {}", questionId, deckId);
                     return new FlashDashException(
@@ -105,20 +104,5 @@ public class QuestionService {
 
         questionRepository.delete(question);
         logger.info("Successfully deleted question with id: {} from deck with id: {}", questionId, deckId);
-    }
-
-    private QuestionDeck validateDeckIsQuestionDeck(Deck deck) {
-        logger.info("Validating if deck with id: {} is a QUESTION deck", deck.getId());
-
-        if (!(deck instanceof QuestionDeck)) {
-            logger.error("Provided deck with id: {} is not a QUESTION deck.", deck.getId());
-            throw new FlashDashException(
-                    ErrorCode.E400003,
-                    "Provided deck with id " + deck.getId() + " is not a QUESTION deck."
-            );
-        }
-
-        logger.info("Deck with id: {} successfully validated as a QUESTION deck", deck.getId());
-        return (QuestionDeck) deck;
     }
 }

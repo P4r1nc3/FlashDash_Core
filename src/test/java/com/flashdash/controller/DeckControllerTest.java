@@ -6,7 +6,6 @@ import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
 import com.flashdash.model.Deck;
 import com.flashdash.model.User;
-import com.flashdash.model.card.CardDeck;
 import com.flashdash.service.DeckService;
 import org.junit.jupiter.api.*;
 import org.mockito.MockedStatic;
@@ -61,23 +60,23 @@ class DeckControllerTest {
     @Order(1)
     void testCreateDeckSuccessful() {
         // Arrange
-        CardDeck cardDeck = TestUtils.createCardDeck(user);
-        when(deckService.createDeck(any(Deck.class), eq(user))).thenReturn(cardDeck);
+        Deck deck = TestUtils.createDeck(user);
+        when(deckService.createDeck(any(Deck.class), eq(user))).thenReturn(deck);
 
         // Act
-        ResponseEntity<Deck> responseEntity = deckController.createDeck(cardDeck);
+        ResponseEntity<Deck> responseEntity = deckController.createDeck(deck);
 
         // Assert
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals(cardDeck, responseEntity.getBody());
+        assertEquals(deck, responseEntity.getBody());
     }
 
     @Test
     @Order(2)
     void testGetAllDecksSuccessful() {
         // Arrange
-        CardDeck cardDeck = TestUtils.createCardDeck(user);
-        List<Deck> decks = List.of(cardDeck);
+        Deck deck = TestUtils.createDeck(user);
+        List<Deck> decks = List.of(deck);
         when(deckService.getAllDecks(eq(user))).thenReturn(decks);
 
         // Act
@@ -92,15 +91,15 @@ class DeckControllerTest {
     @Order(3)
     void testGetDeckByIdSuccessful() {
         // Arrange
-        CardDeck cardDeck = TestUtils.createCardDeck(user);
-        when(deckService.getDeckById(eq(1L), eq(user))).thenReturn(cardDeck);
+        Deck deck = TestUtils.createDeck(user);
+        when(deckService.getDeckById(eq(1L), eq(user))).thenReturn(deck);
 
         // Act
         ResponseEntity<Deck> responseEntity = deckController.getDeck(1L);
 
         // Assert
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals(cardDeck, responseEntity.getBody());
+        assertEquals(deck, responseEntity.getBody());
     }
 
     @Test
@@ -123,12 +122,12 @@ class DeckControllerTest {
     @Order(5)
     void testUpdateDeckSuccessful() {
         // Arrange
-        CardDeck cardDeck = TestUtils.createCardDeck(user);
-        cardDeck.setName("Updated Name");
-        when(deckService.updateDeck(eq(1L), any(Deck.class), eq(user))).thenReturn(cardDeck);
+        Deck deck = TestUtils.createDeck(user);
+        deck.setName("Updated Name");
+        when(deckService.updateDeck(eq(1L), any(Deck.class), eq(user))).thenReturn(deck);
 
         // Act
-        ResponseEntity<Deck> responseEntity = deckController.updateDeck(1L, cardDeck);
+        ResponseEntity<Deck> responseEntity = deckController.updateDeck(1L, deck);
 
         // Assert
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -139,14 +138,14 @@ class DeckControllerTest {
     @Order(6)
     void testUpdateDeckNotFound() {
         // Arrange
-        CardDeck cardDeck = TestUtils.createCardDeck(user);
+        Deck deck = TestUtils.createDeck(user);
         doThrow(new FlashDashException(ErrorCode.E404001, "Deck not found"))
                 .when(deckService).updateDeck(eq(1L), any(Deck.class), eq(user));
 
         // Act & Assert
         FlashDashException exception = assertThrows(
                 FlashDashException.class,
-                () -> deckController.updateDeck(1L, cardDeck)
+                () -> deckController.updateDeck(1L, deck)
         );
         assertEquals(ErrorCode.E404001, exception.getErrorCode());
         assertEquals("Deck not found", exception.getMessage());
