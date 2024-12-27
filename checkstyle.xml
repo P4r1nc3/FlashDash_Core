@@ -9,7 +9,6 @@
         <property name="max" value="160"/>
     </module>
     <module name="TreeWalker">
-        <module name="WhitespaceAround"/>
         <module name="WhitespaceAfter"/>
         <!-- <module name="Indentation"/>-->
      </module>
