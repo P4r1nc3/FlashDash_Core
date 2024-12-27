@@ -98,6 +98,7 @@ public class FriendService {
                         friend.getFirstName(),
                         friend.getLastName(),
                         friend.getUsername(),
+                        friend.isDailyNotifications(),
                         friend.getCreatedAt(),
                         friend.getUpdatedAt()
                 ))

@@ -41,6 +41,7 @@ public class UserService implements UserDetailsService {
         response.setFirstName(user.getFirstName());
         response.setLastName(user.getLastName());
         response.setEmail(user.getUsername());
+        response.setDailyNotifications(user.isDailyNotifications());
         response.setCreatedAt(user.getCreatedAt());
         response.setUpdatedAt(user.getUpdatedAt());
 
