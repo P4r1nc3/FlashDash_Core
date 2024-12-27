@@ -32,17 +32,20 @@ public class Deck {
     @OneToMany(mappedBy = "deck", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Question> questions = new ArrayList<>();
 
+    private boolean isDeleted;
+
     public Deck() {
 
     }
 
-    public Deck(Long id, String name, String description, LocalDateTime createdAt, LocalDateTime updatedAt, User user) {
+    public Deck(Long id, String name, String description, LocalDateTime createdAt, LocalDateTime updatedAt, User user, boolean isDeleted) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.user = user;
+        this.isDeleted = isDeleted;
     }
 
     public Long getId() {
@@ -99,5 +102,13 @@ public class Deck {
 
     public void setQuestions(List<Question> questions) {
         this.questions = questions;
+    }
+
+    public boolean isDeleted() {
+        return isDeleted;
+    }
+
+    public void setDeleted(boolean isDeleted) {
+        this.isDeleted = isDeleted;
     }
 }
