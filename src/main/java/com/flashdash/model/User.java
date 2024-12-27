@@ -5,10 +5,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Table(name = "users")
@@ -43,6 +40,9 @@ public class User implements UserDetails {
 
     @Column(nullable = false)
     private boolean dailyNotifications;
+
+    @OneToMany(mappedBy = "user")
+    private Set<GameSession> gameSessions;
 
     @ManyToMany
     @JoinTable(
@@ -148,6 +148,14 @@ public class User implements UserDetails {
 
     public void setDailyNotifications(boolean dailyNotifications) {
         this.dailyNotifications = dailyNotifications;
+    }
+
+    public Set<GameSession> getGameSessions() {
+        return gameSessions;
+    }
+
+    public void setGameSessions(Set<GameSession> gameSessions) {
+        this.gameSessions = gameSessions;
     }
 
     public Set<User> getFriends() {
