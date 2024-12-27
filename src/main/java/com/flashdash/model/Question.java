@@ -1,6 +1,7 @@
 package com.flashdash.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.flashdash.converter.JsonListConverter;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -17,10 +18,10 @@ public class Question {
 
     private String question;
 
-    @ElementCollection
+    @Convert(converter = JsonListConverter.class)
     private List<String> correctAnswers = new ArrayList<>();
 
-    @ElementCollection
+    @Convert(converter = JsonListConverter.class)
     private List<String> incorrectAnswers = new ArrayList<>();
 
     private String difficulty;
@@ -34,12 +35,16 @@ public class Question {
     @JoinColumn(name = "deck_id")
     private Deck deck;
 
+    private int version = 1;
+
+    private boolean isDeleted;
+
     public Question() {
 
     }
 
     public Question(Long questionId, String question, List<String> correctAnswers, List<String> incorrectAnswers,
-                    String difficulty, LocalDateTime createdAt, LocalDateTime updatedAt, Deck deck) {
+                    String difficulty, LocalDateTime createdAt, LocalDateTime updatedAt, Deck deck, int version, boolean isDeleted) {
         this.questionId = questionId;
         this.question = question;
         this.correctAnswers = correctAnswers;
@@ -48,6 +53,8 @@ public class Question {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.deck = deck;
+        this.version = version;
+        this.isDeleted = isDeleted;
     }
 
     public Long getQuestionId() {
@@ -112,5 +119,21 @@ public class Question {
 
     public void setDeck(Deck deck) {
         this.deck = deck;
+    }
+
+    public int getVersion() {
+        return version;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
+    }
+
+    public boolean isDeleted() {
+        return isDeleted;
+    }
+
+    public void setDeleted(boolean isDeleted) {
+        this.isDeleted = isDeleted;
     }
 }

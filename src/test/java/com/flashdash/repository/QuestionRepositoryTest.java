@@ -98,7 +98,27 @@ class QuestionRepositoryTest {
     }
 
     @Test
-    void shouldDeleteAllQuestionsByDeck() {
+    void shouldSoftDeleteQuestion() {
+        // Arrange
+        User user = TestUtils.createUser();
+        userRepository.save(user);
+
+        Deck deck = TestUtils.createDeck(user);
+        deckRepository.save(deck);
+
+        Question question1 = TestUtils.createQuestion(deck, "What is Java?");
+        questionRepository.save(question1);
+
+        // Act
+        questionRepository.softDeleteQuestion(question1);
+
+        // Assert
+        Optional<Question> deletedQuestion = questionRepository.findByDeckAndQuestionId(deck, question1.getQuestionId());
+        assertThat(deletedQuestion).isEmpty();
+    }
+
+    @Test
+    void shouldSoftDeleteAllQuestionsByDeck() {
         // Arrange
         User user = TestUtils.createUser();
         userRepository.save(user);
@@ -112,10 +132,33 @@ class QuestionRepositoryTest {
         questionRepository.save(question2);
 
         // Act
-        questionRepository.deleteAllByDeck(deck);
-        List<Question> questions = questionRepository.findAllByDeck(deck);
+        questionRepository.softDeleteAllByDeck(deck);
 
         // Assert
-        assertThat(questions).isEmpty();
+        List<Question> deletedQuestions = questionRepository.findAllByDeck(deck);
+        assertThat(deletedQuestions).hasSize(0);
+    }
+
+    @Test
+    void shouldNotFindSoftDeletedQuestions() {
+        // Arrange
+        User user = TestUtils.createUser();
+        userRepository.save(user);
+
+        Deck deck = TestUtils.createDeck(user);
+        deckRepository.save(deck);
+
+        Question question1 = TestUtils.createQuestion(deck, "What is Java?");
+        Question question2 = TestUtils.createQuestion(deck, "What is Spring?");
+        questionRepository.save(question1);
+        questionRepository.save(question2);
+
+        // Act
+        questionRepository.softDeleteQuestion(question1);
+
+        // Assert
+        List<Question> questions = questionRepository.findAllByDeck(deck);
+        assertThat(questions).hasSize(1);
+        assertThat(questions.get(0).getQuestion()).isEqualTo("What is Spring?");
     }
 }

@@ -137,7 +137,7 @@ class QuestionServiceTest {
     }
 
     @Test
-    void shouldDeleteQuestionSuccessfully() {
+    void shouldSoftDeleteQuestionSuccessfully() {
         // Arrange
         User user = TestUtils.createUser();
         Deck deck = TestUtils.createDeck(user);
@@ -145,7 +145,6 @@ class QuestionServiceTest {
 
         when(deckService.getDeckById(1L, user)).thenReturn(deck);
         when(questionRepository.findByDeckAndQuestionId(deck, 1L)).thenReturn(Optional.of(question));
-        doNothing().when(questionRepository).delete(question);
 
         // Act
         questionService.deleteQuestion(1L, 1L, user);
@@ -153,6 +152,23 @@ class QuestionServiceTest {
         // Assert
         verify(deckService).getDeckById(1L, user);
         verify(questionRepository).findByDeckAndQuestionId(deck, 1L);
-        verify(questionRepository).delete(question);
+        verify(questionRepository).softDeleteQuestion(question);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenDeletingNonExistentQuestion() {
+        // Arrange
+        User user = TestUtils.createUser();
+        Deck deck = TestUtils.createDeck(user);
+        when(deckService.getDeckById(1L, user)).thenReturn(deck);
+        when(questionRepository.findByDeckAndQuestionId(deck, 1L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThatThrownBy(() -> questionService.deleteQuestion(1L, 1L, user))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404003);
+
+        verify(deckService).getDeckById(1L, user);
+        verify(questionRepository).findByDeckAndQuestionId(deck, 1L);
     }
 }
