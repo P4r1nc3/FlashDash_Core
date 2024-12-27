@@ -147,6 +147,7 @@ class FriendServiceTest {
         // Assert
         assertThat(invitation.getStatus()).isEqualTo(FriendInvitation.InvitationStatus.ACCEPTED);
         verify(friendInvitationRepository).save(invitation);
+        verify(friendInvitationRepository).delete(invitation);
         verify(userRepository).save(sender);
         verify(userRepository).save(recipient);
     }
