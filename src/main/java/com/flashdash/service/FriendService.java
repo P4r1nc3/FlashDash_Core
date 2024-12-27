@@ -18,10 +18,14 @@ import java.util.stream.Collectors;
 public class FriendService {
     private final FriendInvitationRepository friendInvitationRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
-    public FriendService(FriendInvitationRepository friendInvitationRepository, UserRepository userRepository) {
+    public FriendService(FriendInvitationRepository friendInvitationRepository,
+                         UserRepository userRepository,
+                         EmailService emailService) {
         this.friendInvitationRepository = friendInvitationRepository;
         this.userRepository = userRepository;
+        this.emailService = emailService;
     }
 
     public void sendFriendInvitation(String senderEmail, String recipientEmail) {
@@ -41,6 +45,7 @@ public class FriendService {
         invitation.setSentTo(recipient);
         invitation.setStatus(FriendInvitation.InvitationStatus.PENDING);
         friendInvitationRepository.save(invitation);
+        emailService.sendFriendInvitationEmail(recipient.getUsername(), sender.getFirstName(), sender.getLastName());
     }
 
     public List<FriendInvitationResponse> getReceivedFriendInvitations(String recipientEmail) {
