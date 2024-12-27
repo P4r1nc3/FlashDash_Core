@@ -1,6 +1,7 @@
 package com.flashdash.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.flashdash.converter.JsonListConverter;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -17,10 +18,10 @@ public class Question {
 
     private String question;
 
-    @ElementCollection
+    @Convert(converter = JsonListConverter.class)
     private List<String> correctAnswers = new ArrayList<>();
 
-    @ElementCollection
+    @Convert(converter = JsonListConverter.class)
     private List<String> incorrectAnswers = new ArrayList<>();
 
     private String difficulty;
