@@ -29,6 +29,10 @@ public class FriendService {
     }
 
     public void sendFriendInvitation(String senderEmail, String recipientEmail) {
+        if (senderEmail.equals(recipientEmail)) {
+            throw new FlashDashException(ErrorCode.E403003, "You cannot send an invitation to yourself.");
+        }
+
         User sender = userRepository.findByEmail(senderEmail)
                 .orElseThrow(() -> new FlashDashException(ErrorCode.E404001, "User not found: " + senderEmail));
         User recipient = userRepository.findByEmail(recipientEmail)

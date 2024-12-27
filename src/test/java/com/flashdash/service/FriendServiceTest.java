@@ -180,4 +180,21 @@ class FriendServiceTest {
         assertThat(friends.get(0).getFirstName()).isEqualTo(friend.getFirstName());
         verify(userRepository).findByEmail(user.getUsername());
     }
+
+    @Test
+    void shouldThrowExceptionWhenSendingInvitationToSelf() {
+        // Arrange
+        User user = TestUtils.createUser();
+        when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
+
+        // Act & Assert
+        assertThatThrownBy(() -> friendService.sendFriendInvitation(user.getUsername(), user.getUsername()))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E403003)
+                .hasMessage("You cannot send an invitation to yourself.");
+
+        verify(friendInvitationRepository, times(0)).save(any(FriendInvitation.class));
+        verify(emailService, times(0)).sendFriendInvitationEmail(anyString(), anyString(), anyString());
+    }
+
 }
