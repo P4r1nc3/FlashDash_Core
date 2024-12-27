@@ -28,7 +28,8 @@ public class EmailService {
 
     public void sendFriendInvitationEmail(String recipientEmail, String senderFirstName, String senderLastName) {
         String subject = "You have a new Friend Invitation!";
-        String content = "Hi there! You've received a new friend invitation from " + senderFirstName + " " + senderLastName + ". Visit the FlashDash app to accept or decline.";
+        String content = "Hi there! You've received a new friend invitation from " + senderFirstName + " " + senderLastName
+                         + ". Visit the FlashDash app to accept or decline.";
         sendEmail(recipientEmail, subject, content);
     }
 
