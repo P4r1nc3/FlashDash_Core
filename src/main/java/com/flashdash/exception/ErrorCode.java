@@ -17,5 +17,6 @@ public enum ErrorCode {
     E404004,
     // 409 Conflict
     E409001,
-    E409002
+    E409002,
+    E409003
 }
