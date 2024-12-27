@@ -44,6 +44,10 @@ public class FriendService {
             throw new FlashDashException(ErrorCode.E409002, "Friend invitation already sent.");
         }
 
+        if (sender.getFriends().contains(recipient)) {
+            throw new FlashDashException(ErrorCode.E409003, "You are already friends with this user.");
+        }
+
         FriendInvitation invitation = new FriendInvitation();
         invitation.setSentBy(sender);
         invitation.setSentTo(recipient);

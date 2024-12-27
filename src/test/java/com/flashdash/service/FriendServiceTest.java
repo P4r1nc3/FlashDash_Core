@@ -197,4 +197,24 @@ class FriendServiceTest {
         verify(emailService, times(0)).sendFriendInvitationEmail(anyString(), anyString(), anyString());
     }
 
+    @Test
+    void shouldThrowExceptionWhenUserIsAlreadyAFriend() {
+        // Arrange
+        User sender = TestUtils.createUser();
+        User recipient = TestUtils.createFriendUser();
+        sender.getFriends().add(recipient);
+        recipient.getFriends().add(sender);
+
+        when(userRepository.findByEmail(sender.getUsername())).thenReturn(Optional.of(sender));
+        when(userRepository.findByEmail(recipient.getUsername())).thenReturn(Optional.of(recipient));
+
+        // Act & Assert
+        assertThatThrownBy(() -> friendService.sendFriendInvitation(sender.getUsername(), recipient.getUsername()))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E409003)
+                .hasMessage("You are already friends with this user.");
+
+        verify(friendInvitationRepository, times(0)).save(any(FriendInvitation.class));
+        verify(emailService, times(0)).sendFriendInvitationEmail(anyString(), anyString(), anyString());
+    }
 }

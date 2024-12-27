@@ -237,4 +237,25 @@ class FriendControllerTest {
         assertEquals(ErrorCode.E403003, exception.getErrorCode());
         assertEquals("You cannot send an invitation to yourself.", exception.getMessage());
     }
+
+    @Test
+    @Order(10)
+    void shouldThrowExceptionWhenUserIsAlreadyAFriend() {
+        // Arrange
+        User sender = TestUtils.createUser();
+        User recipient = TestUtils.createFriendUser();
+        sender.getFriends().add(recipient);
+        recipient.getFriends().add(sender);
+
+        doThrow(new FlashDashException(ErrorCode.E409003, "You are already friends with this user."))
+                .when(friendService).sendFriendInvitation(userEmail, recipient.getUsername());
+
+        // Act & Assert
+        FlashDashException exception = assertThrows(
+                FlashDashException.class,
+                () -> friendController.sendFriendInvitation(recipient.getUsername())
+        );
+        assertEquals(ErrorCode.E409003, exception.getErrorCode());
+        assertEquals("You are already friends with this user.", exception.getMessage());
+    }
 }
