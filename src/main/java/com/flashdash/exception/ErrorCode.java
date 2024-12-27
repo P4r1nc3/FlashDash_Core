@@ -9,6 +9,7 @@ public enum ErrorCode {
     // 403 Forbidden
     E403001,
     E403002,
+    E403003,
     // 404 Not Found
     E404001,
     E404002,
@@ -16,5 +17,6 @@ public enum ErrorCode {
     E404004,
     // 409 Conflict
     E409001,
-    E409002
+    E409002,
+    E409003
 }
