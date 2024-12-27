@@ -13,6 +13,7 @@ public class EmailService {
         this.mailSender = mailSender;
     }
 
+    @Async
     public void sendActivationEmail(String to, String activationToken) {
         String activationLink = "http://localhost:8080/auth/activate?token=" + activationToken;
         String subject = "Account Activation";
@@ -20,12 +21,14 @@ public class EmailService {
         sendEmail(to, subject, content);
     }
 
+    @Async
     public void sendDailyNotificationEmail(String to) {
         String subject = "Reminder: Time to Learn!";
         String content = "Hi there! Don't forget to continue your learning journey with FlashDash. Let's make today productive!";
         sendEmail(to, subject, content);
     }
 
+    @Async
     public void sendFriendInvitationEmail(String recipientEmail, String senderFirstName, String senderLastName) {
         String subject = "You have a new Friend Invitation!";
         String content = "Hi there! You've received a new friend invitation from " + senderFirstName + " " + senderLastName
@@ -33,7 +36,6 @@ public class EmailService {
         sendEmail(recipientEmail, subject, content);
     }
 
-    @Async
     private void sendEmail(String to, String subject, String content) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
