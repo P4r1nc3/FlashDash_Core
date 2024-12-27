@@ -31,7 +31,7 @@ public class JsonListConverter implements AttributeConverter<List<String>, Strin
             return null;
         }
         try {
-            return objectMapper.readValue(dbData, new TypeReference<List<String>>() {});
+            return objectMapper.readValue(dbData, new TypeReference<>() {});
         } catch (IOException e) {
             throw new IllegalArgumentException("Could not convert JSON to list", e);
         }
