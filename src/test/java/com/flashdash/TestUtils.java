@@ -100,4 +100,13 @@ public class TestUtils {
         message.setFrom("flashdashservice@gmail.com");
         return message;
     }
+
+    public static SimpleMailMessage createSimpleMailMessageForFriendInvitation(String to, String senderFirstName, String senderLastName) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(to);
+        message.setSubject("You have a new Friend Invitation!");
+        message.setText("Hi there! You've received a new friend invitation from " + senderFirstName + " " + senderLastName + ". Visit the FlashDash app to accept or decline.");
+        message.setFrom("flashdashservice@gmail.com");
+        return message;
+    }
 }
