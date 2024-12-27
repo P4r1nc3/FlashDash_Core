@@ -15,6 +15,9 @@ public class JsonListConverter implements AttributeConverter<List<String>, Strin
 
     @Override
     public String convertToDatabaseColumn(List<String> attribute) {
+        if (attribute == null) {
+            return null;
+        }
         try {
             return objectMapper.writeValueAsString(attribute);
         } catch (Exception e) {
@@ -24,6 +27,9 @@ public class JsonListConverter implements AttributeConverter<List<String>, Strin
 
     @Override
     public List<String> convertToEntityAttribute(String dbData) {
+        if (dbData == null) {
+            return null;
+        }
         try {
             return objectMapper.readValue(dbData, new TypeReference<List<String>>() {});
         } catch (IOException e) {
@@ -31,4 +37,5 @@ public class JsonListConverter implements AttributeConverter<List<String>, Strin
         }
     }
 }
+
 
