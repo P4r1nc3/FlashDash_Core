@@ -36,6 +36,9 @@ class FriendServiceTest {
     @MockBean
     private FriendInvitationRepository friendInvitationRepository;
 
+    @MockBean
+    private EmailService emailService;
+
     @Test
     void shouldSendFriendInvitationSuccessfully() {
         // Arrange
@@ -50,6 +53,7 @@ class FriendServiceTest {
 
         // Assert
         verify(friendInvitationRepository).save(any(FriendInvitation.class));
+        verify(emailService, times(1)).sendFriendInvitationEmail(recipient.getUsername(), sender.getFirstName(), sender.getLastName());
     }
 
     @Test
@@ -62,6 +66,7 @@ class FriendServiceTest {
         assertThatThrownBy(() -> friendService.sendFriendInvitation("nonexistent@example.com", recipient.getUsername()))
                 .isInstanceOf(FlashDashException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404001);
+        verify(emailService, times(0)).sendFriendInvitationEmail(anyString(), anyString(), anyString());
     }
 
     @Test
@@ -75,6 +80,7 @@ class FriendServiceTest {
         assertThatThrownBy(() -> friendService.sendFriendInvitation(sender.getUsername(), "nonexistent@example.com"))
                 .isInstanceOf(FlashDashException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404001);
+        verify(emailService, times(0)).sendFriendInvitationEmail(anyString(), anyString(), anyString());
     }
 
     @Test
