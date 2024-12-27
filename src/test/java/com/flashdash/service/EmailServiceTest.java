@@ -46,4 +46,17 @@ class EmailServiceTest {
         // Assert
         verify(mailSender, times(1)).send(TestUtils.createSimpleMailMessageForDailyNotification(to));
     }
+
+    @Test
+    void testSendFriendInvitationEmail() {
+        // Arrange
+        String to = "test@example.com";
+        String senderFirstName = "Konrad";
+        String senderLastName = "Tupta";
+        // Act
+        emailService.sendFriendInvitationEmail(to, senderFirstName, senderLastName);
+
+        // Assert
+        verify(mailSender, times(1)).send(TestUtils.createSimpleMailMessageForFriendInvitation(to, senderFirstName, senderLastName));
+    }
 }
