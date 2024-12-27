@@ -95,6 +95,8 @@ public class FriendService {
             userRepository.save(sender);
             userRepository.save(recipient);
         }
+
+        friendInvitationRepository.delete(invitation);
     }
 
     public List<UserResponse> getFriends(String email) {
