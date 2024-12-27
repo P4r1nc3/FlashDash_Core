@@ -41,8 +41,8 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private boolean dailyNotifications;
 
-    @OneToMany(mappedBy = "user")
-    private Set<GameSession> gameSessions;
+//    @OneToMany(mappedBy = "user")
+//    private Set<GameSession> gameSessions;
 
     @ManyToMany
     @JoinTable(
@@ -150,13 +150,13 @@ public class User implements UserDetails {
         this.dailyNotifications = dailyNotifications;
     }
 
-    public Set<GameSession> getGameSessions() {
-        return gameSessions;
-    }
-
-    public void setGameSessions(Set<GameSession> gameSessions) {
-        this.gameSessions = gameSessions;
-    }
+//    public Set<GameSession> getGameSessions() {
+//        return gameSessions;
+//    }
+//
+//    public void setGameSessions(Set<GameSession> gameSessions) {
+//        this.gameSessions = gameSessions;
+//    }
 
     public Set<User> getFriends() {
         return friends;
