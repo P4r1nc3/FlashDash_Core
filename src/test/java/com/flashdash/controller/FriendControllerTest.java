@@ -220,4 +220,21 @@ class FriendControllerTest {
         assertEquals(ErrorCode.E409002, exception.getErrorCode());
         assertEquals("Friend invitation already sent.", exception.getMessage());
     }
+
+    @Test
+    @Order(9)
+    void shouldThrowExceptionWhenSendingInvitationToSelf() {
+        // Arrange
+        String recipientEmail = userEmail;
+        doThrow(new FlashDashException(ErrorCode.E403003, "You cannot send an invitation to yourself."))
+                .when(friendService).sendFriendInvitation(userEmail, recipientEmail);
+
+        // Act & Assert
+        FlashDashException exception = assertThrows(
+                FlashDashException.class,
+                () -> friendController.sendFriendInvitation(recipientEmail)
+        );
+        assertEquals(ErrorCode.E403003, exception.getErrorCode());
+        assertEquals("You cannot send an invitation to yourself.", exception.getMessage());
+    }
 }
