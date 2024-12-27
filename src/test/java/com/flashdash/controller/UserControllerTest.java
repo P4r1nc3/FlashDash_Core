@@ -64,6 +64,7 @@ class UserControllerTest {
         userResponse.setFirstName(user.getFirstName());
         userResponse.setLastName(user.getLastName());
         userResponse.setEmail(user.getUsername());
+        userResponse.setDailyNotifications(user.isDailyNotifications());
         userResponse.setCreatedAt(user.getCreatedAt());
         userResponse.setUpdatedAt(user.getUpdatedAt());
 
