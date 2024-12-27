@@ -71,9 +71,11 @@ class FriendControllerTest {
                 friendUser.getFirstName(),
                 friendUser.getLastName(),
                 friendUser.getUsername(),
+                friendUser.isDailyNotifications(),
                 friendUser.getCreatedAt(),
                 friendUser.getUpdatedAt()
         );
+
         List<UserResponse> friends = List.of(friendResponse);
         when(friendService.getFriends(userEmail)).thenReturn(friends);
 

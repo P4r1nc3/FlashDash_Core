@@ -7,19 +7,20 @@ public class UserResponse {
     private String firstName;
     private String lastName;
     private String email;
-
+    private boolean dailyNotifications;
     private LocalDateTime createdAt;
-
     private LocalDateTime updatedAt;
+
 
     public UserResponse() {
 
     }
 
-    public UserResponse(String firstName, String lastName, String email, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public UserResponse(String firstName, String lastName, String email, boolean dailyNotifications, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
+        this.dailyNotifications = dailyNotifications;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -46,6 +47,14 @@ public class UserResponse {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public boolean isDailyNotifications() {
+        return dailyNotifications;
+    }
+
+    public void setDailyNotifications(boolean dailyNotifications) {
+        this.dailyNotifications = dailyNotifications;
     }
 
     public LocalDateTime getCreatedAt() {
