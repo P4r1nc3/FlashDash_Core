@@ -94,7 +94,6 @@ public class AuthenticationService {
         }
 
         user.setEnabled(true);
-        user.setActivationToken("activated");
         userRepository.save(user);
 
         logger.info("Account activated successfully for email: {}", user.getUsername());
