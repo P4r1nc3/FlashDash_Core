@@ -29,6 +29,10 @@ public class FriendService {
     }
 
     public void sendFriendInvitation(String senderEmail, String recipientEmail) {
+        if (senderEmail.equals(recipientEmail)) {
+            throw new FlashDashException(ErrorCode.E403003, "You cannot send an invitation to yourself.");
+        }
+
         User sender = userRepository.findByEmail(senderEmail)
                 .orElseThrow(() -> new FlashDashException(ErrorCode.E404001, "User not found: " + senderEmail));
         User recipient = userRepository.findByEmail(recipientEmail)
@@ -38,6 +42,10 @@ public class FriendService {
         Optional<FriendInvitation> existingInvitation = friendInvitationRepository.findBySentByAndSentTo(sender, recipient);
         if (existingInvitation.isPresent()) {
             throw new FlashDashException(ErrorCode.E409002, "Friend invitation already sent.");
+        }
+
+        if (sender.getFriends().contains(recipient)) {
+            throw new FlashDashException(ErrorCode.E409003, "You are already friends with this user.");
         }
 
         FriendInvitation invitation = new FriendInvitation();
@@ -87,6 +95,8 @@ public class FriendService {
             userRepository.save(sender);
             userRepository.save(recipient);
         }
+
+        friendInvitationRepository.delete(invitation);
     }
 
     public List<UserResponse> getFriends(String email) {

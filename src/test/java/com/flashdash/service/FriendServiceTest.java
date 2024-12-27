@@ -147,6 +147,7 @@ class FriendServiceTest {
         // Assert
         assertThat(invitation.getStatus()).isEqualTo(FriendInvitation.InvitationStatus.ACCEPTED);
         verify(friendInvitationRepository).save(invitation);
+        verify(friendInvitationRepository).delete(invitation);
         verify(userRepository).save(sender);
         verify(userRepository).save(recipient);
     }
@@ -179,5 +180,42 @@ class FriendServiceTest {
         assertThat(friends).hasSize(1);
         assertThat(friends.get(0).getFirstName()).isEqualTo(friend.getFirstName());
         verify(userRepository).findByEmail(user.getUsername());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenSendingInvitationToSelf() {
+        // Arrange
+        User user = TestUtils.createUser();
+        when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
+
+        // Act & Assert
+        assertThatThrownBy(() -> friendService.sendFriendInvitation(user.getUsername(), user.getUsername()))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E403003)
+                .hasMessage("You cannot send an invitation to yourself.");
+
+        verify(friendInvitationRepository, times(0)).save(any(FriendInvitation.class));
+        verify(emailService, times(0)).sendFriendInvitationEmail(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUserIsAlreadyAFriend() {
+        // Arrange
+        User sender = TestUtils.createUser();
+        User recipient = TestUtils.createFriendUser();
+        sender.getFriends().add(recipient);
+        recipient.getFriends().add(sender);
+
+        when(userRepository.findByEmail(sender.getUsername())).thenReturn(Optional.of(sender));
+        when(userRepository.findByEmail(recipient.getUsername())).thenReturn(Optional.of(recipient));
+
+        // Act & Assert
+        assertThatThrownBy(() -> friendService.sendFriendInvitation(sender.getUsername(), recipient.getUsername()))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E409003)
+                .hasMessage("You are already friends with this user.");
+
+        verify(friendInvitationRepository, times(0)).save(any(FriendInvitation.class));
+        verify(emailService, times(0)).sendFriendInvitationEmail(anyString(), anyString(), anyString());
     }
 }
