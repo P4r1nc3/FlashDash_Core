@@ -31,6 +31,7 @@ public class DeckService {
         logger.info("Attempting to create a new deck for user with email: {}", user.getUsername());
 
         deck.setUser(user);
+        deck.setDeleted(false);
         deck.setCreatedAt(LocalDateTime.now());
         deck.setUpdatedAt(LocalDateTime.now());
         Deck savedDeck = deckRepository.save(deck);
@@ -94,9 +95,9 @@ public class DeckService {
                     );
                 });
 
-        questionRepository.deleteAllByDeck(deck);
-        deckRepository.delete(deck);
+        questionRepository.softDeleteAllByDeck(deck);
+        deckRepository.softDeleteDeck(deck);
 
-        logger.info("Successfully deleted deck with id: {} for user with email: {}", deckId, user.getUsername());
+        logger.info("Successfully marked deck with id: {} as deleted for user with email: {}", deckId, user.getUsername());
     }
 }

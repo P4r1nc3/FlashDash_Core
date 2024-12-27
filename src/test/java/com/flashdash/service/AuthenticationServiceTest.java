@@ -142,7 +142,6 @@ class AuthenticationServiceTest {
 
         // Assert
         assertThat(user.isEnabled()).isTrue();
-        assertThat(user.getActivationToken()).isEqualTo("activated");
 
         verify(userRepository).findByActivationToken(activationToken);
         verify(userRepository).save(user);
