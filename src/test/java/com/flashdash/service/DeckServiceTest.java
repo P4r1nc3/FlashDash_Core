@@ -133,22 +133,22 @@ class DeckServiceTest {
     }
 
     @Test
-    void shouldDeleteDeckSuccessfully() {
+    void shouldSoftDeleteDeckSuccessfully() {
         // Arrange
         User user = TestUtils.createUser();
         Deck deck = TestUtils.createDeck(user);
 
         when(deckRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(deck));
-        doNothing().when(questionRepository).deleteAllByDeck(deck);
-        doNothing().when(deckRepository).delete(deck);
+        doNothing().when(questionRepository).softDeleteAllByDeck(deck);
+        doNothing().when(deckRepository).softDeleteDeck(deck);
 
         // Act
         deckService.deleteDeck(1L, user);
 
         // Assert
         verify(deckRepository).findByIdAndUser(1L, user);
-        verify(questionRepository).deleteAllByDeck(deck);
-        verify(deckRepository).delete(deck);
+        verify(questionRepository).softDeleteAllByDeck(deck);
+        verify(deckRepository).softDeleteDeck(deck);
     }
 
     @Test

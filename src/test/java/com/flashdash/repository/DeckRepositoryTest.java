@@ -97,7 +97,34 @@ class DeckRepositoryTest {
     }
 
     @Test
-    void shouldDeleteAllDecksByUser() {
+    void shouldSoftDeleteDeck() {
+        // Arrange
+        User user = TestUtils.createUser();
+        userRepository.save(user);
+
+        Deck deck1 = TestUtils.createDeck(user);
+        deck1.setName("Deck 1");
+        deckRepository.save(deck1);
+
+        Deck deck2 = TestUtils.createDeck(user);
+        deck2.setName("Deck 2");
+        deckRepository.save(deck2);
+
+        // Act
+        deckRepository.softDeleteDeck(deck1);
+
+        // Assert
+        Optional<Deck> softDeletedDeck = deckRepository.findByIdAndUser(deck1.getId(), user);
+        assertThat(softDeletedDeck).isEmpty();
+
+
+        List<Deck> activeDecks = deckRepository.findAllByUser(user);
+        assertThat(activeDecks).hasSize(1);
+        assertThat(activeDecks.get(0).getName()).isEqualTo(deck2.getName());
+    }
+
+    @Test
+    void shouldNotFindSoftDeletedDecks() {
         // Arrange
         User user = TestUtils.createUser();
         userRepository.save(user);
@@ -105,14 +132,11 @@ class DeckRepositoryTest {
         Deck deck1 = TestUtils.createDeck(user);
         deckRepository.save(deck1);
 
-        Deck deck2 = TestUtils.createDeck(user);
-        deckRepository.save(deck2);
-
         // Act
-        deckRepository.deleteAll(deckRepository.findAllByUser(user));
-        List<Deck> decks = deckRepository.findAllByUser(user);
+        deckRepository.softDeleteDeck(deck1);
 
         // Assert
+        List<Deck> decks = deckRepository.findAllByUser(user);
         assertThat(decks).isEmpty();
     }
 }
