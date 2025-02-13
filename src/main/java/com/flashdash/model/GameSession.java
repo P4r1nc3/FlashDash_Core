@@ -25,15 +25,17 @@ public class GameSession {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    private LocalDateTime endTime;  // Czas zakończenia sesji
-    private int totalScore;         // Wynik całkowity gry (np. procentowy wynik)
-    private int correctAnswersCount; // Liczba poprawnych odpowiedzi
+    private LocalDateTime endTime;
+    private int totalScore;
+    private int correctAnswersCount;
 
-    // Constructor without parameters
+    @Enumerated(EnumType.STRING)
+    private GameSessionStatus status;
+
     public GameSession() {
+        this.status = GameSessionStatus.PENDING;
     }
 
-    // Constructor with all parameters
     public GameSession(User user, Deck deck, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.user = user;
         this.deck = deck;
@@ -41,9 +43,9 @@ public class GameSession {
         this.updatedAt = updatedAt;
         this.totalScore = 0;
         this.correctAnswersCount = 0;
+        this.status = GameSessionStatus.PENDING;
     }
 
-    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -106,5 +108,13 @@ public class GameSession {
 
     public void setCorrectAnswersCount(int correctAnswersCount) {
         this.correctAnswersCount = correctAnswersCount;
+    }
+
+    public GameSessionStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(GameSessionStatus status) {
+        this.status = status;
     }
 }
