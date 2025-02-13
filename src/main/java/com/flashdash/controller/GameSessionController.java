@@ -26,10 +26,7 @@ public class GameSessionController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User user = (User) authentication.getPrincipal();
 
-        // Pobieramy pytania z danego decku
         List<Question> questions = gameSessionService.startGameSession(deckId, user);
-
-        // Zwracamy pytania w odpowiedzi
         return ResponseEntity.ok(questions);
     }
 
@@ -39,10 +36,7 @@ public class GameSessionController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User user = (User) authentication.getPrincipal();
 
-        // Zakończenie sesji gry i ocena odpowiedzi
         GameSessionResult result = gameSessionService.endGameSession(deckId, user, userAnswers);
-
         return ResponseEntity.ok(result);
     }
-
 }
