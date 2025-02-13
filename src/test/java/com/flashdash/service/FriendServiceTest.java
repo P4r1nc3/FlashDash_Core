@@ -239,4 +239,74 @@ class FriendServiceTest {
         verify(friendInvitationRepository, times(0)).save(invitation);
         verify(userRepository, times(0)).save(any(User.class));
     }
+
+    @Test
+    void testDeleteFriendSuccessful() {
+        // Arrange
+        User user = TestUtils.createUser();
+        User friend = TestUtils.createFriendUser();
+        user.getFriends().add(friend);
+        friend.getFriends().add(user);
+
+        when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail(friend.getUsername())).thenReturn(Optional.of(friend));
+
+        // Act
+        friendService.deleteFriend(user.getUsername(), friend.getUsername());
+
+        // Assert
+        assertThat(user.getFriends()).doesNotContain(friend);
+        assertThat(friend.getFriends()).doesNotContain(user);
+        verify(userRepository, times(1)).save(user);
+        verify(userRepository, times(1)).save(friend);
+    }
+
+    @Test
+    void testDeleteFriendUserNotFound() {
+        // Arrange
+        String friendEmail = TestUtils.createFriendUser().getUsername();
+        when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThatThrownBy(() -> friendService.deleteFriend("nonexistent@example.com", friendEmail))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404001)
+                .hasMessage("User not found: nonexistent@example.com");
+
+        verify(userRepository, times(0)).save(any(User.class));
+    }
+
+    @Test
+    void testDeleteFriendNotFound() {
+        // Arrange
+        User user = TestUtils.createUser();
+        when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThatThrownBy(() -> friendService.deleteFriend(user.getUsername(), "nonexistent@example.com"))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404005)
+                .hasMessage("Friend not found: nonexistent@example.com");
+
+        verify(userRepository, times(0)).save(any(User.class));
+    }
+
+    @Test
+    void testDeleteNonFriend() {
+        // Arrange
+        User user = TestUtils.createUser();
+        User stranger = TestUtils.createFriendUser(); // This user is not a friend
+        when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail(stranger.getUsername())).thenReturn(Optional.of(stranger));
+
+        // Act & Assert
+        assertThatThrownBy(() -> friendService.deleteFriend(user.getUsername(), stranger.getUsername()))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404005)
+                .hasMessage("This user is not your friend.");
+
+        verify(userRepository, times(0)).save(any(User.class));
+    }
+
 }

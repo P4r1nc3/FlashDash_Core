@@ -127,6 +127,24 @@ public class FriendService {
                 .collect(Collectors.toList());
     }
 
+    public void deleteFriend(String userEmail, String friendEmail) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new FlashDashException(ErrorCode.E404001, "User not found: " + userEmail));
+
+        User friend = userRepository.findByEmail(friendEmail)
+                .orElseThrow(() -> new FlashDashException(ErrorCode.E404005, "Friend not found: " + friendEmail));
+
+        if (!user.getFriends().contains(friend)) {
+            throw new FlashDashException(ErrorCode.E404005, "This user is not your friend.");
+        }
+
+        user.getFriends().remove(friend);
+        friend.getFriends().remove(user);
+
+        userRepository.save(user);
+        userRepository.save(friend);
+    }
+
     private FriendInvitationResponse mapToResponse(FriendInvitation invitation) {
         return new FriendInvitationResponse(
                 invitation.getId(),

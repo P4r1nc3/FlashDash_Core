@@ -258,4 +258,53 @@ class FriendControllerTest {
         assertEquals(ErrorCode.E409003, exception.getErrorCode());
         assertEquals("You are already friends with this user.", exception.getMessage());
     }
+
+    @Test
+    @Order(11)
+    void testDeleteFriendSuccessful() {
+        // Arrange
+        String friendEmail = friendUser.getUsername();
+        doNothing().when(friendService).deleteFriend(userEmail, friendEmail);
+
+        // Act
+        ResponseEntity<Void> responseEntity = friendController.deleteFriend(friendEmail);
+
+        // Assert
+        assertEquals(HttpStatus.NO_CONTENT, responseEntity.getStatusCode());
+        verify(friendService, times(1)).deleteFriend(userEmail, friendEmail);
+    }
+
+    @Test
+    @Order(12)
+    void testDeleteFriendNotFound() {
+        // Arrange
+        String friendEmail = friendUser.getUsername();
+        doThrow(new FlashDashException(ErrorCode.E404005, "Friend not found: " + friendEmail))
+                .when(friendService).deleteFriend(userEmail, friendEmail);
+
+        // Act & Assert
+        FlashDashException exception = assertThrows(
+                FlashDashException.class,
+                () -> friendController.deleteFriend(friendEmail)
+        );
+        assertEquals(ErrorCode.E404005, exception.getErrorCode());
+        assertEquals("Friend not found: " + friendEmail, exception.getMessage());
+    }
+
+    @Test
+    @Order(13)
+    void testDeleteFriendUserNotFound() {
+        // Arrange
+        String friendEmail = friendUser.getUsername();
+        doThrow(new FlashDashException(ErrorCode.E404001, "User not found: " + userEmail))
+                .when(friendService).deleteFriend(userEmail, friendEmail);
+
+        // Act & Assert
+        FlashDashException exception = assertThrows(
+                FlashDashException.class,
+                () -> friendController.deleteFriend(friendEmail)
+        );
+        assertEquals(ErrorCode.E404001, exception.getErrorCode());
+        assertEquals("User not found: " + userEmail, exception.getMessage());
+    }
 }

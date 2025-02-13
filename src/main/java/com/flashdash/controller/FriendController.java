@@ -29,6 +29,16 @@ public class FriendController {
         return ResponseEntity.ok(friends);
     }
 
+    @DeleteMapping("/{friendEmail}")
+    public ResponseEntity<Void> deleteFriend(@PathVariable String friendEmail) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+
+        friendService.deleteFriend(userEmail, friendEmail);
+        return ResponseEntity.noContent().build();
+    }
+
+
     @PostMapping("/invite")
     public ResponseEntity<Void> sendFriendInvitation(@RequestParam String recipientEmail) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
