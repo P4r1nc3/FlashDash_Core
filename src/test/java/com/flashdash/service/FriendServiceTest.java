@@ -218,4 +218,25 @@ class FriendServiceTest {
         verify(friendInvitationRepository, times(0)).save(any(FriendInvitation.class));
         verify(emailService, times(0)).sendFriendInvitationEmail(anyString(), anyString(), anyString());
     }
+
+    @Test
+    void shouldAllowSenderToCancelInvitationButNotAcceptIt() {
+        // Arrange
+        User sender = TestUtils.createUser();
+        User recipient = TestUtils.createFriendUser();
+        FriendInvitation invitation = TestUtils.createFriendInvitation(sender, recipient);
+
+        when(friendInvitationRepository.findById(invitation.getId())).thenReturn(Optional.of(invitation));
+        friendService.respondToFriendInvitation(invitation.getId(), sender.getUsername(), FriendInvitation.InvitationStatus.REJECTED);
+        verify(friendInvitationRepository).delete(invitation);
+
+        // Act & Assert
+        assertThatThrownBy(() -> friendService.respondToFriendInvitation(invitation.getId(), sender.getUsername(), FriendInvitation.InvitationStatus.ACCEPTED))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E403002)
+                .hasMessage("You can only cancel your invitation.");
+
+        verify(friendInvitationRepository, times(0)).save(invitation);
+        verify(userRepository, times(0)).save(any(User.class));
+    }
 }

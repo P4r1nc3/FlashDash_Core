@@ -3,7 +3,6 @@ package com.flashdash.controller;
 import com.flashdash.dto.response.FriendInvitationResponse;
 import com.flashdash.dto.response.UserResponse;
 import com.flashdash.model.FriendInvitation;
-import com.flashdash.model.User;
 import com.flashdash.service.FriendService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -61,9 +60,9 @@ public class FriendController {
     public ResponseEntity<Void> respondToInvitation(@PathVariable Long invitationId,
                                                     @RequestParam FriendInvitation.InvitationStatus status) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String recipientEmail = authentication.getName();
+        String userEmail = authentication.getName();
 
-        friendService.respondToFriendInvitation(invitationId, recipientEmail, status);
+        friendService.respondToFriendInvitation(invitationId, userEmail, status);
         return ResponseEntity.ok().build();
     }
 }
