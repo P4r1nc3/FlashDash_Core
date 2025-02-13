@@ -3,10 +3,7 @@ package com.flashdash.service;
 import com.flashdash.dto.response.GameSessionResult;
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
-import com.flashdash.model.Deck;
-import com.flashdash.model.GameSession;
-import com.flashdash.model.Question;
-import com.flashdash.model.User;
+import com.flashdash.model.*;
 import com.flashdash.repository.GameSessionRepository;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +26,15 @@ public class GameSessionService {
     }
 
     public List<Question> startGameSession(Long deckId, User user) {
+        GameSession existingSession = gameSessionRepository.findTopByDeckIdAndUserIdAndStatus(deckId, user.getId(), GameSessionStatus.PENDING);
+
+        if (existingSession != null) {
+            existingSession.setCreatedAt(LocalDateTime.now());
+            existingSession.setUpdatedAt(LocalDateTime.now());
+            gameSessionRepository.save(existingSession);
+
+            return questionService.getAllQuestionsInDeck(deckId, user);
+        }
 
         Deck deck = deckService.getDeckById(deckId, user);
 
@@ -37,6 +43,7 @@ public class GameSessionService {
         gameSession.setDeck(deck);
         gameSession.setCreatedAt(LocalDateTime.now());
         gameSession.setUpdatedAt(LocalDateTime.now());
+        gameSession.setStatus(GameSessionStatus.PENDING);
 
         gameSessionRepository.save(gameSession);
 
@@ -64,8 +71,18 @@ public class GameSessionService {
         int totalQuestions = userAnswers.size();
         int score = (int) (((double) correctCount / totalQuestions) * 100);
 
+        GameSession gameSession = gameSessionRepository.findTopByDeckIdAndUserIdAndStatus(deckId, user.getId(), GameSessionStatus.PENDING);
+
+        if (gameSession != null) {
+            gameSession.setStatus(GameSessionStatus.FINISHED);
+            gameSession.setEndTime(LocalDateTime.now());
+            gameSession.setTotalScore(score);
+            gameSession.setCorrectAnswersCount(correctCount);
+
+            gameSessionRepository.save(gameSession);
+        }
+
         GameSessionResult result = new GameSessionResult(score, correctCount, totalQuestions);
         return result;
     }
 }
-
