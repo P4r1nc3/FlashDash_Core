@@ -74,29 +74,41 @@ public class FriendService {
                 .collect(Collectors.toList());
     }
 
-    public void respondToFriendInvitation(Long invitationId, String recipientEmail, FriendInvitation.InvitationStatus status) {
+    public void respondToFriendInvitation(Long invitationId, String userEmail, FriendInvitation.InvitationStatus status) {
         FriendInvitation invitation = friendInvitationRepository.findById(invitationId)
                 .orElseThrow(() -> new FlashDashException(ErrorCode.E404004, "Invitation not found"));
 
-        if (!invitation.getSentTo().getUsername().equals(recipientEmail)) {
+        User sender = invitation.getSentBy();
+        User recipient = invitation.getSentTo();
+
+        boolean isSender = sender.getUsername().equals(userEmail);
+        boolean isRecipient = recipient.getUsername().equals(userEmail);
+
+        if (!isSender && !isRecipient) {
             throw new FlashDashException(ErrorCode.E403001, "Unauthorized to respond to this invitation.");
         }
 
-        invitation.setStatus(status);
-        friendInvitationRepository.save(invitation);
-
-        // Automatically add to friends list if accepted
-        if (status == FriendInvitation.InvitationStatus.ACCEPTED) {
-            User sender = invitation.getSentBy();
-            User recipient = invitation.getSentTo();
-            sender.getFriends().add(recipient);
-            recipient.getFriends().add(sender);
-
-            userRepository.save(sender);
-            userRepository.save(recipient);
+        if (isSender) {
+            if (status != FriendInvitation.InvitationStatus.REJECTED) {
+                throw new FlashDashException(ErrorCode.E403002, "You can only cancel your invitation.");
+            }
+            friendInvitationRepository.delete(invitation);
+            return;
         }
 
-        friendInvitationRepository.delete(invitation);
+        if (isRecipient) {
+            invitation.setStatus(status);
+            friendInvitationRepository.save(invitation);
+
+            if (status == FriendInvitation.InvitationStatus.ACCEPTED) {
+                sender.getFriends().add(recipient);
+                recipient.getFriends().add(sender);
+                userRepository.save(sender);
+                userRepository.save(recipient);
+            }
+
+            friendInvitationRepository.delete(invitation);
+        }
     }
 
     public List<UserResponse> getFriends(String email) {
