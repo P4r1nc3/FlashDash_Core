@@ -2,6 +2,7 @@ package com.flashdash.controller;
 
 import com.flashdash.FlashDashApplication;
 import com.flashdash.TestUtils;
+import com.flashdash.dto.request.ChangePasswordRequest;
 import com.flashdash.dto.response.UserResponse;
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
@@ -99,4 +100,101 @@ class UserControllerTest {
         assertEquals(ErrorCode.E404001, exception.getErrorCode());
         verify(userService).getCurrentUser(user.getUsername());
     }
+
+    @Test
+    @Order(3)
+    void shouldChangePasswordSuccessfully() {
+        // Arrange
+        ChangePasswordRequest request = new ChangePasswordRequest();
+        request.setOldPassword("oldPassword");
+        request.setNewPassword("newPassword");
+
+        doNothing().when(userService).changePassword(user.getUsername(), request);
+
+        // Act
+        ResponseEntity<Void> response = userController.changePassword(request);
+
+        // Assert
+        assertThat(response).isNotNull();
+        assertThat(response.getStatusCodeValue()).isEqualTo(200);
+        verify(userService, times(1)).changePassword(user.getUsername(), request);
+    }
+
+    @Test
+    @Order(4)
+    void shouldThrowExceptionWhenChangingPasswordWithIncorrectOldPassword() {
+        // Arrange
+        ChangePasswordRequest request = new ChangePasswordRequest();
+        request.setOldPassword("wrongOldPassword");
+        request.setNewPassword("newPassword");
+
+        doThrow(new FlashDashException(ErrorCode.E401002, "Incorrect old password."))
+                .when(userService).changePassword(user.getUsername(), request);
+
+        // Act & Assert
+        FlashDashException exception = assertThrows(
+                FlashDashException.class,
+                () -> userController.changePassword(request)
+        );
+
+        assertEquals(ErrorCode.E401002, exception.getErrorCode());
+        assertEquals("Incorrect old password.", exception.getMessage());
+        verify(userService, times(1)).changePassword(user.getUsername(), request);
+    }
+
+    @Test
+    @Order(5)
+    void shouldThrowExceptionWhenChangingPasswordNonExistentUser() {
+        // Arrange
+        ChangePasswordRequest request = new ChangePasswordRequest();
+        request.setOldPassword("wrongOldPassword");
+        request.setNewPassword("newPassword");
+
+        doThrow(new FlashDashException(ErrorCode.E404001, "User not found."))
+                .when(userService).changePassword(user.getUsername(), request);
+
+        // Act & Assert
+        FlashDashException exception = assertThrows(
+                FlashDashException.class,
+                () -> userController.changePassword(request)
+        );
+
+        assertEquals(ErrorCode.E404001, exception.getErrorCode());
+        assertEquals("User not found.", exception.getMessage());
+        verify(userService, times(1)).changePassword(user.getUsername(), request);
+    }
+
+    @Test
+    @Order(6)
+    void shouldDeleteUserSuccessfully() {
+        // Arrange
+        doNothing().when(userService).deleteUser(user.getUsername());
+
+        // Act
+        ResponseEntity<Void> response = userController.deleteUser();
+
+        // Assert
+        assertThat(response).isNotNull();
+        assertThat(response.getStatusCodeValue()).isEqualTo(204);
+        verify(userService, times(1)).deleteUser(user.getUsername());
+    }
+
+    @Test
+    @Order(7)
+    void shouldThrowExceptionWhenDeletingNonExistentUser() {
+        // Arrange
+        doThrow(new FlashDashException(ErrorCode.E404001, "User not found."))
+                .when(userService).deleteUser(user.getUsername());
+
+        // Act & Assert
+        FlashDashException exception = assertThrows(
+                FlashDashException.class,
+                () -> userController.deleteUser()
+        );
+
+        assertEquals(ErrorCode.E404001, exception.getErrorCode());
+        assertEquals("User not found.", exception.getMessage());
+        verify(userService, times(1)).deleteUser(user.getUsername());
+    }
+
 }
