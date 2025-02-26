@@ -296,7 +296,7 @@ class FriendServiceTest {
     void testDeleteNonFriend() {
         // Arrange
         User user = TestUtils.createUser();
-        User stranger = TestUtils.createFriendUser(); // This user is not a friend
+        User stranger = TestUtils.createFriendUser();
         when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
         when(userRepository.findByEmail(stranger.getUsername())).thenReturn(Optional.of(stranger));
 
@@ -307,6 +307,37 @@ class FriendServiceTest {
                 .hasMessage("This user is not your friend.");
 
         verify(userRepository, times(0)).save(any(User.class));
+    }
+
+    @Test
+    void shouldRemoveAllFriendsSuccessfully() {
+        // Arrange
+        User user = TestUtils.createUser();
+        User friend1 = TestUtils.createFriendUser();
+        User friend2 = new User();
+        friend2.setUsername("anotherfriend@example.com");
+        friend2.setFirstName("Another");
+        friend2.setLastName("Friend");
+
+        user.getFriends().add(friend1);
+        user.getFriends().add(friend2);
+        friend1.getFriends().add(user);
+        friend2.getFriends().add(user);
+
+        when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
+
+        // Act
+        friendService.removeAllFriends(user.getUsername());
+
+        // Assert
+        assertThat(user.getFriends()).isEmpty();
+        assertThat(friend1.getFriends()).doesNotContain(user);
+        assertThat(friend2.getFriends()).doesNotContain(user);
+
+        verify(userRepository, times(1)).findByEmail(user.getUsername());
+        verify(userRepository, times(1)).save(user);
+        verify(userRepository, times(1)).save(friend1);
+        verify(userRepository, times(1)).save(friend2);
     }
 
 }
