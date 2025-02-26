@@ -324,20 +324,18 @@ class FriendServiceTest {
         friend1.getFriends().add(user);
         friend2.getFriends().add(user);
 
-        when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        friendService.removeAllFriends(user.getUsername());
+        friendService.removeAllFriends(user);
 
         // Assert
         assertThat(user.getFriends()).isEmpty();
         assertThat(friend1.getFriends()).doesNotContain(user);
         assertThat(friend2.getFriends()).doesNotContain(user);
 
-        verify(userRepository, times(1)).findByEmail(user.getUsername());
         verify(userRepository, times(1)).save(user);
         verify(userRepository, times(1)).save(friend1);
         verify(userRepository, times(1)).save(friend2);
     }
-
 }
