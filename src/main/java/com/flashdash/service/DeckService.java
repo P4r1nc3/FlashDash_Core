@@ -100,4 +100,20 @@ public class DeckService {
 
         logger.info("Successfully marked deck with id: {} as deleted for user with email: {}", deckId, user.getUsername());
     }
+
+    @Transactional
+    public void deleteAllDecksForUser(User user) {
+        logger.info("Attempting to delete all decks for user with email: {}", user.getUsername());
+
+        List<Deck> decks = getAllDecks(user);
+
+        if (decks.isEmpty()) {
+            logger.info("No decks found for user with email: {}", user.getUsername());
+            return;
+        }
+
+        decks.forEach(deck -> deleteDeck(deck.getId(), user));
+
+        logger.info("Successfully marked all decks as deleted for user with email: {}", user.getUsername());
+    }
 }
