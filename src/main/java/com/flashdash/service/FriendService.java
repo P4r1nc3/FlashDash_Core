@@ -9,6 +9,7 @@ import com.flashdash.model.User;
 import com.flashdash.repository.FriendInvitationRepository;
 import com.flashdash.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -145,8 +146,10 @@ public class FriendService {
         userRepository.save(friend);
     }
 
+    @Transactional
     public void removeAllFriends(User user) {
         List<User> friends = List.copyOf(user.getFriends());
+
         for (User friend : friends) {
             user.getFriends().remove(friend);
             friend.getFriends().remove(user);
@@ -155,6 +158,7 @@ public class FriendService {
 
         userRepository.save(user);
     }
+
 
     private FriendInvitationResponse mapToResponse(FriendInvitation invitation) {
         return new FriendInvitationResponse(
