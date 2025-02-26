@@ -139,17 +139,24 @@ class UserServiceTest {
 
     @Test
     void shouldDeleteUserSuccessfully() {
-        // Arrange
         User user = TestUtils.createUser();
-        when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
+        User friend = TestUtils.createFriendUser();
+
+        user.getFriends().add(friend);
+        friend.getFriends().add(user);
+
+        when(userRepository.findByEmail(user.getUsername()))
+                .thenReturn(Optional.of(user))
+                .thenReturn(Optional.of(user));
+
         doNothing().when(userRepository).delete(user);
 
-        // Act
         userService.deleteUser(user.getUsername());
 
-        // Assert
-        verify(userRepository).findByEmail(user.getUsername());
-        verify(userRepository).delete(user);
+        verify(userRepository, times(2)).findByEmail(user.getUsername());
+        verify(userRepository, times(1)).save(friend);
+        verify(userRepository, times(1)).save(user);
+        verify(userRepository, times(1)).delete(user);
     }
 
     @Test
