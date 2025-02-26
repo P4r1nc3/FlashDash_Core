@@ -19,11 +19,19 @@ public class UserService implements UserDetailsService {
 
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
+    private final DeckService deckService;
+    private final GameSessionService gameSessionService;
     private final FriendService friendService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(FriendService friendService, UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(DeckService deckService,
+                       GameSessionService gameSessionService,
+                       FriendService friendService,
+                       UserRepository userRepository,
+                       PasswordEncoder passwordEncoder) {
+        this.deckService = deckService;
+        this.gameSessionService = gameSessionService;
         this.friendService = friendService;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -91,6 +99,8 @@ public class UserService implements UserDetailsService {
                     );
                 });
 
+        deckService.deleteAllDecksForUser(user);
+        gameSessionService.removeAllGameSessionsForUser(user);
         friendService.removeAllFriends(email);
         userRepository.delete(user);
         logger.info("User with email {} successfully deleted.", email);
