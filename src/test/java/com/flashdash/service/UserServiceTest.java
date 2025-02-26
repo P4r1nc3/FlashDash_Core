@@ -154,7 +154,7 @@ class UserServiceTest {
         when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
         doNothing().when(deckService).deleteAllDecksForUser(user);
         doNothing().when(gameSessionService).removeAllGameSessionsForUser(user);
-        doNothing().when(friendService).removeAllFriends(user.getUsername());
+        doNothing().when(friendService).removeAllFriends(user);
         doNothing().when(userRepository).delete(user);
 
         // Act
@@ -164,7 +164,7 @@ class UserServiceTest {
         verify(userRepository, times(1)).findByEmail(user.getUsername());
         verify(deckService, times(1)).deleteAllDecksForUser(user);
         verify(gameSessionService, times(1)).removeAllGameSessionsForUser(user);
-        verify(friendService, times(1)).removeAllFriends(user.getUsername());
+        verify(friendService, times(1)).removeAllFriends(user);
         verify(userRepository, times(1)).delete(user);
     }
 
@@ -183,7 +183,7 @@ class UserServiceTest {
         verify(userRepository, times(1)).findByEmail("nonexistent@example.com");
         verify(deckService, never()).deleteAllDecksForUser(any(User.class));
         verify(gameSessionService, never()).removeAllGameSessionsForUser(any(User.class));
-        verify(friendService, never()).removeAllFriends(anyString());
+        verify(friendService, never()).removeAllFriends(any(User.class));
         verify(userRepository, never()).delete(any(User.class));
     }
 }

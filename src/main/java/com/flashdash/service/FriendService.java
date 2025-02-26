@@ -145,10 +145,7 @@ public class FriendService {
         userRepository.save(friend);
     }
 
-    public void removeAllFriends(String userEmail) {
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new FlashDashException(ErrorCode.E404001, "User not found: " + userEmail));
-
+    public void removeAllFriends(User user) {
         List<User> friends = List.copyOf(user.getFriends());
         for (User friend : friends) {
             user.getFriends().remove(friend);
