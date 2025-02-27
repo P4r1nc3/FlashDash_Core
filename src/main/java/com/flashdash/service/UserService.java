@@ -99,8 +99,8 @@ public class UserService implements UserDetailsService {
                     );
                 });
 
-        deckService.deleteAllDecksForUser(user);
         gameSessionService.removeAllGameSessionsForUser(user);
+        deckService.deleteAllDecksForUser(user);
         friendService.removeAllFriends(user);
         userRepository.delete(user);
         logger.info("User with email {} successfully deleted.", email);
