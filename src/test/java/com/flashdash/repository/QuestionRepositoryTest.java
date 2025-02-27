@@ -110,7 +110,7 @@ class QuestionRepositoryTest {
         questionRepository.save(question1);
 
         // Act
-        questionRepository.softDeleteQuestion(question1);
+        questionRepository.delete(question1);
 
         // Assert
         Optional<Question> deletedQuestion = questionRepository.findByDeckAndQuestionId(deck, question1.getQuestionId());
@@ -118,7 +118,7 @@ class QuestionRepositoryTest {
     }
 
     @Test
-    void shouldSoftDeleteAllQuestionsByDeck() {
+    void shouldDeleteAllQuestionsByDeck() {
         // Arrange
         User user = TestUtils.createUser();
         userRepository.save(user);
@@ -132,7 +132,7 @@ class QuestionRepositoryTest {
         questionRepository.save(question2);
 
         // Act
-        questionRepository.softDeleteAllByDeck(deck);
+        questionRepository.deleteAllByDeck(deck);
 
         // Assert
         List<Question> deletedQuestions = questionRepository.findAllByDeck(deck);
@@ -154,7 +154,7 @@ class QuestionRepositoryTest {
         questionRepository.save(question2);
 
         // Act
-        questionRepository.softDeleteQuestion(question1);
+        questionRepository.delete(question1);
 
         // Assert
         List<Question> questions = questionRepository.findAllByDeck(deck);
