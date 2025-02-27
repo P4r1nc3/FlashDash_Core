@@ -85,4 +85,9 @@ public class GameSessionService {
         GameSessionResult result = new GameSessionResult(score, correctCount, totalQuestions);
         return result;
     }
+
+    public void removeAllGameSessionsForUser(User user) {
+        List<GameSession> userSessions = gameSessionRepository.findAllByUser(user);
+        gameSessionRepository.deleteAll(userSessions);
+    }
 }

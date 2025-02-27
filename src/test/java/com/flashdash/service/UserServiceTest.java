@@ -29,6 +29,15 @@ class UserServiceTest {
     private UserService userService;
 
     @MockBean
+    private GameSessionService gameSessionService;
+
+    @MockBean
+    private DeckService deckService;
+
+    @MockBean
+    private FriendService friendService;
+
+    @MockBean
     private UserRepository userRepository;
 
     @MockBean
@@ -141,16 +150,24 @@ class UserServiceTest {
     void shouldDeleteUserSuccessfully() {
         // Arrange
         User user = TestUtils.createUser();
+
         when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
+        doNothing().when(deckService).deleteAllDecksForUser(user);
+        doNothing().when(gameSessionService).removeAllGameSessionsForUser(user);
+        doNothing().when(friendService).removeAllFriends(user);
         doNothing().when(userRepository).delete(user);
 
         // Act
         userService.deleteUser(user.getUsername());
 
         // Assert
-        verify(userRepository).findByEmail(user.getUsername());
-        verify(userRepository).delete(user);
+        verify(userRepository, times(1)).findByEmail(user.getUsername());
+        verify(deckService, times(1)).deleteAllDecksForUser(user);
+        verify(gameSessionService, times(1)).removeAllGameSessionsForUser(user);
+        verify(friendService, times(1)).removeAllFriends(user);
+        verify(userRepository, times(1)).delete(user);
     }
+
 
     @Test
     void shouldThrowExceptionWhenDeletingNonExistentUser() {
@@ -163,6 +180,10 @@ class UserServiceTest {
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404001)
                 .hasMessage("User with email nonexistent@example.com not found.");
 
-        verify(userRepository, times(0)).delete(any(User.class));
+        verify(userRepository, times(1)).findByEmail("nonexistent@example.com");
+        verify(deckService, never()).deleteAllDecksForUser(any(User.class));
+        verify(gameSessionService, never()).removeAllGameSessionsForUser(any(User.class));
+        verify(friendService, never()).removeAllFriends(any(User.class));
+        verify(userRepository, never()).delete(any(User.class));
     }
 }

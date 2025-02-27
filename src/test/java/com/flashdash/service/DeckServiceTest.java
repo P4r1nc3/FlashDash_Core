@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -139,16 +140,16 @@ class DeckServiceTest {
         Deck deck = TestUtils.createDeck(user);
 
         when(deckRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(deck));
-        doNothing().when(questionRepository).softDeleteAllByDeck(deck);
-        doNothing().when(deckRepository).softDeleteDeck(deck);
+        doNothing().when(questionRepository).deleteAllByDeck(deck);
+        doNothing().when(deckRepository).delete(deck);
 
         // Act
         deckService.deleteDeck(1L, user);
 
         // Assert
         verify(deckRepository).findByIdAndUser(1L, user);
-        verify(questionRepository).softDeleteAllByDeck(deck);
-        verify(deckRepository).softDeleteDeck(deck);
+        verify(questionRepository).deleteAllByDeck(deck);
+        verify(deckRepository).delete(deck);
     }
 
     @Test
@@ -163,5 +164,62 @@ class DeckServiceTest {
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404002);
 
         verify(deckRepository).findByIdAndUser(1L, user);
+    }
+
+    @Test
+    void shouldDeleteAllDecksForUserSuccessfully() {
+        // Arrange
+        User user = TestUtils.createUser();
+        Deck deck1 = TestUtils.createDeck(user);
+        deck1.setId(1L);
+        Deck deck2 = TestUtils.createDeck(user);
+        deck2.setId(2L);
+        List<Deck> userDecks = List.of(deck1, deck2);
+
+        when(deckRepository.findAllByUser(user)).thenReturn(userDecks);
+        when(deckRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(deck1));
+        when(deckRepository.findByIdAndUser(2L, user)).thenReturn(Optional.of(deck2));
+
+        doNothing().when(questionRepository).deleteAllByDeck(any(Deck.class));
+        doNothing().when(deckRepository).delete(any(Deck.class));
+
+        // Act
+        deckService.deleteAllDecksForUser(user);
+
+        // Assert
+        verify(deckRepository).findAllByUser(user);
+        verify(deckRepository, times(userDecks.size())).delete(any(Deck.class));
+        verify(questionRepository, times(userDecks.size())).deleteAllByDeck(any(Deck.class));
+    }
+
+
+    @Test
+    void shouldNotDeleteDecksWhenUserHasNone() {
+        // Arrange
+        User user = TestUtils.createUser();
+        when(deckRepository.findAllByUser(user)).thenReturn(List.of());
+
+        // Act
+        deckService.deleteAllDecksForUser(user);
+
+        // Assert
+        verify(deckRepository).findAllByUser(user);
+        verify(deckRepository, never()).delete(any(Deck.class));
+        verify(questionRepository, never()).deleteAllByDeck(any(Deck.class));
+    }
+
+    @Test
+    void shouldNotDeleteAnythingWhenDeletingDecksForNonExistentUser() {
+        // Arrange
+        User user = TestUtils.createUser();
+
+        when(deckRepository.findAllByUser(user)).thenReturn(Collections.emptyList());
+
+        // Act & Assert
+        deckService.deleteAllDecksForUser(user);
+
+        verify(deckRepository).findAllByUser(user);
+        verify(deckRepository, never()).delete(any(Deck.class));
+        verify(questionRepository, never()).deleteAllByDeck(any(Deck.class));
     }
 }

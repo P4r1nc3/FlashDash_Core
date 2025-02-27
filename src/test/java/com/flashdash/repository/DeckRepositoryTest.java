@@ -111,7 +111,7 @@ class DeckRepositoryTest {
         deckRepository.save(deck2);
 
         // Act
-        deckRepository.softDeleteDeck(deck1);
+        deckRepository.delete(deck1);
 
         // Assert
         Optional<Deck> softDeletedDeck = deckRepository.findByIdAndUser(deck1.getId(), user);
@@ -133,7 +133,7 @@ class DeckRepositoryTest {
         deckRepository.save(deck1);
 
         // Act
-        deckRepository.softDeleteDeck(deck1);
+        deckRepository.delete(deck1);
 
         // Assert
         List<Deck> decks = deckRepository.findAllByUser(user);

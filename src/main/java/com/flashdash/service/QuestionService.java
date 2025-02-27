@@ -32,7 +32,6 @@ public class QuestionService {
         logger.info("Deck with id: {} successfully retrieved for adding question", deckId);
 
         question.setDeck(deck);
-        question.setDeleted(false);
         question.setCreatedAt(LocalDateTime.now());
         question.setUpdatedAt(LocalDateTime.now());
         Question savedQuestion = questionRepository.save(question);
@@ -79,26 +78,20 @@ public class QuestionService {
                     );
                 });
 
-        // Create a new version of the question with the updated details
-        Question updatedQuestion = new Question();
-        updatedQuestion.setDeck(deck);
-        updatedQuestion.setQuestion(questionDetails.getQuestion());
-        updatedQuestion.setCorrectAnswers(questionDetails.getCorrectAnswers());
-        updatedQuestion.setIncorrectAnswers(questionDetails.getIncorrectAnswers());
-        updatedQuestion.setDifficulty(questionDetails.getDifficulty());
-        updatedQuestion.setCreatedAt(LocalDateTime.now());
-        updatedQuestion.setUpdatedAt(LocalDateTime.now());
-        updatedQuestion.setVersion(question.getVersion() + 1);
+        // Update question details
+        question.setDeck(deck);
+        question.setQuestion(questionDetails.getQuestion());
+        question.setCorrectAnswers(questionDetails.getCorrectAnswers());
+        question.setIncorrectAnswers(questionDetails.getIncorrectAnswers());
+        question.setDifficulty(questionDetails.getDifficulty());
+        question.setUpdatedAt(LocalDateTime.now());
+        question.setVersion(question.getVersion() + 1);
 
         // Save the new version of the question
-        questionRepository.save(updatedQuestion);
-
-        // Mark the old question as deleted or update its status if needed
-        question.setDeleted(true);
         questionRepository.save(question);
 
         logger.info("Successfully updated question with id: {} in deck with id: {}", questionId, deckId);
-        return updatedQuestion;
+        return question;
     }
 
     public void deleteQuestion(Long deckId, Long questionId, User user) {
@@ -114,7 +107,7 @@ public class QuestionService {
                     );
                 });
 
-        questionRepository.softDeleteQuestion(question);
-        logger.info("Successfully marked question with id: {} as deleted from deck with id: {}", questionId, deckId);
+        questionRepository.delete(question);
+        logger.info("Successfully deleted question with id: {} from deck with id: {}", questionId, deckId);
     }
 }
