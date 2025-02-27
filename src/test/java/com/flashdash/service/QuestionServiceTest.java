@@ -152,7 +152,7 @@ class QuestionServiceTest {
         // Assert
         verify(deckService).getDeckById(1L, user);
         verify(questionRepository).findByDeckAndQuestionId(deck, 1L);
-        verify(questionRepository).softDeleteQuestion(question);
+        verify(questionRepository).delete(question);
     }
 
     @Test

@@ -3,10 +3,7 @@ package com.flashdash;
 import com.flashdash.dto.response.AuthenticationResponse;
 import com.flashdash.dto.request.LoginRequest;
 import com.flashdash.dto.request.RegisterRequest;
-import com.flashdash.model.User;
-import com.flashdash.model.Question;
-import com.flashdash.model.Deck;
-import com.flashdash.model.FriendInvitation;
+import com.flashdash.model.*;
 import org.springframework.mail.SimpleMailMessage;
 
 import java.time.LocalDateTime;
@@ -74,6 +71,19 @@ public class TestUtils {
         question.setUpdatedAt(LocalDateTime.now());
         question.setDeck(deck);
         return question;
+    }
+
+    public static GameSession createGameSession(User user, Deck deck, GameSessionStatus status) {
+        GameSession session = new GameSession();
+        session.setUser(user);
+        session.setDeck(deck);
+        session.setStatus(status);
+        session.setCreatedAt(LocalDateTime.now());
+        session.setUpdatedAt(LocalDateTime.now());
+        session.setTotalScore(0);
+        session.setCorrectAnswersCount(0);
+        session.setEndTime(null);
+        return session;
     }
 
     public static FriendInvitation createFriendInvitation(User sender, User recipient) {

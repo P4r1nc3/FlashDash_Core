@@ -11,14 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface DeckRepository extends JpaRepository<Deck, Long> {
-    @Query("SELECT d FROM Deck d WHERE d.user = :user AND d.isDeleted = false")
     List<Deck> findAllByUser(User user);
 
-    @Query("SELECT d FROM Deck d WHERE d.id = :deckId AND d.user = :user AND d.isDeleted = false")
     Optional<Deck> findByIdAndUser(Long deckId, User user);
-
-    @Modifying
-    @Transactional
-    @Query("UPDATE Deck d SET d.isDeleted = true WHERE d = :deck")
-    void softDeleteDeck(Deck deck);
 }
