@@ -31,7 +31,6 @@ public class DeckService {
         logger.info("Attempting to create a new deck for user with email: {}", user.getUsername());
 
         deck.setUser(user);
-        deck.setDeleted(false);
         deck.setCreatedAt(LocalDateTime.now());
         deck.setUpdatedAt(LocalDateTime.now());
         Deck savedDeck = deckRepository.save(deck);
@@ -95,10 +94,10 @@ public class DeckService {
                     );
                 });
 
-        questionRepository.softDeleteAllByDeck(deck);
-        deckRepository.softDeleteDeck(deck);
+        questionRepository.deleteAllByDeck(deck);
+        deckRepository.delete(deck);
 
-        logger.info("Successfully marked deck with id: {} as deleted for user with email: {}", deckId, user.getUsername());
+        logger.info("Successfully deleted deck with id: {} for user with email: {}", deckId, user.getUsername());
     }
 
     @Transactional
@@ -114,6 +113,6 @@ public class DeckService {
 
         decks.forEach(deck -> deleteDeck(deck.getId(), user));
 
-        logger.info("Successfully marked all decks as deleted for user with email: {}", user.getUsername());
+        logger.info("Successfully deleted all decks for user with email: {}", user.getUsername());
     }
 }

@@ -140,16 +140,16 @@ class DeckServiceTest {
         Deck deck = TestUtils.createDeck(user);
 
         when(deckRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(deck));
-        doNothing().when(questionRepository).softDeleteAllByDeck(deck);
-        doNothing().when(deckRepository).softDeleteDeck(deck);
+        doNothing().when(questionRepository).deleteAllByDeck(deck);
+        doNothing().when(deckRepository).delete(deck);
 
         // Act
         deckService.deleteDeck(1L, user);
 
         // Assert
         verify(deckRepository).findByIdAndUser(1L, user);
-        verify(questionRepository).softDeleteAllByDeck(deck);
-        verify(deckRepository).softDeleteDeck(deck);
+        verify(questionRepository).deleteAllByDeck(deck);
+        verify(deckRepository).delete(deck);
     }
 
     @Test
@@ -180,16 +180,16 @@ class DeckServiceTest {
         when(deckRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(deck1));
         when(deckRepository.findByIdAndUser(2L, user)).thenReturn(Optional.of(deck2));
 
-        doNothing().when(questionRepository).softDeleteAllByDeck(any(Deck.class));
-        doNothing().when(deckRepository).softDeleteDeck(any(Deck.class));
+        doNothing().when(questionRepository).deleteAllByDeck(any(Deck.class));
+        doNothing().when(deckRepository).delete(any(Deck.class));
 
         // Act
         deckService.deleteAllDecksForUser(user);
 
         // Assert
         verify(deckRepository).findAllByUser(user);
-        verify(deckRepository, times(userDecks.size())).softDeleteDeck(any(Deck.class));
-        verify(questionRepository, times(userDecks.size())).softDeleteAllByDeck(any(Deck.class));
+        verify(deckRepository, times(userDecks.size())).delete(any(Deck.class));
+        verify(questionRepository, times(userDecks.size())).deleteAllByDeck(any(Deck.class));
     }
 
 
@@ -204,8 +204,8 @@ class DeckServiceTest {
 
         // Assert
         verify(deckRepository).findAllByUser(user);
-        verify(deckRepository, never()).softDeleteDeck(any(Deck.class));
-        verify(questionRepository, never()).softDeleteAllByDeck(any(Deck.class));
+        verify(deckRepository, never()).delete(any(Deck.class));
+        verify(questionRepository, never()).deleteAllByDeck(any(Deck.class));
     }
 
     @Test
@@ -219,7 +219,7 @@ class DeckServiceTest {
         deckService.deleteAllDecksForUser(user);
 
         verify(deckRepository).findAllByUser(user);
-        verify(deckRepository, never()).softDeleteDeck(any(Deck.class));
-        verify(questionRepository, never()).softDeleteAllByDeck(any(Deck.class));
+        verify(deckRepository, never()).delete(any(Deck.class));
+        verify(questionRepository, never()).deleteAllByDeck(any(Deck.class));
     }
 }

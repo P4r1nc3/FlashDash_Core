@@ -37,14 +37,12 @@ public class Question {
 
     private int version = 1;
 
-    private boolean isDeleted;
-
     public Question() {
 
     }
 
     public Question(Long questionId, String question, List<String> correctAnswers, List<String> incorrectAnswers,
-                    String difficulty, LocalDateTime createdAt, LocalDateTime updatedAt, Deck deck, int version, boolean isDeleted) {
+                    String difficulty, LocalDateTime createdAt, LocalDateTime updatedAt, Deck deck, int version) {
         this.questionId = questionId;
         this.question = question;
         this.correctAnswers = correctAnswers;
@@ -54,7 +52,6 @@ public class Question {
         this.updatedAt = updatedAt;
         this.deck = deck;
         this.version = version;
-        this.isDeleted = isDeleted;
     }
 
     public Long getQuestionId() {
@@ -127,13 +124,5 @@ public class Question {
 
     public void setVersion(int version) {
         this.version = version;
-    }
-
-    public boolean isDeleted() {
-        return isDeleted;
-    }
-
-    public void setDeleted(boolean isDeleted) {
-        this.isDeleted = isDeleted;
     }
 }
