@@ -34,8 +34,8 @@ jobs:
           <servers>
             <server>
               <id>github</id>
-              <username>${{ secrets.GITHUB_ACTOR }}</username>
-              <password>${{ secrets.GITHUB_TOKEN }}</password>
+              <username>P4r1nc3</username>
+              <password>${{ secrets.TOKEN_GITHUB }}</password>
             </server>
           </servers>
           </settings>" > ~/.m2/settings.xml
@@ -45,7 +45,7 @@ jobs:
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-
+          restore-keys: ${{ runner.os }}-m2
 
       - name: Compile project with Maven
         run: mvn -B compile --file pom.xml
@@ -70,8 +70,8 @@ jobs:
           <servers>
             <server>
               <id>github</id>
-              <username>${{ secrets.GITHUB_ACTOR }}</username>
-              <password>${{ secrets.GITHUB_TOKEN }}</password>
+              <username>P4r1nc3</username>
+              <password>${{ secrets.TOKEN_GITHUB }}</password>
             </server>
           </servers>
           </settings>" > ~/.m2/settings.xml
@@ -98,8 +98,8 @@ jobs:
           <servers>
             <server>
               <id>github</id>
-              <username>${{ secrets.GITHUB_ACTOR }}</username>
-              <password>${{ secrets.GITHUB_TOKEN }}</password>
+              <username>P4r1nc3</username>
+              <password>${{ secrets.TOKEN_GITHUB }}</password>
             </server>
           </servers>
           </settings>" > ~/.m2/settings.xml
@@ -139,8 +139,8 @@ jobs:
           <servers>
             <server>
               <id>github</id>
-              <username>${{ secrets.GITHUB_ACTOR }}</username>
-              <password>${{ secrets.GITHUB_TOKEN }}</password>
+              <username>P4r1nc3</username>
+              <password>${{ secrets.TOKEN_GITHUB }}</password>
             </server>
           </servers>
           </settings>" > ~/.m2/settings.xml
