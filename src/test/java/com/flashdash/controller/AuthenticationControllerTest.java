@@ -2,20 +2,20 @@ package com.flashdash.controller;
 
 import com.flashdash.FlashDashApplication;
 import com.flashdash.TestUtils;
-import com.flashdash.dto.response.AuthenticationResponse;
-import com.flashdash.dto.request.LoginRequest;
-import com.flashdash.dto.request.RegisterRequest;
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
 import com.flashdash.service.AuthenticationService;
+import com.p4r1nc3.flashdash.core.model.AuthenticationResponse;
+import com.p4r1nc3.flashdash.core.model.LoginRequest;
+import com.p4r1nc3.flashdash.core.model.RegisterRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -29,7 +29,7 @@ class AuthenticationControllerTest {
     @Autowired
     private AuthenticationController authenticationController;
 
-    @MockBean
+    @MockitoBean
     private AuthenticationService authenticationService;
 
     @Test

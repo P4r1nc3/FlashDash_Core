@@ -1,9 +1,9 @@
 package com.flashdash;
 
-import com.flashdash.dto.response.AuthenticationResponse;
-import com.flashdash.dto.request.LoginRequest;
-import com.flashdash.dto.request.RegisterRequest;
 import com.flashdash.model.*;
+import com.p4r1nc3.flashdash.core.model.AuthenticationResponse;
+import com.p4r1nc3.flashdash.core.model.LoginRequest;
+import com.p4r1nc3.flashdash.core.model.RegisterRequest;
 import org.springframework.mail.SimpleMailMessage;
 
 import java.time.LocalDateTime;
@@ -38,6 +38,7 @@ public class TestUtils {
 
     public static RegisterRequest createRegisterRequest() {
         RegisterRequest registerRequest = new RegisterRequest();
+        registerRequest.setUsername("testuser");
         registerRequest.setFirstName("Test");
         registerRequest.setLastName("User");
         registerRequest.setEmail("test@example.com");
