@@ -2,12 +2,12 @@ package com.flashdash.controller;
 
 import com.flashdash.FlashDashApplication;
 import com.flashdash.TestUtils;
-import com.flashdash.dto.response.AuthenticationResponse;
-import com.flashdash.dto.request.LoginRequest;
-import com.flashdash.dto.request.RegisterRequest;
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
 import com.flashdash.service.AuthenticationService;
+import com.p4r1nc3.flashdash.core.model.AuthenticationResponse;
+import com.p4r1nc3.flashdash.core.model.LoginRequest;
+import com.p4r1nc3.flashdash.core.model.RegisterRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,9 +1,9 @@
 package com.flashdash.controller;
 
-import com.flashdash.dto.response.AuthenticationResponse;
-import com.flashdash.dto.request.LoginRequest;
-import com.flashdash.dto.request.RegisterRequest;
 import com.flashdash.service.AuthenticationService;
+import com.p4r1nc3.flashdash.core.model.AuthenticationResponse;
+import com.p4r1nc3.flashdash.core.model.LoginRequest;
+import com.p4r1nc3.flashdash.core.model.RegisterRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
