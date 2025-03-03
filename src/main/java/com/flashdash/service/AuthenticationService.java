@@ -1,19 +1,18 @@
 package com.flashdash.service;
 
 import com.flashdash.config.JwtManager;
-import com.flashdash.dto.response.AuthenticationResponse;
-import com.flashdash.dto.request.LoginRequest;
-import com.flashdash.dto.request.RegisterRequest;
 import com.flashdash.exception.FlashDashException;
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.model.User;
 import com.flashdash.repository.UserRepository;
+import com.p4r1nc3.flashdash.core.model.AuthenticationResponse;
+import com.p4r1nc3.flashdash.core.model.LoginRequest;
+import com.p4r1nc3.flashdash.core.model.RegisterRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -56,7 +55,11 @@ public class AuthenticationService {
 
         String token = jwtManager.generateToken(user.getUsername());
         logger.info("Login successful for email: {}", request.getEmail());
-        return new AuthenticationResponse(token);
+
+        AuthenticationResponse authenticationResponse = new AuthenticationResponse();
+        authenticationResponse.setToken(token);
+
+        return authenticationResponse;
     }
 
     public AuthenticationResponse register(RegisterRequest request) {
@@ -79,7 +82,10 @@ public class AuthenticationService {
         userRepository.save(user);
         emailService.sendActivationEmail(user.getUsername(), activationToken);
 
-        return new AuthenticationResponse("Account created. Please check your email to activate.");
+        AuthenticationResponse authenticationResponse = new AuthenticationResponse();
+        authenticationResponse.setToken("Account created. Please check your email to activate.");
+
+        return authenticationResponse;
     }
 
     public void activateAccount(String token) {
