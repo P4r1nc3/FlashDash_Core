@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.Collections;
 import java.util.List;
@@ -29,10 +29,10 @@ class DeckServiceTest {
     @Autowired
     private DeckService deckService;
 
-    @MockBean
+    @MockitoBean
     private DeckRepository deckRepository;
 
-    @MockBean
+    @MockitoBean
     private QuestionRepository questionRepository;
 
     @Test
