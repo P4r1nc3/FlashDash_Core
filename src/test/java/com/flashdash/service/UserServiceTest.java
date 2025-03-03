@@ -12,8 +12,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.Optional;
 
@@ -28,19 +28,19 @@ class UserServiceTest {
     @Autowired
     private UserService userService;
 
-    @MockBean
+    @MockitoBean
     private GameSessionService gameSessionService;
 
-    @MockBean
+    @MockitoBean
     private DeckService deckService;
 
-    @MockBean
+    @MockitoBean
     private FriendService friendService;
 
-    @MockBean
+    @MockitoBean
     private UserRepository userRepository;
 
-    @MockBean
+    @MockitoBean
     private PasswordEncoder passwordEncoder;
 
     @Test
