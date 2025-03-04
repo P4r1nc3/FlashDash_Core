@@ -44,7 +44,11 @@ public class QuestionController {
     }
 
     @PutMapping("/{questionId}")
-    public ResponseEntity<QuestionResponse> updateQuestion(@PathVariable Long deckId, @PathVariable Long questionId, @RequestBody QuestionRequest questionRequest) {
+    public ResponseEntity<QuestionResponse> updateQuestion(
+            @PathVariable Long deckId,
+            @PathVariable Long questionId,
+            @RequestBody QuestionRequest questionRequest
+    ) {
         User user = getAuthenticatedUser();
         Question updatedQuestion = questionService.updateQuestion(deckId, questionId, questionRequest, user);
         return ResponseEntity.ok(EntityToResponseMapper.toQuestionResponse(updatedQuestion));
