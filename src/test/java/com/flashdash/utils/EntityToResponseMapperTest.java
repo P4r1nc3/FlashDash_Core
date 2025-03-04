@@ -1,13 +1,18 @@
 package com.flashdash.utils;
 
 import com.flashdash.model.Deck;
+import com.flashdash.model.GameSession;
+import com.flashdash.model.GameSessionStatus;
 import com.flashdash.model.Question;
 import com.flashdash.model.User;
 import com.p4r1nc3.flashdash.core.model.DeckResponse;
+import com.p4r1nc3.flashdash.core.model.GameSessionResponse;
 import com.p4r1nc3.flashdash.core.model.QuestionResponse;
 import com.flashdash.TestUtils;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -96,5 +101,66 @@ class EntityToResponseMapperTest {
             assertThat(questionResponses.get(i).getCreatedAt()).isEqualTo(questions.get(i).getCreatedAt().atOffset(java.time.ZoneOffset.UTC));
             assertThat(questionResponses.get(i).getUpdatedAt()).isEqualTo(questions.get(i).getUpdatedAt().atOffset(java.time.ZoneOffset.UTC));
         }
+    }
+
+    @Test
+    void shouldConvertGameSessionToGameSessionResponse() {
+        // Arrange
+        User user = TestUtils.createUser();
+        Deck deck = TestUtils.createDeck(user);
+        GameSession gameSession = TestUtils.createGameSession(user, deck, GameSessionStatus.FINISHED);
+        gameSession.setCorrectAnswersCount(5);
+        gameSession.setQuestionCount(10);
+        gameSession.setTotalScore(50);
+        gameSession.setCreatedAt(LocalDateTime.now().minusMinutes(30));
+        gameSession.setEndTime(LocalDateTime.now());
+
+        // Act
+        GameSessionResponse response = EntityToResponseMapper.toGameSessionResponse(gameSession);
+
+        // Assert
+        assertThat(response).isNotNull();
+        assertThat(response.getScore()).isEqualTo(50);
+        assertThat(response.getCorrectAnswers()).isEqualTo(5);
+        assertThat(response.getTotalQuestions()).isEqualTo(10);
+        assertThat(response.getAccuracy()).isEqualTo(50.0f);
+        assertThat(response.getDuration()).isEqualTo("30 min");
+        assertThat(response.getStartTime()).isEqualTo(gameSession.getCreatedAt().atOffset(ZoneOffset.UTC));
+        assertThat(response.getEndTime()).isEqualTo(gameSession.getEndTime().atOffset(ZoneOffset.UTC));
+    }
+
+    @Test
+    void shouldConvertGameSessionListToGameSessionResponseList() {
+        // Arrange
+        User user = TestUtils.createUser();
+        Deck deck = TestUtils.createDeck(user);
+        List<GameSession> gameSessions = List.of(
+                TestUtils.createGameSession(user, deck, GameSessionStatus.FINISHED),
+                TestUtils.createGameSession(user, deck, GameSessionStatus.FINISHED)
+        );
+
+        // Act
+        List<GameSessionResponse> responses = EntityToResponseMapper.toGameSessionResponseList(gameSessions);
+
+        // Assert
+        assertThat(responses).isNotEmpty();
+        assertThat(responses).hasSize(gameSessions.size());
+    }
+
+    @Test
+    void shouldHandleNullEndTimeInGameSessionResponse() {
+        // Arrange
+        User user = TestUtils.createUser();
+        Deck deck = TestUtils.createDeck(user);
+        GameSession gameSession = TestUtils.createGameSession(user, deck, GameSessionStatus.PENDING);
+        gameSession.setCreatedAt(LocalDateTime.now());
+
+        // Act
+        GameSessionResponse response = EntityToResponseMapper.toGameSessionResponse(gameSession);
+
+        // Assert
+        assertThat(response).isNotNull();
+        assertThat(response.getDuration()).isEqualTo("N/A");
+        assertThat(response.getEndTime()).isNull();
     }
 }
