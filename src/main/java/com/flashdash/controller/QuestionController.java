@@ -3,6 +3,9 @@ package com.flashdash.controller;
 import com.flashdash.model.User;
 import com.flashdash.model.Question;
 import com.flashdash.service.QuestionService;
+import com.flashdash.utils.EntityToResponseMapper;
+import com.p4r1nc3.flashdash.core.model.QuestionRequest;
+import com.p4r1nc3.flashdash.core.model.QuestionResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,47 +23,42 @@ public class QuestionController {
     }
 
     @PostMapping
-    public ResponseEntity<Question> addQuestionToDeck(@PathVariable Long deckId, @RequestBody Question question) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User user = (User) authentication.getPrincipal();
-
-        Question newQuestion = questionService.addQuestionToDeck(deckId, question, user);
-        return ResponseEntity.ok(newQuestion);
+    public ResponseEntity<QuestionResponse> addQuestionToDeck(@PathVariable Long deckId, @RequestBody QuestionRequest questionRequest) {
+        User user = getAuthenticatedUser();
+        Question newQuestion = questionService.addQuestionToDeck(deckId, questionRequest, user);
+        return ResponseEntity.ok(EntityToResponseMapper.toQuestionResponse(newQuestion));
     }
 
     @GetMapping
-    public ResponseEntity<List<Question>> getAllQuestionsInDeck(@PathVariable Long deckId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User user = (User) authentication.getPrincipal();
-
+    public ResponseEntity<List<QuestionResponse>> getAllQuestionsInDeck(@PathVariable Long deckId) {
+        User user = getAuthenticatedUser();
         List<Question> questions = questionService.getAllQuestionsInDeck(deckId, user);
-        return ResponseEntity.ok(questions);
+        return ResponseEntity.ok(EntityToResponseMapper.toQuestionResponseList(questions));
     }
 
     @GetMapping("/{questionId}")
-    public ResponseEntity<Question> getQuestion(@PathVariable Long deckId, @PathVariable Long questionId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User user = (User) authentication.getPrincipal();
-
+    public ResponseEntity<QuestionResponse> getQuestion(@PathVariable Long deckId, @PathVariable Long questionId) {
+        User user = getAuthenticatedUser();
         Question question = questionService.getQuestionById(deckId, questionId, user);
-        return ResponseEntity.ok(question);
+        return ResponseEntity.ok(EntityToResponseMapper.toQuestionResponse(question));
     }
 
     @PutMapping("/{questionId}")
-    public ResponseEntity<Question> updateQuestion(@PathVariable Long deckId, @PathVariable Long questionId, @RequestBody Question question) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User user = (User) authentication.getPrincipal();
-
-        Question newQuestion = questionService.updateQuestion(deckId, questionId, question, user);
-        return ResponseEntity.ok(newQuestion);
+    public ResponseEntity<QuestionResponse> updateQuestion(@PathVariable Long deckId, @PathVariable Long questionId, @RequestBody QuestionRequest questionRequest) {
+        User user = getAuthenticatedUser();
+        Question updatedQuestion = questionService.updateQuestion(deckId, questionId, questionRequest, user);
+        return ResponseEntity.ok(EntityToResponseMapper.toQuestionResponse(updatedQuestion));
     }
 
     @DeleteMapping("/{questionId}")
     public ResponseEntity<Void> deleteQuestion(@PathVariable Long deckId, @PathVariable Long questionId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User user = (User) authentication.getPrincipal();
-
+        User user = getAuthenticatedUser();
         questionService.deleteQuestion(deckId, questionId, user);
         return ResponseEntity.noContent().build();
+    }
+
+    private User getAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return (User) authentication.getPrincipal();
     }
 }
