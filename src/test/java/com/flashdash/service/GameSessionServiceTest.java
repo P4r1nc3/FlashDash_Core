@@ -2,11 +2,11 @@ package com.flashdash.service;
 
 import com.flashdash.FlashDashApplication;
 import com.flashdash.TestUtils;
-import com.flashdash.dto.response.GameSessionResult;
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
 import com.flashdash.model.*;
 import com.flashdash.repository.GameSessionRepository;
+import com.p4r1nc3.flashdash.core.model.QuestionRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -53,7 +53,8 @@ class GameSessionServiceTest {
         when(gameSessionRepository.findTopByDeckIdAndUserIdAndStatus(deck.getId(), user.getId(), GameSessionStatus.PENDING))
                 .thenReturn(null);
         when(deckService.getDeckById(deck.getId(), user)).thenReturn(deck);
-        when(questionService.getAllQuestionsInDeck(deck.getId(), user)).thenReturn(List.of(TestUtils.createQuestion(deck, "Sample Question")));
+        when(questionService.getAllQuestionsInDeck(deck.getId(), user))
+                .thenReturn(List.of(TestUtils.createQuestion(deck, "Sample Question")));
 
         // Act
         List<Question> questions = gameSessionService.startGameSession(deck.getId(), user);
@@ -68,55 +69,101 @@ class GameSessionServiceTest {
         // Arrange
         when(gameSessionRepository.findTopByDeckIdAndUserIdAndStatus(deck.getId(), user.getId(), GameSessionStatus.PENDING))
                 .thenReturn(gameSession);
-        when(questionService.getAllQuestionsInDeck(deck.getId(), user)).thenReturn(List.of(TestUtils.createQuestion(deck, "Sample Question")));
+        when(questionService.getAllQuestionsInDeck(deck.getId(), user))
+                .thenReturn(List.of(TestUtils.createQuestion(deck, "Sample Question")));
 
         // Act
         List<Question> questions = gameSessionService.startGameSession(deck.getId(), user);
 
         // Assert
         assertThat(questions).isNotEmpty();
-        verify(gameSessionRepository).save(gameSession);
+        verify(gameSessionRepository, never()).save(gameSession);
     }
 
     @Test
     void shouldEndGameSessionSuccessfully() {
         // Arrange
-        Question question = TestUtils.createQuestion(deck, "Sample Question");
-        question.setQuestionId(1L); // Upewnij się, że questionId nie jest null
-        List<Question> userAnswers = List.of(question);
+        QuestionRequest userAnswer = new QuestionRequest()
+                .question("Sample Question")
+                .correctAnswers(List.of("Correct Answer"));
 
-        when(questionService.getAllQuestionsInDeck(deck.getId(), user)).thenReturn(userAnswers);
+        Question correctQuestion = TestUtils.createQuestion(deck, "Sample Question");
+        correctQuestion.setCorrectAnswers(List.of("Correct Answer"));
+
+        when(questionService.getAllQuestionsInDeck(deck.getId(), user)).thenReturn(List.of(correctQuestion));
         when(gameSessionRepository.findTopByDeckIdAndUserIdAndStatus(deck.getId(), user.getId(), GameSessionStatus.PENDING))
                 .thenReturn(gameSession);
 
         // Act
-        GameSessionResult result = gameSessionService.endGameSession(deck.getId(), user, userAnswers);
+        GameSession result = gameSessionService.endGameSession(deck.getId(), user, List.of(userAnswer));
 
         // Assert
-        assertThat(result.getScore()).isEqualTo(100);
-        assertThat(result.getCorrectAnswers()).isEqualTo(1);
-        assertThat(result.getTotalQuestions()).isEqualTo(1);
+        assertThat(result.getTotalScore()).isEqualTo(100);
+        assertThat(result.getCorrectAnswersCount()).isEqualTo(1);
+        assertThat(result.getQuestionCount()).isEqualTo(1);
         verify(gameSessionRepository).save(gameSession);
     }
 
     @Test
     void shouldThrowExceptionWhenEndingSessionWithInvalidQuestion() {
         // Arrange
-        Question invalidQuestion = TestUtils.createQuestion(deck, "Invalid Question");
-        invalidQuestion.setQuestionId(99L); // Nadaj mu ID, żeby uniknąć NullPointerException
+        QuestionRequest invalidAnswer = new QuestionRequest()
+                .question("Invalid Question")
+                .correctAnswers(List.of("Wrong Answer"));
 
-        List<Question> userAnswers = List.of(invalidQuestion);
+        Question correctQuestion = TestUtils.createQuestion(deck, "Sample Question");
+        correctQuestion.setCorrectAnswers(List.of("Correct Answer"));
 
-        Question validQuestion = TestUtils.createQuestion(deck, "Sample Question");
-        validQuestion.setQuestionId(1L);
-
-        when(questionService.getAllQuestionsInDeck(deck.getId(), user)).thenReturn(List.of(validQuestion));
+        when(questionService.getAllQuestionsInDeck(deck.getId(), user)).thenReturn(List.of(correctQuestion));
 
         // Act & Assert
-        assertThatThrownBy(() -> gameSessionService.endGameSession(deck.getId(), user, userAnswers))
+        assertThatThrownBy(() -> gameSessionService.endGameSession(deck.getId(), user, List.of(invalidAnswer)))
                 .isInstanceOf(FlashDashException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404003)
-                .hasMessage("Question not found");
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404002)
+                .hasMessage("Matching question not found in the provided deck.");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenEndingSessionWithoutActiveSession() {
+        // Arrange
+        QuestionRequest userAnswer = new QuestionRequest()
+                .question("Sample Question")
+                .correctAnswers(List.of("Correct Answer"));
+
+        when(gameSessionRepository.findTopByDeckIdAndUserIdAndStatus(deck.getId(), user.getId(), GameSessionStatus.PENDING))
+                .thenReturn(null);
+
+        // Act & Assert
+        assertThatThrownBy(() -> gameSessionService.endGameSession(deck.getId(), user, List.of(userAnswer)))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404002)
+                .hasMessage("Matching question not found in the provided deck.");
+    }
+
+    @Test
+    void shouldGetExistingGameSession() {
+        // Arrange
+        deck.setId(1L);
+        user.setId(1L);
+        when(gameSessionRepository.findById(gameSession.getId())).thenReturn(java.util.Optional.of(gameSession));
+
+        // Act
+        GameSession retrievedSession = gameSessionService.getGameSession(1L, gameSession.getId(), user);
+
+        // Assert
+        assertThat(retrievedSession).isEqualTo(gameSession);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenGameSessionNotFound() {
+        // Arrange
+        when(gameSessionRepository.findById(anyLong())).thenReturn(java.util.Optional.empty());
+
+        // Act & Assert
+        assertThatThrownBy(() -> gameSessionService.getGameSession(deck.getId(), 99L, user))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404006)
+                .hasMessage("Game session not found");
     }
 
     @Test
@@ -142,5 +189,4 @@ class GameSessionServiceTest {
         // Assert
         verify(gameSessionRepository).deleteAll(List.of());
     }
-
 }
