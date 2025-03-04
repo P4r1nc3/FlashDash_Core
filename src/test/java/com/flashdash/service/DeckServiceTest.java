@@ -8,6 +8,7 @@ import com.flashdash.model.Deck;
 import com.flashdash.model.User;
 import com.flashdash.repository.DeckRepository;
 import com.flashdash.repository.QuestionRepository;
+import com.p4r1nc3.flashdash.core.model.DeckRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,16 +40,19 @@ class DeckServiceTest {
     void shouldCreateDeckSuccessfully() {
         // Arrange
         User user = TestUtils.createUser();
+        DeckRequest deckRequest = TestUtils.createDeckRequest();
         Deck deck = TestUtils.createDeck(user);
+
         when(deckRepository.save(any(Deck.class))).thenReturn(deck);
 
         // Act
-        Deck createdDeck = deckService.createDeck(deck, user);
+        Deck createdDeck = deckService.createDeck(deckRequest, user);
 
         // Assert
         assertThat(createdDeck).isNotNull();
-        assertThat(createdDeck).isEqualTo(deck);
-        verify(deckRepository).save(deck);
+        assertThat(createdDeck.getName()).isEqualTo(deckRequest.getName());
+        assertThat(createdDeck.getDescription()).isEqualTo(deckRequest.getDescription());
+        verify(deckRepository).save(any(Deck.class));
     }
 
     @Test
@@ -101,15 +105,15 @@ class DeckServiceTest {
         // Arrange
         User user = TestUtils.createUser();
         Deck deck = TestUtils.createDeck(user);
-        Deck updatedDetails = TestUtils.createDeck(user);
-        updatedDetails.setName("Updated Name");
-        updatedDetails.setDescription("Updated Description");
+        DeckRequest deckRequest = TestUtils.createDeckRequest();
+        deckRequest.setName("Updated Name");
+        deckRequest.setDescription("Updated Description");
 
         when(deckRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(deck));
         when(deckRepository.save(any(Deck.class))).thenReturn(deck);
 
         // Act
-        Deck updatedDeck = deckService.updateDeck(1L, updatedDetails, user);
+        Deck updatedDeck = deckService.updateDeck(1L, deckRequest, user);
 
         // Assert
         assertThat(updatedDeck.getName()).isEqualTo("Updated Name");
@@ -122,11 +126,11 @@ class DeckServiceTest {
     void shouldThrowExceptionWhenUpdatingNonExistentDeck() {
         // Arrange
         User user = TestUtils.createUser();
-        Deck updatedDetails = TestUtils.createDeck(user);
+        DeckRequest deckRequest = TestUtils.createDeckRequest();
         when(deckRepository.findByIdAndUser(1L, user)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThatThrownBy(() -> deckService.updateDeck(1L, updatedDetails, user))
+        assertThatThrownBy(() -> deckService.updateDeck(1L, deckRequest, user))
                 .isInstanceOf(FlashDashException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404002);
 
@@ -191,7 +195,6 @@ class DeckServiceTest {
         verify(deckRepository, times(userDecks.size())).delete(any(Deck.class));
         verify(questionRepository, times(userDecks.size())).deleteAllByDeck(any(Deck.class));
     }
-
 
     @Test
     void shouldNotDeleteDecksWhenUserHasNone() {

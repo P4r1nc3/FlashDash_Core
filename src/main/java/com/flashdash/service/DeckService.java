@@ -1,5 +1,6 @@
 package com.flashdash.service;
 
+import com.p4r1nc3.flashdash.core.model.DeckRequest;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,10 +28,13 @@ public class DeckService {
         this.questionRepository = questionRepository;
     }
 
-    public Deck createDeck(Deck deck, User user) {
+    public Deck createDeck(DeckRequest deckRequest, User user) {
         logger.info("Attempting to create a new deck for user with email: {}", user.getUsername());
 
+        Deck deck = new Deck();
         deck.setUser(user);
+        deck.setName(deckRequest.getName());
+        deck.setDescription(deckRequest.getDescription());
         deck.setCreatedAt(LocalDateTime.now());
         deck.setUpdatedAt(LocalDateTime.now());
         Deck savedDeck = deckRepository.save(deck);
@@ -60,7 +64,7 @@ public class DeckService {
                 });
     }
 
-    public Deck updateDeck(Long deckId, Deck deckDetails, User user) {
+    public Deck updateDeck(Long deckId, DeckRequest deckRequest, User user) {
         logger.info("Attempting to update deck with id: {} for user with email: {}", deckId, user.getUsername());
 
         Deck deck = deckRepository.findByIdAndUser(deckId, user)
@@ -72,8 +76,8 @@ public class DeckService {
                     );
                 });
 
-        deck.setName(deckDetails.getName());
-        deck.setDescription(deckDetails.getDescription());
+        deck.setName(deckRequest.getName());
+        deck.setDescription(deckRequest.getDescription());
         deck.setUpdatedAt(LocalDateTime.now());
 
         Deck updatedDeck = deckRepository.save(deck);
