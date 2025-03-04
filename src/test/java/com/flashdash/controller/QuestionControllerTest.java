@@ -5,9 +5,12 @@ import com.flashdash.TestUtils;
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
 import com.flashdash.model.User;
-import com.flashdash.model.Question;
 import com.flashdash.model.Deck;
+import com.flashdash.model.Question;
 import com.flashdash.service.QuestionService;
+import com.flashdash.utils.EntityToResponseMapper;
+import com.p4r1nc3.flashdash.core.model.QuestionRequest;
+import com.p4r1nc3.flashdash.core.model.QuestionResponse;
 import org.junit.jupiter.api.*;
 import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,15 +65,18 @@ class QuestionControllerTest {
     void testAddQuestionToDeckSuccessful() {
         // Arrange
         Deck deck = TestUtils.createDeck(user);
-        Question question = TestUtils.createQuestion(deck, "What is Java?");
-        when(questionService.addQuestionToDeck(eq(1L), any(Question.class), eq(user))).thenReturn(question);
+        QuestionRequest questionRequest = TestUtils.createQuestionRequest();
+        Question question = TestUtils.createQuestion(deck, questionRequest.getQuestion());
+        QuestionResponse expectedResponse = EntityToResponseMapper.toQuestionResponse(question);
+
+        when(questionService.addQuestionToDeck(eq(1L), any(QuestionRequest.class), eq(user))).thenReturn(question);
 
         // Act
-        ResponseEntity<Question> responseEntity = questionController.addQuestionToDeck(1L, question);
+        ResponseEntity<QuestionResponse> responseEntity = questionController.addQuestionToDeck(1L, questionRequest);
 
         // Assert
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals(question, responseEntity.getBody());
+        assertEquals(expectedResponse, responseEntity.getBody());
     }
 
     @Test
@@ -82,14 +88,16 @@ class QuestionControllerTest {
                 TestUtils.createQuestion(deck, "What is Java?"),
                 TestUtils.createQuestion(deck, "What is Spring?")
         );
+        List<QuestionResponse> expectedResponses = EntityToResponseMapper.toQuestionResponseList(questions);
+
         when(questionService.getAllQuestionsInDeck(eq(1L), eq(user))).thenReturn(questions);
 
         // Act
-        ResponseEntity<List<Question>> responseEntity = questionController.getAllQuestionsInDeck(1L);
+        ResponseEntity<List<QuestionResponse>> responseEntity = questionController.getAllQuestionsInDeck(1L);
 
         // Assert
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals(questions, responseEntity.getBody());
+        assertEquals(expectedResponses, responseEntity.getBody());
     }
 
     @Test
@@ -98,14 +106,16 @@ class QuestionControllerTest {
         // Arrange
         Deck deck = TestUtils.createDeck(user);
         Question question = TestUtils.createQuestion(deck, "What is Java?");
+        QuestionResponse expectedResponse = EntityToResponseMapper.toQuestionResponse(question);
+
         when(questionService.getQuestionById(eq(1L), eq(1L), eq(user))).thenReturn(question);
 
         // Act
-        ResponseEntity<Question> responseEntity = questionController.getQuestion(1L, 1L);
+        ResponseEntity<QuestionResponse> responseEntity = questionController.getQuestion(1L, 1L);
 
         // Assert
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals(question, responseEntity.getBody());
+        assertEquals(expectedResponse, responseEntity.getBody());
     }
 
     @Test
@@ -129,30 +139,32 @@ class QuestionControllerTest {
     void testUpdateQuestionSuccessful() {
         // Arrange
         Deck deck = TestUtils.createDeck(user);
+        QuestionRequest questionRequest = TestUtils.createQuestionRequest();
         Question updatedQuestion = TestUtils.createQuestion(deck, "Updated Question?");
-        when(questionService.updateQuestion(eq(1L), eq(1L), any(Question.class), eq(user))).thenReturn(updatedQuestion);
+        QuestionResponse expectedResponse = EntityToResponseMapper.toQuestionResponse(updatedQuestion);
+
+        when(questionService.updateQuestion(eq(1L), eq(1L), any(QuestionRequest.class), eq(user))).thenReturn(updatedQuestion);
 
         // Act
-        ResponseEntity<Question> responseEntity = questionController.updateQuestion(1L, 1L, updatedQuestion);
+        ResponseEntity<QuestionResponse> responseEntity = questionController.updateQuestion(1L, 1L, questionRequest);
 
         // Assert
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals(updatedQuestion, responseEntity.getBody());
+        assertEquals(expectedResponse, responseEntity.getBody());
     }
 
     @Test
     @Order(6)
     void testUpdateQuestionNotFound() {
         // Arrange
-        Deck deck = TestUtils.createDeck(user);
-        Question updatedQuestion = TestUtils.createQuestion(deck, "Updated Question?");
+        QuestionRequest questionRequest = TestUtils.createQuestionRequest();
         doThrow(new FlashDashException(ErrorCode.E404004, "Question not found"))
-                .when(questionService).updateQuestion(eq(1L), eq(1L), any(Question.class), eq(user));
+                .when(questionService).updateQuestion(eq(1L), eq(1L), any(QuestionRequest.class), eq(user));
 
         // Act & Assert
         FlashDashException exception = assertThrows(
                 FlashDashException.class,
-                () -> questionController.updateQuestion(1L, 1L, updatedQuestion)
+                () -> questionController.updateQuestion(1L, 1L, questionRequest)
         );
         assertEquals(ErrorCode.E404004, exception.getErrorCode());
         assertEquals("Question not found", exception.getMessage());

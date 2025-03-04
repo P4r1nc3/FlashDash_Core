@@ -6,6 +6,7 @@ import com.flashdash.model.Deck;
 import com.flashdash.model.User;
 import com.flashdash.model.Question;
 import com.flashdash.repository.QuestionRepository;
+import com.p4r1nc3.flashdash.core.model.QuestionRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -26,17 +27,23 @@ public class QuestionService {
         this.deckService = deckService;
     }
 
-    public Question addQuestionToDeck(Long deckId, Question question, User user) {
+    public Question addQuestionToDeck(Long deckId, QuestionRequest questionRequest, User user) {
         logger.info("Attempting to add question to deck with id: {} for user with email: {}", deckId, user.getUsername());
         Deck deck = deckService.getDeckById(deckId, user);
         logger.info("Deck with id: {} successfully retrieved for adding question", deckId);
 
-        question.setDeck(deck);
+        Question question = new Question();
+        question.setQuestion(questionRequest.getQuestion());
+        question.setCorrectAnswers(questionRequest.getCorrectAnswers());
+        question.setIncorrectAnswers(questionRequest.getIncorrectAnswers());
+        question.setDifficulty(questionRequest.getDifficulty().name());
         question.setCreatedAt(LocalDateTime.now());
         question.setUpdatedAt(LocalDateTime.now());
+        question.setDeck(deck);
+
         Question savedQuestion = questionRepository.save(question);
 
-        logger.info("Question successfully added to deck with id: {}. Question ID: {}", deckId, savedQuestion.getQuestionId());
+        logger.info("Question successfully added to deck with id: {}. Question id: {}", deckId, savedQuestion.getQuestionId());
         return savedQuestion;
     }
 
@@ -65,7 +72,7 @@ public class QuestionService {
         return question;
     }
 
-    public Question updateQuestion(Long deckId, Long questionId, Question questionDetails, User user) {
+    public Question updateQuestion(Long deckId, Long questionId, QuestionRequest questionRequest, User user) {
         logger.info("Attempting to update question with id: {} in deck with id: {} for user with email: {}", questionId, deckId, user.getUsername());
         Deck deck = deckService.getDeckById(deckId, user);
 
@@ -79,13 +86,13 @@ public class QuestionService {
                 });
 
         // Update question details
-        question.setDeck(deck);
-        question.setQuestion(questionDetails.getQuestion());
-        question.setCorrectAnswers(questionDetails.getCorrectAnswers());
-        question.setIncorrectAnswers(questionDetails.getIncorrectAnswers());
-        question.setDifficulty(questionDetails.getDifficulty());
+        question.setQuestion(questionRequest.getQuestion());
+        question.setCorrectAnswers(questionRequest.getCorrectAnswers());
+        question.setIncorrectAnswers(questionRequest.getIncorrectAnswers());
+        question.setDifficulty(questionRequest.getDifficulty().name());
         question.setUpdatedAt(LocalDateTime.now());
         question.setVersion(question.getVersion() + 1);
+        question.setDeck(deck);
 
         // Save the new version of the question
         questionRepository.save(question);

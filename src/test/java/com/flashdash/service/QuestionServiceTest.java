@@ -2,12 +2,14 @@ package com.flashdash.service;
 
 import com.flashdash.FlashDashApplication;
 import com.flashdash.TestUtils;
-import com.flashdash.exception.FlashDashException;
 import com.flashdash.exception.ErrorCode;
+import com.flashdash.exception.FlashDashException;
 import com.flashdash.model.User;
 import com.flashdash.model.Question;
 import com.flashdash.model.Deck;
 import com.flashdash.repository.QuestionRepository;
+import com.flashdash.utils.EntityToResponseMapper;
+import com.p4r1nc3.flashdash.core.model.QuestionRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,19 +41,20 @@ class QuestionServiceTest {
         // Arrange
         User user = TestUtils.createUser();
         Deck deck = TestUtils.createDeck(user);
-        Question question = TestUtils.createQuestion(deck, "What is Java?");
+        QuestionRequest questionRequest = TestUtils.createQuestionRequest();
+        Question question = TestUtils.createQuestion(deck, questionRequest.getQuestion());
 
         when(deckService.getDeckById(1L, user)).thenReturn(deck);
-        when(questionRepository.save(question)).thenReturn(question);
+        when(questionRepository.save(any(Question.class))).thenReturn(question);
 
         // Act
-        Question createdQuestion = questionService.addQuestionToDeck(1L, question, user);
+        Question createdQuestion = questionService.addQuestionToDeck(1L, questionRequest, user);
 
         // Assert
         assertThat(createdQuestion).isNotNull();
-        assertThat(createdQuestion).isEqualTo(question);
+        assertThat(createdQuestion.getQuestion()).isEqualTo(questionRequest.getQuestion());
         verify(deckService).getDeckById(1L, user);
-        verify(questionRepository).save(question);
+        verify(questionRepository).save(any(Question.class));
     }
 
     @Test
@@ -119,25 +122,44 @@ class QuestionServiceTest {
         // Arrange
         User user = TestUtils.createUser();
         Deck deck = TestUtils.createDeck(user);
-        Question question = TestUtils.createQuestion(deck, "What is Java?");
-        Question updatedDetails = TestUtils.createQuestion(deck, "Updated Question");
+        QuestionRequest questionRequest = TestUtils.createQuestionRequest();
+        Question existingQuestion = TestUtils.createQuestion(deck, "Old Question");
 
         when(deckService.getDeckById(1L, user)).thenReturn(deck);
-        when(questionRepository.findByDeckAndQuestionId(deck, 1L)).thenReturn(Optional.of(question));
-        when(questionRepository.save(question)).thenReturn(question);
+        when(questionRepository.findByDeckAndQuestionId(deck, 1L)).thenReturn(Optional.of(existingQuestion));
+        when(questionRepository.save(existingQuestion)).thenReturn(existingQuestion);
 
         // Act
-        Question updatedQuestion = questionService.updateQuestion(1L, 1L, updatedDetails, user);
+        Question updatedQuestion = questionService.updateQuestion(1L, 1L, questionRequest, user);
 
         // Assert
-        assertThat(updatedQuestion.getQuestion()).isEqualTo("Updated Question");
+        assertThat(updatedQuestion.getQuestion()).isEqualTo(questionRequest.getQuestion());
         verify(deckService).getDeckById(1L, user);
         verify(questionRepository).findByDeckAndQuestionId(deck, 1L);
-        verify(questionRepository).save(question);
+        verify(questionRepository).save(existingQuestion);
     }
 
     @Test
-    void shouldSoftDeleteQuestionSuccessfully() {
+    void shouldThrowExceptionWhenUpdatingNonExistentQuestion() {
+        // Arrange
+        User user = TestUtils.createUser();
+        Deck deck = TestUtils.createDeck(user);
+        QuestionRequest questionRequest = TestUtils.createQuestionRequest();
+
+        when(deckService.getDeckById(1L, user)).thenReturn(deck);
+        when(questionRepository.findByDeckAndQuestionId(deck, 1L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThatThrownBy(() -> questionService.updateQuestion(1L, 1L, questionRequest, user))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404003);
+
+        verify(deckService).getDeckById(1L, user);
+        verify(questionRepository).findByDeckAndQuestionId(deck, 1L);
+    }
+
+    @Test
+    void shouldDeleteQuestionSuccessfully() {
         // Arrange
         User user = TestUtils.createUser();
         Deck deck = TestUtils.createDeck(user);
