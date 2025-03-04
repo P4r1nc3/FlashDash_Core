@@ -1,8 +1,10 @@
 package com.flashdash.utils;
 
 import com.flashdash.model.Deck;
+import com.flashdash.model.Question;
 import com.flashdash.model.User;
 import com.p4r1nc3.flashdash.core.model.DeckResponse;
+import com.p4r1nc3.flashdash.core.model.QuestionResponse;
 import com.flashdash.TestUtils;
 import org.junit.jupiter.api.Test;
 
@@ -45,5 +47,54 @@ class EntityToResponseMapperTest {
         assertThat(deckResponses.get(0).getDeckId()).isEqualTo(decks.get(0).getId());
         assertThat(deckResponses.get(0).getName()).isEqualTo(decks.get(0).getName());
         assertThat(deckResponses.get(0).getDescription()).isEqualTo(decks.get(0).getDescription());
+    }
+
+    @Test
+    void shouldConvertQuestionToQuestionResponse() {
+        // Arrange
+        User user = TestUtils.createUser();
+        Deck deck = TestUtils.createDeck(user);
+        Question question = TestUtils.createQuestion(deck, "What is Java?");
+
+        // Act
+        QuestionResponse questionResponse = EntityToResponseMapper.toQuestionResponse(question);
+
+        // Assert
+        assertThat(questionResponse).isNotNull();
+        assertThat(questionResponse.getQuestionId()).isEqualTo(question.getQuestionId());
+        assertThat(questionResponse.getQuestion()).isEqualTo(question.getQuestion());
+        assertThat(questionResponse.getCorrectAnswers()).isEqualTo(question.getCorrectAnswers());
+        assertThat(questionResponse.getIncorrectAnswers()).isEqualTo(question.getIncorrectAnswers());
+        assertThat(questionResponse.getDifficulty()).isEqualTo(QuestionResponse.DifficultyEnum.fromValue(question.getDifficulty()));
+        assertThat(questionResponse.getCreatedAt()).isEqualTo(question.getCreatedAt().atOffset(java.time.ZoneOffset.UTC));
+        assertThat(questionResponse.getUpdatedAt()).isEqualTo(question.getUpdatedAt().atOffset(java.time.ZoneOffset.UTC));
+    }
+
+    @Test
+    void shouldConvertQuestionListToQuestionResponseList() {
+        // Arrange
+        User user = TestUtils.createUser();
+        Deck deck = TestUtils.createDeck(user);
+        List<Question> questions = List.of(
+                TestUtils.createQuestion(deck, "What is Java?"),
+                TestUtils.createQuestion(deck, "What is Spring Boot?")
+        );
+
+        // Act
+        List<QuestionResponse> questionResponses = EntityToResponseMapper.toQuestionResponseList(questions);
+
+        // Assert
+        assertThat(questionResponses).isNotEmpty();
+        assertThat(questionResponses).hasSize(questions.size());
+
+        for (int i = 0; i < questions.size(); i++) {
+            assertThat(questionResponses.get(i).getQuestionId()).isEqualTo(questions.get(i).getQuestionId());
+            assertThat(questionResponses.get(i).getQuestion()).isEqualTo(questions.get(i).getQuestion());
+            assertThat(questionResponses.get(i).getCorrectAnswers()).isEqualTo(questions.get(i).getCorrectAnswers());
+            assertThat(questionResponses.get(i).getIncorrectAnswers()).isEqualTo(questions.get(i).getIncorrectAnswers());
+            assertThat(questionResponses.get(i).getDifficulty()).isEqualTo(QuestionResponse.DifficultyEnum.fromValue(questions.get(i).getDifficulty()));
+            assertThat(questionResponses.get(i).getCreatedAt()).isEqualTo(questions.get(i).getCreatedAt().atOffset(java.time.ZoneOffset.UTC));
+            assertThat(questionResponses.get(i).getUpdatedAt()).isEqualTo(questions.get(i).getUpdatedAt().atOffset(java.time.ZoneOffset.UTC));
+        }
     }
 }
