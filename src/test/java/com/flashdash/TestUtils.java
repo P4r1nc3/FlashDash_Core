@@ -1,10 +1,7 @@
 package com.flashdash;
 
 import com.flashdash.model.*;
-import com.p4r1nc3.flashdash.core.model.AuthenticationResponse;
-import com.p4r1nc3.flashdash.core.model.DeckRequest;
-import com.p4r1nc3.flashdash.core.model.LoginRequest;
-import com.p4r1nc3.flashdash.core.model.RegisterRequest;
+import com.p4r1nc3.flashdash.core.model.*;
 import org.springframework.mail.SimpleMailMessage;
 
 import java.time.LocalDateTime;
@@ -70,12 +67,21 @@ public class TestUtils {
         return deck;
     }
 
+    public static QuestionRequest createQuestionRequest() {
+        QuestionRequest questionRequest = new QuestionRequest();
+        questionRequest.setQuestion("What is Java?");
+        questionRequest.setCorrectAnswers(List.of("A programming language", "A platform"));
+        questionRequest.setIncorrectAnswers(List.of("A drink", "A city"));
+        questionRequest.setDifficulty(QuestionRequest.DifficultyEnum.MEDIUM);
+        return questionRequest;
+    }
+
     public static Question createQuestion(Deck deck, String content) {
         Question question = new Question();
         question.setQuestion(content);
         question.setCorrectAnswers(List.of("Correct Answer 1", "Correct Answer 2"));
         question.setIncorrectAnswers(List.of("Incorrect Answer 1", "Incorrect Answer 2"));
-        question.setDifficulty("Medium");
+        question.setDifficulty("medium");
         question.setCreatedAt(LocalDateTime.now());
         question.setUpdatedAt(LocalDateTime.now());
         question.setDeck(deck);
