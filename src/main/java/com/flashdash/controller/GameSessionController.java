@@ -1,5 +1,6 @@
 package com.flashdash.controller;
 
+import com.flashdash.model.GameSession;
 import com.flashdash.model.Question;
 import com.flashdash.model.User;
 import com.flashdash.service.GameSessionService;
@@ -26,34 +27,34 @@ public class GameSessionController {
 
     @PostMapping("/start")
     public ResponseEntity<List<QuestionResponse>> startGameSession(@PathVariable Long deckId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User user = (User) authentication.getPrincipal();
-
+        User user = getAuthenticatedUser();
         List<Question> questions = gameSessionService.startGameSession(deckId, user);
         return ResponseEntity.ok(EntityToResponseMapper.toQuestionResponseList(questions));
     }
 
     @PostMapping("/end")
     public ResponseEntity<GameSessionResponse> endGameSession(@PathVariable Long deckId, @RequestBody List<QuestionRequest> userAnswers) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User user = (User) authentication.getPrincipal();
-
-        return ResponseEntity.ok(EntityToResponseMapper.toGameSessionResponse(gameSessionService.endGameSession(deckId, user, userAnswers)));
+        User user = getAuthenticatedUser();
+        GameSession gameSession = gameSessionService.endGameSession(deckId, user, userAnswers);
+        return ResponseEntity.ok(EntityToResponseMapper.toGameSessionResponse(gameSession));
     }
 
     @GetMapping
     public ResponseEntity<List<GameSessionResponse>> getGameSessions(@PathVariable Long deckId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User user = (User) authentication.getPrincipal();
-
-        return ResponseEntity.ok(EntityToResponseMapper.toGameSessionResponseList(gameSessionService.getGameSessions(deckId, user)));
+        User user = getAuthenticatedUser();
+        List<GameSession> gameSessionList = gameSessionService.getGameSessions(deckId, user);
+        return ResponseEntity.ok(EntityToResponseMapper.toGameSessionResponseList(gameSessionList));
     }
 
     @GetMapping("/{gameSessionId}")
     public ResponseEntity<GameSessionResponse> getGameSession(@PathVariable Long deckId, @PathVariable Long gameSessionId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User user = (User) authentication.getPrincipal();
+        User user = getAuthenticatedUser();
+        GameSession gameSession = gameSessionService.getGameSession(deckId, gameSessionId, user);
+        return ResponseEntity.ok(EntityToResponseMapper.toGameSessionResponse(gameSession));
+    }
 
-        return ResponseEntity.ok(EntityToResponseMapper.toGameSessionResponse(gameSessionService.getGameSession(deckId, gameSessionId, user)));
+    private User getAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return (User) authentication.getPrincipal();
     }
 }
