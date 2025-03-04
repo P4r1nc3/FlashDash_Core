@@ -52,6 +52,7 @@ public class EntityToResponseMapper {
 
     public static GameSessionResponse toGameSessionResponse(GameSession gameSession) {
         GameSessionResponse response = new GameSessionResponse();
+        response.setGameSessionId(gameSession.getId());
         response.setScore(gameSession.getTotalScore());
         response.setCorrectAnswers(gameSession.getCorrectAnswersCount());
         response.setTotalQuestions(gameSession.getQuestionCount());
