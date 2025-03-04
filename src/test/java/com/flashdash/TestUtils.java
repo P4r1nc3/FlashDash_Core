@@ -2,6 +2,7 @@ package com.flashdash;
 
 import com.flashdash.model.*;
 import com.p4r1nc3.flashdash.core.model.AuthenticationResponse;
+import com.p4r1nc3.flashdash.core.model.DeckRequest;
 import com.p4r1nc3.flashdash.core.model.LoginRequest;
 import com.p4r1nc3.flashdash.core.model.RegisterRequest;
 import org.springframework.mail.SimpleMailMessage;
@@ -50,6 +51,13 @@ public class TestUtils {
         AuthenticationResponse response = new AuthenticationResponse();
         response.setToken("mockToken");
         return response;
+    }
+
+    public static DeckRequest createDeckRequest() {
+        DeckRequest deckRequest = new DeckRequest();
+        deckRequest.setName("Sample Deck");
+        deckRequest.setDescription("This is a sample deck.");
+        return deckRequest;
     }
 
     public static Deck createDeck(User user) {
