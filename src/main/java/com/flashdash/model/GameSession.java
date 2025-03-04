@@ -3,6 +3,7 @@ package com.flashdash.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 @Entity
@@ -25,9 +26,13 @@ public class GameSession {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    private LocalDateTime startTime;
     private LocalDateTime endTime;
+
     private int totalScore;
     private int correctAnswersCount;
+    private int wrongAnswersCount;
+    private int questionCount;
 
     @Enumerated(EnumType.STRING)
     private GameSessionStatus status;
@@ -36,13 +41,15 @@ public class GameSession {
         this.status = GameSessionStatus.PENDING;
     }
 
-    public GameSession(User user, Deck deck, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public GameSession(User user, Deck deck, LocalDateTime createdAt, LocalDateTime updatedAt, int questionCount) {
         this.user = user;
         this.deck = deck;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.totalScore = 0;
         this.correctAnswersCount = 0;
+        this.wrongAnswersCount = 0;
+        this.questionCount = questionCount;
         this.status = GameSessionStatus.PENDING;
     }
 
@@ -86,6 +93,14 @@ public class GameSession {
         this.updatedAt = updatedAt;
     }
 
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
     public LocalDateTime getEndTime() {
         return endTime;
     }
@@ -110,11 +125,39 @@ public class GameSession {
         this.correctAnswersCount = correctAnswersCount;
     }
 
+    public int getWrongAnswersCount() {
+        return wrongAnswersCount;
+    }
+
+    public void setWrongAnswersCount(int wrongAnswersCount) {
+        this.wrongAnswersCount = wrongAnswersCount;
+    }
+
+    public int getQuestionCount() {
+        return questionCount;
+    }
+
+    public void setQuestionCount(int questionCount) {
+        this.questionCount = questionCount;
+    }
+
     public GameSessionStatus getStatus() {
         return status;
     }
 
     public void setStatus(GameSessionStatus status) {
         this.status = status;
+    }
+
+    public long getDurationInSeconds() {
+        if (startTime != null && endTime != null) {
+            return Duration.between(startTime, endTime).getSeconds();
+        }
+        return 0;
+    }
+
+    public double getAccuracy() {
+        if (questionCount == 0) return 0.0;
+        return ((double) correctAnswersCount / questionCount) * 100;
     }
 }

@@ -3,6 +3,8 @@ package com.flashdash.exception;
 public enum ErrorCode {
     // 400 Bad Request
     E400001,
+    E400002,
+    E400003,
     // 401 Unauthorized
     E401001,
     E401002,
@@ -16,6 +18,7 @@ public enum ErrorCode {
     E404003,
     E404004,
     E404005,
+    E404006,
     // 409 Conflict
     E409001,
     E409002,

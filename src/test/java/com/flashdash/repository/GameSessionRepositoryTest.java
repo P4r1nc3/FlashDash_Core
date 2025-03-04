@@ -122,4 +122,47 @@ class GameSessionRepositoryTest {
         // Assert
         assertThat(sessions).isEmpty();
     }
+
+    @Test
+    void shouldFindAllGameSessionsForSpecificDeckAndUser() {
+        // Arrange
+        User user = TestUtils.createUser();
+        userRepository.save(user);
+
+        Deck deck1 = TestUtils.createDeck(user);
+        deckRepository.save(deck1);
+
+        Deck deck2 = TestUtils.createDeck(user);
+        deckRepository.save(deck2);
+
+        GameSession session1 = TestUtils.createGameSession(user, deck1, GameSessionStatus.PENDING);
+        GameSession session2 = TestUtils.createGameSession(user, deck1, GameSessionStatus.FINISHED);
+        GameSession session3 = TestUtils.createGameSession(user, deck2, GameSessionStatus.PENDING);
+
+        gameSessionRepository.saveAll(List.of(session1, session2, session3));
+
+        // Act
+        List<GameSession> deck1Sessions = gameSessionRepository.findAllByDeckIdAndUserId(deck1.getId(), user.getId());
+
+        // Assert
+        assertThat(deck1Sessions).hasSize(2);
+        assertThat(deck1Sessions).extracting(GameSession::getDeck).extracting(Deck::getId).containsOnly(deck1.getId());
+        assertThat(deck1Sessions).extracting(GameSession::getUser).extracting(User::getId).containsOnly(user.getId());
+    }
+
+    @Test
+    void shouldReturnEmptyListWhenNoSessionsExistForUserAndDeck() {
+        // Arrange
+        User user = TestUtils.createUser();
+        userRepository.save(user);
+
+        Deck deck = TestUtils.createDeck(user);
+        deckRepository.save(deck);
+
+        // Act
+        List<GameSession> sessions = gameSessionRepository.findAllByDeckIdAndUserId(deck.getId(), user.getId());
+
+        // Assert
+        assertThat(sessions).isEmpty();
+    }
 }

@@ -1,9 +1,13 @@
 package com.flashdash.controller;
 
-import com.flashdash.dto.response.GameSessionResult;
+import com.flashdash.model.GameSession;
 import com.flashdash.model.Question;
 import com.flashdash.model.User;
 import com.flashdash.service.GameSessionService;
+import com.flashdash.utils.EntityToResponseMapper;
+import com.p4r1nc3.flashdash.core.model.GameSessionResponse;
+import com.p4r1nc3.flashdash.core.model.QuestionRequest;
+import com.p4r1nc3.flashdash.core.model.QuestionResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -12,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/decks")
+@RequestMapping("/decks/{deckId}/gameSessions")
 public class GameSessionController {
 
     private final GameSessionService gameSessionService;
@@ -21,22 +25,36 @@ public class GameSessionController {
         this.gameSessionService = gameSessionService;
     }
 
-    @PostMapping("/{deckId}/gameSessions/start")
-    public ResponseEntity<List<Question>> startGameSession(@PathVariable Long deckId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User user = (User) authentication.getPrincipal();
-
+    @PostMapping("/start")
+    public ResponseEntity<List<QuestionResponse>> startGameSession(@PathVariable Long deckId) {
+        User user = getAuthenticatedUser();
         List<Question> questions = gameSessionService.startGameSession(deckId, user);
-        return ResponseEntity.ok(questions);
+        return ResponseEntity.ok(EntityToResponseMapper.toQuestionResponseList(questions));
     }
 
+    @PostMapping("/end")
+    public ResponseEntity<GameSessionResponse> endGameSession(@PathVariable Long deckId, @RequestBody List<QuestionRequest> userAnswers) {
+        User user = getAuthenticatedUser();
+        GameSession gameSession = gameSessionService.endGameSession(deckId, user, userAnswers);
+        return ResponseEntity.ok(EntityToResponseMapper.toGameSessionResponse(gameSession));
+    }
 
-    @PostMapping("/{deckId}/gameSessions/end")
-    public ResponseEntity<GameSessionResult> endGameSession(@PathVariable Long deckId, @RequestBody List<Question> userAnswers) {
+    @GetMapping
+    public ResponseEntity<List<GameSessionResponse>> getGameSessions(@PathVariable Long deckId) {
+        User user = getAuthenticatedUser();
+        List<GameSession> gameSessionList = gameSessionService.getGameSessions(deckId, user);
+        return ResponseEntity.ok(EntityToResponseMapper.toGameSessionResponseList(gameSessionList));
+    }
+
+    @GetMapping("/{gameSessionId}")
+    public ResponseEntity<GameSessionResponse> getGameSession(@PathVariable Long deckId, @PathVariable Long gameSessionId) {
+        User user = getAuthenticatedUser();
+        GameSession gameSession = gameSessionService.getGameSession(deckId, gameSessionId, user);
+        return ResponseEntity.ok(EntityToResponseMapper.toGameSessionResponse(gameSession));
+    }
+
+    private User getAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User user = (User) authentication.getPrincipal();
-
-        GameSessionResult result = gameSessionService.endGameSession(deckId, user, userAnswers);
-        return ResponseEntity.ok(result);
+        return (User) authentication.getPrincipal();
     }
 }

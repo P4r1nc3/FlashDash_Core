@@ -1,10 +1,10 @@
 package com.flashdash.service;
 
-import com.flashdash.dto.response.GameSessionResult;
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
 import com.flashdash.model.*;
 import com.flashdash.repository.GameSessionRepository;
+import com.p4r1nc3.flashdash.core.model.QuestionRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -17,9 +17,7 @@ public class GameSessionService {
     private final QuestionService questionService;
     private final GameSessionRepository gameSessionRepository;
 
-    public GameSessionService(DeckService deckService,
-                              QuestionService questionService,
-                              GameSessionRepository gameSessionRepository) {
+    public GameSessionService(DeckService deckService, QuestionService questionService, GameSessionRepository gameSessionRepository) {
         this.deckService = deckService;
         this.questionService = questionService;
         this.gameSessionRepository = gameSessionRepository;
@@ -28,43 +26,38 @@ public class GameSessionService {
     public List<Question> startGameSession(Long deckId, User user) {
         GameSession existingSession = gameSessionRepository.findTopByDeckIdAndUserIdAndStatus(deckId, user.getId(), GameSessionStatus.PENDING);
 
-        if (existingSession != null) {
-            existingSession.setCreatedAt(LocalDateTime.now());
-            existingSession.setUpdatedAt(LocalDateTime.now());
-            gameSessionRepository.save(existingSession);
+        if (existingSession == null) {
+            Deck deck = deckService.getDeckById(deckId, user);
 
-            return questionService.getAllQuestionsInDeck(deckId, user);
+            GameSession gameSession = new GameSession();
+            gameSession.setUser(user);
+            gameSession.setDeck(deck);
+            gameSession.setCreatedAt(LocalDateTime.now());
+            gameSession.setUpdatedAt(LocalDateTime.now());
+            gameSession.setStatus(GameSessionStatus.PENDING);
+
+            gameSessionRepository.save(gameSession);
         }
 
-        Deck deck = deckService.getDeckById(deckId, user);
-
-        GameSession gameSession = new GameSession();
-        gameSession.setUser(user);
-        gameSession.setDeck(deck);
-        gameSession.setCreatedAt(LocalDateTime.now());
-        gameSession.setUpdatedAt(LocalDateTime.now());
-        gameSession.setStatus(GameSessionStatus.PENDING);
-
-        gameSessionRepository.save(gameSession);
-
-        List<Question> questions = questionService.getAllQuestionsInDeck(deckId, user);
-
-        return questions;
+        return questionService.getAllQuestionsInDeck(deckId, user);
     }
 
-    public GameSessionResult endGameSession(Long deckId, User user, List<Question> userAnswers) {
+    public GameSession endGameSession(Long deckId, User user, List<QuestionRequest> userAnswers) {
         List<Question> correctQuestions = questionService.getAllQuestionsInDeck(deckId, user);
 
         int correctCount = 0;
+        int wrongCount = 0;
 
-        for (Question userQuestion : userAnswers) {
+        for (QuestionRequest userQuestion : userAnswers) {
             Question correctQuestion = correctQuestions.stream()
-                    .filter(q -> q.getQuestionId().equals(userQuestion.getQuestionId()))
+                    .filter(q -> q.getQuestion().equalsIgnoreCase(userQuestion.getQuestion()))
                     .findFirst()
-                    .orElseThrow(() -> new FlashDashException(ErrorCode.E404003, "Question not found"));
+                    .orElseThrow(() -> new FlashDashException(ErrorCode.E404002, "Matching question not found in the provided deck."));
 
             if (correctQuestion.getCorrectAnswers().equals(userQuestion.getCorrectAnswers())) {
                 correctCount++;
+            } else {
+                wrongCount++;
             }
         }
 
@@ -73,17 +66,32 @@ public class GameSessionService {
 
         GameSession gameSession = gameSessionRepository.findTopByDeckIdAndUserIdAndStatus(deckId, user.getId(), GameSessionStatus.PENDING);
 
-        if (gameSession != null) {
-            gameSession.setStatus(GameSessionStatus.FINISHED);
-            gameSession.setEndTime(LocalDateTime.now());
-            gameSession.setTotalScore(score);
-            gameSession.setCorrectAnswersCount(correctCount);
-
-            gameSessionRepository.save(gameSession);
+        if (gameSession == null) {
+            throw new FlashDashException(ErrorCode.E400003, "No active game session for this deck.");
         }
 
-        GameSessionResult result = new GameSessionResult(score, correctCount, totalQuestions);
-        return result;
+        gameSession.setStatus(GameSessionStatus.FINISHED);
+        gameSession.setEndTime(LocalDateTime.now());
+        gameSession.setTotalScore(score);
+        gameSession.setCorrectAnswersCount(correctCount);
+        gameSession.setWrongAnswersCount(wrongCount);
+        gameSession.setQuestionCount(totalQuestions);
+
+        gameSessionRepository.save(gameSession);
+        return gameSession;
+    }
+
+    public List<GameSession> getGameSessions(Long deckId, User user) {
+        return gameSessionRepository.findAllByDeckIdAndUserId(deckId, user.getId());
+    }
+
+    public GameSession getGameSession(Long deckId, Long gameSessionId, User user) {
+        return gameSessionRepository.findById(gameSessionId)
+                .filter(session -> {
+                    Long sessionDeckId = session.getDeck() != null ? session.getDeck().getId() : null;
+                    return sessionDeckId != null && sessionDeckId.equals(deckId) && session.getUser().getId().equals(user.getId());
+                })
+                .orElseThrow(() -> new FlashDashException(ErrorCode.E404006, "Game session not found"));
     }
 
     public void removeAllGameSessionsForUser(User user) {
