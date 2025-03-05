@@ -28,7 +28,11 @@ public class GameSessionService {
     }
 
     public List<Question> startGameSession(String deckFrn, String userFrn) {
-        Optional<GameSession> existingSessionOptional = gameSessionRepository.findTopByDeckFrnAndUserFrnAndStatus(deckFrn, userFrn, GameSessionStatus.PENDING.toString());
+        Optional<GameSession> existingSessionOptional = gameSessionRepository.findTopByDeckFrnAndUserFrnAndStatus(
+                deckFrn,
+                userFrn,
+                GameSessionStatus.PENDING.toString()
+        );
 
         if (existingSessionOptional.isEmpty()) {
             deckService.getDeckByFrn(deckFrn, userFrn);
@@ -48,7 +52,11 @@ public class GameSessionService {
     }
 
     public GameSession endGameSession(String deckFrn, String userFrn, List<QuestionRequest> userAnswers) {
-        Optional<GameSession> gameSessionOptional = gameSessionRepository.findTopByDeckFrnAndUserFrnAndStatus(deckFrn, userFrn, GameSessionStatus.PENDING.toString());
+        Optional<GameSession> gameSessionOptional = gameSessionRepository.findTopByDeckFrnAndUserFrnAndStatus(
+                deckFrn,
+                userFrn,
+                GameSessionStatus.PENDING.toString()
+        );
 
         if (gameSessionOptional.isEmpty()) {
             throw new FlashDashException(ErrorCode.E400003, "No active game session for this deck.");
