@@ -48,6 +48,12 @@ public class GameSessionService {
     }
 
     public GameSession endGameSession(String deckFrn, String userFrn, List<QuestionRequest> userAnswers) {
+        Optional<GameSession> gameSessionOptional = gameSessionRepository.findTopByDeckFrnAndUserFrnAndStatus(deckFrn, userFrn, GameSessionStatus.PENDING.toString());
+
+        if (gameSessionOptional.isEmpty()) {
+            throw new FlashDashException(ErrorCode.E400003, "No active game session for this deck.");
+        }
+
         List<Question> correctQuestions = questionService.getAllQuestionsInDeck(deckFrn, userFrn);
 
         int correctCount = 0;
@@ -69,14 +75,7 @@ public class GameSessionService {
         int totalQuestions = userAnswers.size();
         int score = (int) (((double) correctCount / totalQuestions) * 100);
 
-        Optional<GameSession> gameSessionOptional = gameSessionRepository.findTopByDeckFrnAndUserFrnAndStatus(deckFrn, userFrn, GameSessionStatus.PENDING.toString());
-
-        if (gameSessionOptional.isEmpty()) {
-            throw new FlashDashException(ErrorCode.E400003, "No active game session for this deck.");
-        }
-
         GameSession gameSession = gameSessionOptional.get();
-
         gameSession.setStatus(GameSessionStatus.FINISHED.toString());
         gameSession.setEndTime(LocalDateTime.now());
         gameSession.setTotalScore(score);
@@ -99,7 +98,9 @@ public class GameSessionService {
 
     public void removeAllGameSessionsForUser(String userFrn) {
         List<GameSession> userSessions = gameSessionRepository.findAllByUserFrn(userFrn);
-        gameSessionRepository.deleteAll(userSessions);
+        if (!userSessions.isEmpty()) {
+            gameSessionRepository.deleteAll(userSessions);
+        }
     }
 
     private String generateFrn(String resourceType) {
