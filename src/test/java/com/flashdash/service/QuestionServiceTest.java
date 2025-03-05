@@ -8,8 +8,8 @@ import com.flashdash.model.User;
 import com.flashdash.model.Question;
 import com.flashdash.model.Deck;
 import com.flashdash.repository.QuestionRepository;
-import com.flashdash.utils.EntityToResponseMapper;
 import com.p4r1nc3.flashdash.core.model.QuestionRequest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,161 +36,148 @@ class QuestionServiceTest {
     @MockitoBean
     private DeckService deckService;
 
+    private User user;
+    private Deck deck;
+    private QuestionRequest questionRequest;
+    private Question question;
+
+    @BeforeEach
+    void setUp() {
+        user = TestUtils.createUser();
+        deck = TestUtils.createDeck(user);
+        questionRequest = TestUtils.createQuestionRequest();
+        question = TestUtils.createQuestion(deck, questionRequest.getQuestion());
+    }
+
     @Test
     void shouldAddQuestionToDeckSuccessfully() {
         // Arrange
-        User user = TestUtils.createUser();
-        Deck deck = TestUtils.createDeck(user);
-        QuestionRequest questionRequest = TestUtils.createQuestionRequest();
-        Question question = TestUtils.createQuestion(deck, questionRequest.getQuestion());
-
-        when(deckService.getDeckById(1L, user)).thenReturn(deck);
+        when(deckService.getDeckByFrn(deck.getDeckFrn(), user.getUserFrn())).thenReturn(deck);
         when(questionRepository.save(any(Question.class))).thenReturn(question);
 
         // Act
-        Question createdQuestion = questionService.addQuestionToDeck(1L, questionRequest, user);
+        Question createdQuestion = questionService.addQuestionToDeck(deck.getDeckFrn(), questionRequest, user.getUserFrn());
 
         // Assert
         assertThat(createdQuestion).isNotNull();
         assertThat(createdQuestion.getQuestion()).isEqualTo(questionRequest.getQuestion());
-        verify(deckService).getDeckById(1L, user);
+        verify(deckService).getDeckByFrn(deck.getDeckFrn(), user.getUserFrn());
         verify(questionRepository).save(any(Question.class));
     }
 
     @Test
     void shouldGetAllQuestionsInDeckSuccessfully() {
         // Arrange
-        User user = TestUtils.createUser();
-        Deck deck = TestUtils.createDeck(user);
         List<Question> questions = List.of(
                 TestUtils.createQuestion(deck, "What is Java?"),
                 TestUtils.createQuestion(deck, "What is Spring?")
         );
 
-        when(deckService.getDeckById(1L, user)).thenReturn(deck);
-        when(questionRepository.findAllByDeck(deck)).thenReturn(questions);
+        when(deckService.getDeckByFrn(deck.getDeckFrn(), user.getUserFrn())).thenReturn(deck);
+        when(questionRepository.findAllByDeckFrn(deck.getDeckFrn())).thenReturn(questions);
 
         // Act
-        List<Question> retrievedQuestions = questionService.getAllQuestionsInDeck(1L, user);
+        List<Question> retrievedQuestions = questionService.getAllQuestionsInDeck(deck.getDeckFrn(), user.getUserFrn());
 
         // Assert
         assertThat(retrievedQuestions).isNotEmpty();
         assertThat(retrievedQuestions).isEqualTo(questions);
-        verify(deckService).getDeckById(1L, user);
-        verify(questionRepository).findAllByDeck(deck);
+        verify(deckService).getDeckByFrn(deck.getDeckFrn(), user.getUserFrn());
+        verify(questionRepository).findAllByDeckFrn(deck.getDeckFrn());
     }
 
     @Test
-    void shouldGetQuestionByIdSuccessfully() {
+    void shouldGetQuestionByFrnSuccessfully() {
         // Arrange
-        User user = TestUtils.createUser();
-        Deck deck = TestUtils.createDeck(user);
-        Question question = TestUtils.createQuestion(deck, "What is Java?");
-
-        when(deckService.getDeckById(1L, user)).thenReturn(deck);
-        when(questionRepository.findByDeckAndQuestionId(deck, 1L)).thenReturn(Optional.of(question));
+        when(deckService.getDeckByFrn(deck.getDeckFrn(), user.getUserFrn())).thenReturn(deck);
+        when(questionRepository.findByDeckFrnAndQuestionFrn(deck.getDeckFrn(), question.getQuestionFrn()))
+                .thenReturn(Optional.of(question));
 
         // Act
-        Question retrievedQuestion = questionService.getQuestionById(1L, 1L, user);
+        Question retrievedQuestion = questionService.getQuestionByFrn(deck.getDeckFrn(), question.getQuestionFrn(), user.getUserFrn());
 
         // Assert
         assertThat(retrievedQuestion).isEqualTo(question);
-        verify(deckService).getDeckById(1L, user);
-        verify(questionRepository).findByDeckAndQuestionId(deck, 1L);
+        verify(deckService).getDeckByFrn(deck.getDeckFrn(), user.getUserFrn());
+        verify(questionRepository).findByDeckFrnAndQuestionFrn(deck.getDeckFrn(), question.getQuestionFrn());
     }
 
     @Test
-    void shouldThrowExceptionWhenQuestionNotFoundById() {
+    void shouldThrowExceptionWhenQuestionNotFoundByFrn() {
         // Arrange
-        User user = TestUtils.createUser();
-        Deck deck = TestUtils.createDeck(user);
-
-        when(deckService.getDeckById(1L, user)).thenReturn(deck);
-        when(questionRepository.findByDeckAndQuestionId(deck, 1L)).thenReturn(Optional.empty());
+        when(deckService.getDeckByFrn(deck.getDeckFrn(), user.getUserFrn())).thenReturn(deck);
+        when(questionRepository.findByDeckFrnAndQuestionFrn(deck.getDeckFrn(), "nonexistent-frn")).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThatThrownBy(() -> questionService.getQuestionById(1L, 1L, user))
+        assertThatThrownBy(() -> questionService.getQuestionByFrn(deck.getDeckFrn(), "nonexistent-frn", user.getUserFrn()))
                 .isInstanceOf(FlashDashException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404003);
 
-        verify(deckService).getDeckById(1L, user);
-        verify(questionRepository).findByDeckAndQuestionId(deck, 1L);
+        verify(deckService).getDeckByFrn(deck.getDeckFrn(), user.getUserFrn());
+        verify(questionRepository).findByDeckFrnAndQuestionFrn(deck.getDeckFrn(), "nonexistent-frn");
     }
 
     @Test
     void shouldUpdateQuestionSuccessfully() {
         // Arrange
-        User user = TestUtils.createUser();
-        Deck deck = TestUtils.createDeck(user);
-        QuestionRequest questionRequest = TestUtils.createQuestionRequest();
-        Question existingQuestion = TestUtils.createQuestion(deck, "Old Question");
-
-        when(deckService.getDeckById(1L, user)).thenReturn(deck);
-        when(questionRepository.findByDeckAndQuestionId(deck, 1L)).thenReturn(Optional.of(existingQuestion));
-        when(questionRepository.save(existingQuestion)).thenReturn(existingQuestion);
+        when(deckService.getDeckByFrn(deck.getDeckFrn(), user.getUserFrn())).thenReturn(deck);
+        when(questionRepository.findByDeckFrnAndQuestionFrn(deck.getDeckFrn(), question.getQuestionFrn()))
+                .thenReturn(Optional.of(question));
+        when(questionRepository.save(question)).thenReturn(question);
 
         // Act
-        Question updatedQuestion = questionService.updateQuestion(1L, 1L, questionRequest, user);
+        Question updatedQuestion = questionService.updateQuestion(deck.getDeckFrn(), question.getQuestionFrn(), questionRequest, user.getUserFrn());
 
         // Assert
         assertThat(updatedQuestion.getQuestion()).isEqualTo(questionRequest.getQuestion());
-        verify(deckService).getDeckById(1L, user);
-        verify(questionRepository).findByDeckAndQuestionId(deck, 1L);
-        verify(questionRepository).save(existingQuestion);
+        verify(deckService).getDeckByFrn(deck.getDeckFrn(), user.getUserFrn());
+        verify(questionRepository).findByDeckFrnAndQuestionFrn(deck.getDeckFrn(), question.getQuestionFrn());
+        verify(questionRepository).save(question);
     }
 
     @Test
     void shouldThrowExceptionWhenUpdatingNonExistentQuestion() {
         // Arrange
-        User user = TestUtils.createUser();
-        Deck deck = TestUtils.createDeck(user);
-        QuestionRequest questionRequest = TestUtils.createQuestionRequest();
-
-        when(deckService.getDeckById(1L, user)).thenReturn(deck);
-        when(questionRepository.findByDeckAndQuestionId(deck, 1L)).thenReturn(Optional.empty());
+        when(deckService.getDeckByFrn(deck.getDeckFrn(), user.getUserFrn())).thenReturn(deck);
+        when(questionRepository.findByDeckFrnAndQuestionFrn(deck.getDeckFrn(), "nonexistent-frn")).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThatThrownBy(() -> questionService.updateQuestion(1L, 1L, questionRequest, user))
+        assertThatThrownBy(() -> questionService.updateQuestion(deck.getDeckFrn(), "nonexistent-frn", questionRequest, user.getUserFrn()))
                 .isInstanceOf(FlashDashException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404003);
 
-        verify(deckService).getDeckById(1L, user);
-        verify(questionRepository).findByDeckAndQuestionId(deck, 1L);
+        verify(deckService).getDeckByFrn(deck.getDeckFrn(), user.getUserFrn());
+        verify(questionRepository).findByDeckFrnAndQuestionFrn(deck.getDeckFrn(), "nonexistent-frn");
     }
 
     @Test
     void shouldDeleteQuestionSuccessfully() {
         // Arrange
-        User user = TestUtils.createUser();
-        Deck deck = TestUtils.createDeck(user);
-        Question question = TestUtils.createQuestion(deck, "What is Java?");
-
-        when(deckService.getDeckById(1L, user)).thenReturn(deck);
-        when(questionRepository.findByDeckAndQuestionId(deck, 1L)).thenReturn(Optional.of(question));
+        when(deckService.getDeckByFrn(deck.getDeckFrn(), user.getUserFrn())).thenReturn(deck);
+        when(questionRepository.findByDeckFrnAndQuestionFrn(deck.getDeckFrn(), question.getQuestionFrn()))
+                .thenReturn(Optional.of(question));
 
         // Act
-        questionService.deleteQuestion(1L, 1L, user);
+        questionService.deleteQuestion(deck.getDeckFrn(), question.getQuestionFrn(), user.getUserFrn());
 
         // Assert
-        verify(deckService).getDeckById(1L, user);
-        verify(questionRepository).findByDeckAndQuestionId(deck, 1L);
+        verify(deckService).getDeckByFrn(deck.getDeckFrn(), user.getUserFrn());
+        verify(questionRepository).findByDeckFrnAndQuestionFrn(deck.getDeckFrn(), question.getQuestionFrn());
         verify(questionRepository).delete(question);
     }
 
     @Test
     void shouldThrowExceptionWhenDeletingNonExistentQuestion() {
         // Arrange
-        User user = TestUtils.createUser();
-        Deck deck = TestUtils.createDeck(user);
-        when(deckService.getDeckById(1L, user)).thenReturn(deck);
-        when(questionRepository.findByDeckAndQuestionId(deck, 1L)).thenReturn(Optional.empty());
+        when(deckService.getDeckByFrn(deck.getDeckFrn(), user.getUserFrn())).thenReturn(deck);
+        when(questionRepository.findByDeckFrnAndQuestionFrn(deck.getDeckFrn(), "nonexistent-frn")).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThatThrownBy(() -> questionService.deleteQuestion(1L, 1L, user))
+        assertThatThrownBy(() -> questionService.deleteQuestion(deck.getDeckFrn(), "nonexistent-frn", user.getUserFrn()))
                 .isInstanceOf(FlashDashException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404003);
 
-        verify(deckService).getDeckById(1L, user);
-        verify(questionRepository).findByDeckAndQuestionId(deck, 1L);
+        verify(deckService).getDeckByFrn(deck.getDeckFrn(), user.getUserFrn());
+        verify(questionRepository).findByDeckFrnAndQuestionFrn(deck.getDeckFrn(), "nonexistent-frn");
     }
 }
