@@ -9,6 +9,8 @@ import com.flashdash.model.FriendInvitation;
 import com.flashdash.model.User;
 import com.flashdash.repository.FriendInvitationRepository;
 import com.flashdash.repository.UserRepository;
+import com.flashdash.utils.FrnGenerator;
+import com.flashdash.utils.ResourceType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,7 +45,7 @@ public class FriendService {
         }
 
         FriendInvitation invitation = new FriendInvitation();
-        invitation.setInvitationFrn(generateFrn("friend-invitation"));
+        invitation.setInvitationFrn(FrnGenerator.generateFrn(ResourceType.INVITATION));
         invitation.setSentByFrn(senderFrn);
         invitation.setSentToFrn(recipientFrn);
         invitation.setStatus("PENDING");
@@ -172,9 +174,5 @@ public class FriendService {
                 invitation.getStatus(),
                 invitation.getCreatedAt()
         );
-    }
-
-    private String generateFrn(String resourceType) {
-        return "frn:flashdash:" + resourceType + ":" + UUID.randomUUID();
     }
 }

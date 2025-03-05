@@ -6,6 +6,8 @@ import com.flashdash.model.GameSession;
 import com.flashdash.model.GameSessionStatus;
 import com.flashdash.model.Question;
 import com.flashdash.repository.GameSessionRepository;
+import com.flashdash.utils.FrnGenerator;
+import com.flashdash.utils.ResourceType;
 import com.p4r1nc3.flashdash.core.model.QuestionRequest;
 import org.springframework.stereotype.Service;
 
@@ -38,7 +40,7 @@ public class GameSessionService {
             deckService.getDeckByFrn(deckFrn, userFrn);
 
             GameSession gameSession = new GameSession();
-            gameSession.setGameSessionFrn(generateFrn("game-session"));
+            gameSession.setGameSessionFrn(FrnGenerator.generateFrn(ResourceType.GAME_SESSION));
             gameSession.setUserFrn(userFrn);
             gameSession.setDeckFrn(deckFrn);
             gameSession.setCreatedAt(LocalDateTime.now());
@@ -109,9 +111,5 @@ public class GameSessionService {
         if (!userSessions.isEmpty()) {
             gameSessionRepository.deleteAll(userSessions);
         }
-    }
-
-    private String generateFrn(String resourceType) {
-        return "frn:flashdash:" + resourceType + ":" + UUID.randomUUID();
     }
 }
