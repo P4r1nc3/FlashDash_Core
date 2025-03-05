@@ -111,7 +111,16 @@ public class FriendService {
 
     @Transactional
     public void deleteFriend(String userFrn, String friendFrn) {
-        removeFriendship(userFrn, friendFrn);
+        User user = userRepository.findById(userFrn)
+                .orElseThrow(() -> new FlashDashException(ErrorCode.E404002, "User not found"));
+        User friend = userRepository.findById(friendFrn)
+                .orElseThrow(() -> new FlashDashException(ErrorCode.E404002, "Friend not found"));
+
+        if (!user.getFriendsFrnList().contains(friendFrn)) {
+            throw new FlashDashException(ErrorCode.E404005, "This user is not your friend.");
+        }
+
+        removeFriendship(user, friend);
     }
 
     @Transactional
@@ -141,17 +150,12 @@ public class FriendService {
         userRepository.save(friend);
     }
 
-    private void removeFriendship(String userFrn, String friendFrn) {
-        User user = userRepository.findById(userFrn)
-                .orElseThrow(() -> new FlashDashException(ErrorCode.E404002, "User not found"));
-        User friend = userRepository.findById(friendFrn)
-                .orElseThrow(() -> new FlashDashException(ErrorCode.E404002, "Friend not found"));
-
+    private void removeFriendship(User user, User friend) {
         List<String> userFriends = user.getFriendsFrnList();
         List<String> friendFriends = friend.getFriendsFrnList();
 
-        userFriends.remove(friendFrn);
-        friendFriends.remove(userFrn);
+        userFriends.remove(friend.getUserFrn());
+        friendFriends.remove(user.getUserFrn());
 
         user.setFriendsFrnList(userFriends);
         friend.setFriendsFrnList(friendFriends);
