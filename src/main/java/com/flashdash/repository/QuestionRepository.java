@@ -9,9 +9,7 @@ import java.util.Optional;
 
 public interface QuestionRepository extends JpaRepository<Question, String> {
     List<Question> findAllByDeckFrn(String deckFrn);
-
     Optional<Question> findByDeckFrnAndQuestionFrn(String deckFrn, String questionFrn);
-
     @Transactional
     void deleteAllByDeckFrn(String deckFrn);
 }
