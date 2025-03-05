@@ -35,7 +35,12 @@ public class FriendService {
         this.emailService = emailService;
     }
 
-    public void sendFriendInvitation(String senderFrn, String recipientFrn) {
+    public void sendFriendInvitation(String senderFrn, String recipientEmail) {
+        User recipient = userRepository.findByEmail(recipientEmail)
+                .orElseThrow(() -> new FlashDashException(ErrorCode.E404002, "Recipient not found"));
+
+        String recipientFrn = recipient.getUserFrn();
+
         if (senderFrn.equals(recipientFrn)) {
             throw new FlashDashException(ErrorCode.E403003, "You cannot send an invitation to yourself.");
         }
@@ -56,8 +61,6 @@ public class FriendService {
 
         User sender = userRepository.findById(senderFrn)
                 .orElseThrow(() -> new FlashDashException(ErrorCode.E404002, "Sender not found"));
-        User recipient = userRepository.findById(recipientFrn)
-                .orElseThrow(() -> new FlashDashException(ErrorCode.E404002, "Recipient not found"));
 
         emailService.sendFriendInvitationEmail(
                 recipient.getEmail(),
@@ -65,7 +68,6 @@ public class FriendService {
                 sender.getLastName()
         );
     }
-
 
     public List<FriendInvitationResponse> getReceivedFriendInvitations(String recipientFrn) {
         return friendInvitationRepository.findAllBySentToFrn(recipientFrn).stream()
