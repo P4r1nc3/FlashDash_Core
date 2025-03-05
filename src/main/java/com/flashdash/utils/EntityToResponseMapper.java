@@ -91,7 +91,7 @@ public class EntityToResponseMapper {
                 .collect(Collectors.toList());
     }
 
-    private static String extractId(String frn) {
+    public static String extractId(String frn) {
         if (frn != null && frn.contains(":")) {
             String[] parts = frn.split(":");
             return parts[parts.length - 1];
