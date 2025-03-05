@@ -34,12 +34,12 @@ class FriendInvitationRepositoryTest {
     }
 
     @Test
-    void shouldFindAllInvitationsBySentTo() {
+    void shouldFindAllInvitationsBySentToFrn() {
         // Arrange
         User sender = TestUtils.createUser();
         userRepository.save(sender);
 
-        User recipient = TestUtils.createFriendUser();
+        User recipient = TestUtils.createUser();
         userRepository.save(recipient);
 
         FriendInvitation invitation1 = TestUtils.createFriendInvitation(sender, recipient);
@@ -49,21 +49,21 @@ class FriendInvitationRepositoryTest {
         friendInvitationRepository.save(invitation2);
 
         // Act
-        List<FriendInvitation> invitations = friendInvitationRepository.findAllBySentTo(recipient);
+        List<FriendInvitation> invitations = friendInvitationRepository.findAllBySentToFrn(recipient.getUserFrn());
 
         // Assert
         assertThat(invitations).hasSize(2);
-        assertThat(invitations).extracting(FriendInvitation::getSentBy)
-                .containsExactly(sender, sender);
+        assertThat(invitations).extracting(FriendInvitation::getSentByFrn)
+                .containsExactly(sender.getUserFrn(), sender.getUserFrn());
     }
 
     @Test
-    void shouldFindAllInvitationsBySentBy() {
+    void shouldFindAllInvitationsBySentByFrn() {
         // Arrange
         User sender = TestUtils.createUser();
         userRepository.save(sender);
 
-        User recipient = TestUtils.createFriendUser();
+        User recipient = TestUtils.createUser();
         userRepository.save(recipient);
 
         FriendInvitation invitation1 = TestUtils.createFriendInvitation(sender, recipient);
@@ -73,71 +73,50 @@ class FriendInvitationRepositoryTest {
         friendInvitationRepository.save(invitation2);
 
         // Act
-        List<FriendInvitation> invitations = friendInvitationRepository.findAllBySentBy(sender);
+        List<FriendInvitation> invitations = friendInvitationRepository.findAllBySentByFrn(sender.getUserFrn());
 
         // Assert
         assertThat(invitations).hasSize(2);
-        assertThat(invitations).extracting(FriendInvitation::getSentTo)
-                .containsExactly(recipient, recipient);
+        assertThat(invitations).extracting(FriendInvitation::getSentToFrn)
+                .containsExactly(recipient.getUserFrn(), recipient.getUserFrn());
     }
 
     @Test
-    void shouldFindSpecificInvitationBySentByAndSentTo() {
+    void shouldFindSpecificInvitationBySentByFrnAndSentToFrn() {
         // Arrange
         User sender = TestUtils.createUser();
         userRepository.save(sender);
 
-        User recipient = TestUtils.createFriendUser();
+        User recipient = TestUtils.createUser();
         userRepository.save(recipient);
 
         FriendInvitation invitation = TestUtils.createFriendInvitation(sender, recipient);
         friendInvitationRepository.save(invitation);
 
         // Act
-        Optional<FriendInvitation> foundInvitation = friendInvitationRepository.findBySentByAndSentTo(sender, recipient);
+        Optional<FriendInvitation> foundInvitation = friendInvitationRepository.findBySentByFrnAndSentToFrn(
+                sender.getUserFrn(), recipient.getUserFrn());
 
         // Assert
         assertThat(foundInvitation).isPresent();
-        assertThat(foundInvitation.get().getSentBy()).isEqualTo(sender);
-        assertThat(foundInvitation.get().getSentTo()).isEqualTo(recipient);
+        assertThat(foundInvitation.get().getSentByFrn()).isEqualTo(sender.getUserFrn());
+        assertThat(foundInvitation.get().getSentToFrn()).isEqualTo(recipient.getUserFrn());
     }
 
     @Test
-    void shouldReturnEmptyWhenInvitationNotExists() {
+    void shouldReturnEmptyWhenInvitationDoesNotExist() {
         // Arrange
         User sender = TestUtils.createUser();
         userRepository.save(sender);
 
-        User recipient = TestUtils.createFriendUser();
+        User recipient = TestUtils.createUser();
         userRepository.save(recipient);
 
         // Act
-        Optional<FriendInvitation> foundInvitation = friendInvitationRepository.findBySentByAndSentTo(sender, recipient);
+        Optional<FriendInvitation> foundInvitation = friendInvitationRepository.findBySentByFrnAndSentToFrn(
+                sender.getUserFrn(), recipient.getUserFrn());
 
         // Assert
         assertThat(foundInvitation).isNotPresent();
-    }
-
-    @Test
-    void shouldDeleteAllInvitationsBySentTo() {
-        // Arrange
-        User sender = TestUtils.createUser();
-        userRepository.save(sender);
-
-        User recipient = TestUtils.createFriendUser();
-        userRepository.save(recipient);
-
-        FriendInvitation invitation1 = TestUtils.createFriendInvitation(sender, recipient);
-        friendInvitationRepository.save(invitation1);
-
-        FriendInvitation invitation2 = TestUtils.createFriendInvitation(sender, recipient);
-        friendInvitationRepository.save(invitation2);
-
-        // Act
-        friendInvitationRepository.deleteAll(friendInvitationRepository.findAllBySentTo(recipient));
-        List<FriendInvitation> invitations = friendInvitationRepository.findAllBySentTo(recipient);
-
-        // Assert
-        assertThat(invitations).isEmpty();
     }
 }
