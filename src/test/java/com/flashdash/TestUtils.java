@@ -6,33 +6,9 @@ import org.springframework.mail.SimpleMailMessage;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 public class TestUtils {
-
-    public static User createUser() {
-        User user = new User();
-        user.setUsername("test@example.com");
-        user.setPassword("password123");
-        user.setFirstName("Test");
-        user.setLastName("User");
-        return user;
-    }
-
-    public static User createFriendUser() {
-        User user = new User();
-        user.setUsername("friend@example.com");
-        user.setPassword("password123");
-        user.setFirstName("Friend");
-        user.setLastName("User");
-        return user;
-    }
-
-    public static LoginRequest createLoginRequest() {
-        LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setEmail("test@example.com");
-        loginRequest.setPassword("password123");
-        return loginRequest;
-    }
 
     public static RegisterRequest createRegisterRequest() {
         RegisterRequest registerRequest = new RegisterRequest();
@@ -44,10 +20,58 @@ public class TestUtils {
         return registerRequest;
     }
 
+    public static LoginRequest createLoginRequest() {
+        LoginRequest loginRequest = new LoginRequest();
+        loginRequest.setEmail("test@example.com");
+        loginRequest.setPassword("password123");
+        return loginRequest;
+    }
+
     public static AuthenticationResponse createAuthenticationResponse() {
         AuthenticationResponse response = new AuthenticationResponse();
         response.setToken("mockToken");
         return response;
+    }
+
+    public static User createUser() {
+        User user = new User();
+        user.setUserFrn(generateFrn("user"));
+        user.setEmail("test@example.com");
+        user.setPassword("password123");
+        user.setFirstName("Test");
+        user.setLastName("User");
+        user.setCreatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
+        user.setEnabled(true);
+        user.setDailyNotifications(true);
+        user.setFriendsFrnList(List.of());
+        return user;
+    }
+
+    public static User createFriendUser() {
+        User user = new User();
+        user.setUserFrn(generateFrn("user"));
+        user.setEmail("friend@example.com");
+        user.setPassword("password123");
+        user.setFirstName("Friend");
+        user.setLastName("User");
+        user.setCreatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
+        user.setEnabled(true);
+        user.setDailyNotifications(true);
+        user.setFriendsFrnList(List.of());
+        return user;
+    }
+
+    public static FriendInvitation createFriendInvitation(User sender, User recipient) {
+        FriendInvitation invitation = new FriendInvitation();
+        invitation.setInvitationFrn(generateFrn("friend-invitation"));
+        invitation.setSentByFrn(sender.getUserFrn());
+        invitation.setSentToFrn(recipient.getUserFrn());
+        invitation.setStatus("PENDING");
+        invitation.setCreatedAt(LocalDateTime.now());
+        invitation.setUpdatedAt(LocalDateTime.now());
+        return invitation;
     }
 
     public static DeckRequest createDeckRequest() {
@@ -59,11 +83,12 @@ public class TestUtils {
 
     public static Deck createDeck(User user) {
         Deck deck = new Deck();
+        deck.setDeckFrn(generateFrn("deck"));
+        deck.setUserFrn(user.getUserFrn());
         deck.setName("Sample Deck");
         deck.setDescription("This is a sample deck.");
         deck.setCreatedAt(LocalDateTime.now());
         deck.setUpdatedAt(LocalDateTime.now());
-        deck.setUser(user);
         return deck;
     }
 
@@ -78,34 +103,32 @@ public class TestUtils {
 
     public static Question createQuestion(Deck deck, String content) {
         Question question = new Question();
+        question.setQuestionFrn(generateFrn("question"));
+        question.setDeckFrn(deck.getDeckFrn());
         question.setQuestion(content);
         question.setCorrectAnswers(List.of("Correct Answer 1", "Correct Answer 2"));
         question.setIncorrectAnswers(List.of("Incorrect Answer 1", "Incorrect Answer 2"));
         question.setDifficulty("medium");
         question.setCreatedAt(LocalDateTime.now());
         question.setUpdatedAt(LocalDateTime.now());
-        question.setDeck(deck);
         return question;
     }
 
-    public static GameSession createGameSession(User user, Deck deck, GameSessionStatus status) {
+    public static GameSession createGameSession(User user, Deck deck, String status) {
         GameSession session = new GameSession();
-        session.setUser(user);
-        session.setDeck(deck);
+        session.setGameSessionFrn(generateFrn("game-session"));
+        session.setUserFrn(user.getUserFrn());
+        session.setDeckFrn(deck.getDeckFrn());
         session.setStatus(status);
-        session.setCreatedAt(LocalDateTime.now());
-        session.setUpdatedAt(LocalDateTime.now());
         session.setTotalScore(0);
         session.setCorrectAnswersCount(0);
+        session.setWrongAnswersCount(0);
+        session.setQuestionCount(0);
+        session.setStartTime(LocalDateTime.now());
         session.setEndTime(null);
+        session.setCreatedAt(LocalDateTime.now());
+        session.setUpdatedAt(LocalDateTime.now());
         return session;
-    }
-
-    public static FriendInvitation createFriendInvitation(User sender, User recipient) {
-        FriendInvitation invitation = new FriendInvitation();
-        invitation.setSentBy(sender);
-        invitation.setSentTo(recipient);
-        return invitation;
     }
 
     public static SimpleMailMessage createSimpleMailMessageForAccountActivation(String to, String activationToken) {
@@ -133,5 +156,9 @@ public class TestUtils {
         message.setText("Hi there! You've received a new friend invitation from " + senderFirstName + " " + senderLastName + ". Visit the FlashDash app to accept or decline.");
         message.setFrom("flashdashservice@gmail.com");
         return message;
+    }
+
+    private static String generateFrn(String resourceType) {
+        return "frn:flashdash:" + resourceType + ":" + UUID.randomUUID();
     }
 }
