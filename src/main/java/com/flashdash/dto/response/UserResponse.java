@@ -3,7 +3,7 @@ package com.flashdash.dto.response;
 import java.time.LocalDateTime;
 
 public class UserResponse {
-
+    private String userFrn; // ✅ Dodane
     private String firstName;
     private String lastName;
     private String email;
@@ -11,11 +11,14 @@ public class UserResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    public UserResponse() {}
 
-    public UserResponse() {
-
+    // 🔹 Nowy konstruktor tylko dla FRN
+    public UserResponse(String userFrn) {
+        this.userFrn = userFrn;
     }
 
+    // 🔹 Istniejący konstruktor dla pełnych danych użytkownika
     public UserResponse(String firstName, String lastName, String email, boolean dailyNotifications, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.firstName = firstName;
         this.lastName = lastName;
@@ -23,6 +26,14 @@ public class UserResponse {
         this.dailyNotifications = dailyNotifications;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+    }
+
+    public String getUserFrn() {
+        return userFrn;
+    }
+
+    public void setUserFrn(String userFrn) {
+        this.userFrn = userFrn;
     }
 
     public String getFirstName() {
