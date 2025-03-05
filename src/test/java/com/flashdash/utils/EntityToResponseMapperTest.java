@@ -1,11 +1,14 @@
 package com.flashdash.utils;
 
+import com.flashdash.FlashDashApplication;
 import com.flashdash.model.*;
 import com.p4r1nc3.flashdash.core.model.DeckResponse;
 import com.p4r1nc3.flashdash.core.model.GameSessionResponse;
 import com.p4r1nc3.flashdash.core.model.QuestionResponse;
 import com.flashdash.TestUtils;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -13,6 +16,8 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SpringBootTest(classes = FlashDashApplication.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class EntityToResponseMapperTest {
 
     @Test
