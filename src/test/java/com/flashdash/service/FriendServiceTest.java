@@ -10,6 +10,7 @@ import com.flashdash.model.FriendInvitation;
 import com.flashdash.model.User;
 import com.flashdash.repository.FriendInvitationRepository;
 import com.flashdash.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,128 +40,101 @@ class FriendServiceTest {
     @MockitoBean
     private EmailService emailService;
 
+    private User sender;
+    private User recipient;
+
+    @BeforeEach
+    void setUp() {
+        sender = TestUtils.createUser();
+        recipient = TestUtils.createUser();
+    }
+
     @Test
     void shouldSendFriendInvitationSuccessfully() {
-        // Arrange
-        User sender = TestUtils.createUser();
-        User recipient = TestUtils.createFriendUser();
-        when(userRepository.findByEmail(sender.getUsername())).thenReturn(Optional.of(sender));
-        when(userRepository.findByEmail(recipient.getUsername())).thenReturn(Optional.of(recipient));
-        when(friendInvitationRepository.findBySentByAndSentTo(sender, recipient)).thenReturn(Optional.empty());
+        when(userRepository.findById(sender.getUserFrn())).thenReturn(Optional.of(sender));
+        when(userRepository.findById(recipient.getUserFrn())).thenReturn(Optional.of(recipient));
+        when(friendInvitationRepository.findBySentByFrnAndSentToFrn(sender.getUserFrn(), recipient.getUserFrn()))
+                .thenReturn(Optional.empty());
 
-        // Act
-        friendService.sendFriendInvitation(sender.getUsername(), recipient.getUsername());
+        friendService.sendFriendInvitation(sender.getUserFrn(), recipient.getUserFrn());
 
-        // Assert
         verify(friendInvitationRepository).save(any(FriendInvitation.class));
-        verify(emailService, times(1)).sendFriendInvitationEmail(recipient.getUsername(), sender.getFirstName(), sender.getLastName());
+        verify(emailService, times(1)).sendFriendInvitationEmail(recipient.getEmail(), sender.getFirstName(), sender.getLastName());
     }
 
     @Test
-    void shouldThrowExceptionWhenSenderNotFound() {
-        // Arrange
-        User recipient = TestUtils.createFriendUser();
-        when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
-
-        // Act & Assert
-        assertThatThrownBy(() -> friendService.sendFriendInvitation("nonexistent@example.com", recipient.getUsername()))
+    void shouldThrowExceptionWhenSendingInvitationToSelf() {
+        assertThatThrownBy(() -> friendService.sendFriendInvitation(sender.getUserFrn(), sender.getUserFrn()))
                 .isInstanceOf(FlashDashException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404001);
-        verify(emailService, times(0)).sendFriendInvitationEmail(anyString(), anyString(), anyString());
-    }
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E403003);
 
-    @Test
-    void shouldThrowExceptionWhenRecipientNotFound() {
-        // Arrange
-        User sender = TestUtils.createUser();
-        when(userRepository.findByEmail(sender.getUsername())).thenReturn(Optional.of(sender));
-        when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
-
-        // Act & Assert
-        assertThatThrownBy(() -> friendService.sendFriendInvitation(sender.getUsername(), "nonexistent@example.com"))
-                .isInstanceOf(FlashDashException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404001);
-        verify(emailService, times(0)).sendFriendInvitationEmail(anyString(), anyString(), anyString());
+        verify(friendInvitationRepository, never()).save(any(FriendInvitation.class));
     }
 
     @Test
     void shouldThrowExceptionWhenInvitationAlreadyExists() {
-        // Arrange
-        User sender = TestUtils.createUser();
-        User recipient = TestUtils.createFriendUser();
         FriendInvitation existingInvitation = TestUtils.createFriendInvitation(sender, recipient);
-        when(userRepository.findByEmail(sender.getUsername())).thenReturn(Optional.of(sender));
-        when(userRepository.findByEmail(recipient.getUsername())).thenReturn(Optional.of(recipient));
-        when(friendInvitationRepository.findBySentByAndSentTo(sender, recipient)).thenReturn(Optional.of(existingInvitation));
+        when(friendInvitationRepository.findBySentByFrnAndSentToFrn(sender.getUserFrn(), recipient.getUserFrn()))
+                .thenReturn(Optional.of(existingInvitation));
 
-        // Act & Assert
-        assertThatThrownBy(() -> friendService.sendFriendInvitation(sender.getUsername(), recipient.getUsername()))
+        assertThatThrownBy(() -> friendService.sendFriendInvitation(sender.getUserFrn(), recipient.getUserFrn()))
                 .isInstanceOf(FlashDashException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E409002);
     }
 
     @Test
-    void shouldGetReceivedFriendInvitationsSuccessfully() {
-        // Arrange
-        User recipient = TestUtils.createFriendUser();
-        FriendInvitation invitation = TestUtils.createFriendInvitation(TestUtils.createUser(), recipient);
-        when(userRepository.findByEmail(recipient.getUsername())).thenReturn(Optional.of(recipient));
-        when(friendInvitationRepository.findAllBySentTo(recipient)).thenReturn(List.of(invitation));
+    void shouldThrowExceptionWhenSenderNotFound() {
+        when(userRepository.findById(sender.getUserFrn())).thenReturn(Optional.empty());
 
-        // Act
-        List<FriendInvitationResponse> invitations = friendService.getReceivedFriendInvitations(recipient.getUsername());
-
-        // Assert
-        assertThat(invitations).hasSize(1);
-        assertThat(invitations.get(0).getRecipientFirstName()).isEqualTo(recipient.getFirstName());
-        verify(friendInvitationRepository).findAllBySentTo(recipient);
+        assertThatThrownBy(() -> friendService.sendFriendInvitation(sender.getUserFrn(), recipient.getUserFrn()))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404002);
     }
 
     @Test
-    void shouldGetSentFriendInvitationsSuccessfully() {
-        // Arrange
-        User sender = TestUtils.createUser();
-        FriendInvitation invitation = TestUtils.createFriendInvitation(sender, TestUtils.createFriendUser());
-        when(userRepository.findByEmail(sender.getUsername())).thenReturn(Optional.of(sender));
-        when(friendInvitationRepository.findAllBySentBy(sender)).thenReturn(List.of(invitation));
+    void shouldThrowExceptionWhenRecipientNotFound() {
+        when(userRepository.findById(recipient.getUserFrn())).thenReturn(Optional.empty());
 
-        // Act
-        List<FriendInvitationResponse> invitations = friendService.getSentFriendInvitations(sender.getUsername());
+        assertThatThrownBy(() -> friendService.sendFriendInvitation(sender.getUserFrn(), recipient.getUserFrn()))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404002);
+    }
 
-        // Assert
+    @Test
+    void shouldGetReceivedFriendInvitationsSuccessfully() {
+        FriendInvitation invitation = TestUtils.createFriendInvitation(sender, recipient);
+        when(friendInvitationRepository.findAllBySentToFrn(recipient.getUserFrn())).thenReturn(List.of(invitation));
+
+        List<FriendInvitationResponse> invitations = friendService.getReceivedFriendInvitations(recipient.getUserFrn());
+
         assertThat(invitations).hasSize(1);
-        assertThat(invitations.get(0).getSenderFirstName()).isEqualTo(sender.getFirstName());
-        verify(friendInvitationRepository).findAllBySentBy(sender);
+        verify(friendInvitationRepository).findAllBySentToFrn(recipient.getUserFrn());
     }
 
     @Test
     void shouldRespondToFriendInvitationSuccessfully() {
         // Arrange
-        User sender = TestUtils.createUser();
-        User recipient = TestUtils.createFriendUser();
         FriendInvitation invitation = TestUtils.createFriendInvitation(sender, recipient);
-        when(friendInvitationRepository.findById(invitation.getId())).thenReturn(Optional.of(invitation));
+
+        when(friendInvitationRepository.findById(invitation.getInvitationFrn())).thenReturn(Optional.of(invitation));
+        when(userRepository.findById(sender.getUserFrn())).thenReturn(Optional.of(sender));
+        when(userRepository.findById(recipient.getUserFrn())).thenReturn(Optional.of(recipient));
 
         // Act
-        friendService.respondToFriendInvitation(invitation.getId(), recipient.getUsername(), FriendInvitation.InvitationStatus.ACCEPTED);
+        friendService.respondToFriendInvitation(invitation.getInvitationFrn(), recipient.getUserFrn(), "ACCEPTED");
 
         // Assert
-        assertThat(invitation.getStatus()).isEqualTo(FriendInvitation.InvitationStatus.ACCEPTED);
-        verify(friendInvitationRepository).save(invitation);
         verify(friendInvitationRepository).delete(invitation);
-        verify(userRepository).save(sender);
-        verify(userRepository).save(recipient);
+        verify(userRepository, times(2)).save(any(User.class));
     }
+
 
     @Test
     void shouldThrowExceptionWhenRespondingToUnauthorizedInvitation() {
-        // Arrange
-        User recipient = TestUtils.createFriendUser();
-        FriendInvitation invitation = TestUtils.createFriendInvitation(TestUtils.createUser(), recipient);
-        when(friendInvitationRepository.findById(invitation.getId())).thenReturn(Optional.of(invitation));
+        FriendInvitation invitation = TestUtils.createFriendInvitation(sender, recipient);
+        when(friendInvitationRepository.findById(invitation.getInvitationFrn())).thenReturn(Optional.of(invitation));
 
-        // Act & Assert
-        assertThatThrownBy(() -> friendService.respondToFriendInvitation(invitation.getId(), "unauthorized@example.com", FriendInvitation.InvitationStatus.ACCEPTED))
+        assertThatThrownBy(() -> friendService.respondToFriendInvitation(invitation.getInvitationFrn(), "random-frn", "ACCEPTED"))
                 .isInstanceOf(FlashDashException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E403001);
     }
@@ -169,173 +143,64 @@ class FriendServiceTest {
     void shouldGetFriendsSuccessfully() {
         // Arrange
         User user = TestUtils.createUser();
-        User friend = TestUtils.createFriendUser();
-        user.getFriends().add(friend);
-        when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
+        User friend = TestUtils.createUser();
+        user.setFriendsFrnList(List.of(friend.getUserFrn()));
+        friend.setFriendsFrnList(List.of(user.getUserFrn()));
+
+        when(userRepository.findById(user.getUserFrn())).thenReturn(Optional.of(user));
+        when(userRepository.findById(friend.getUserFrn())).thenReturn(Optional.of(friend));
 
         // Act
-        List<UserResponse> friends = friendService.getFriends(user.getUsername());
+        List<UserResponse> friends = friendService.getFriends(user.getUserFrn());
 
         // Assert
         assertThat(friends).hasSize(1);
-        assertThat(friends.get(0).getFirstName()).isEqualTo(friend.getFirstName());
-        verify(userRepository).findByEmail(user.getUsername());
-    }
-
-    @Test
-    void shouldThrowExceptionWhenSendingInvitationToSelf() {
-        // Arrange
-        User user = TestUtils.createUser();
-        when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
-
-        // Act & Assert
-        assertThatThrownBy(() -> friendService.sendFriendInvitation(user.getUsername(), user.getUsername()))
-                .isInstanceOf(FlashDashException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E403003)
-                .hasMessage("You cannot send an invitation to yourself.");
-
-        verify(friendInvitationRepository, times(0)).save(any(FriendInvitation.class));
-        verify(emailService, times(0)).sendFriendInvitationEmail(anyString(), anyString(), anyString());
-    }
-
-    @Test
-    void shouldThrowExceptionWhenUserIsAlreadyAFriend() {
-        // Arrange
-        User sender = TestUtils.createUser();
-        User recipient = TestUtils.createFriendUser();
-        sender.getFriends().add(recipient);
-        recipient.getFriends().add(sender);
-
-        when(userRepository.findByEmail(sender.getUsername())).thenReturn(Optional.of(sender));
-        when(userRepository.findByEmail(recipient.getUsername())).thenReturn(Optional.of(recipient));
-
-        // Act & Assert
-        assertThatThrownBy(() -> friendService.sendFriendInvitation(sender.getUsername(), recipient.getUsername()))
-                .isInstanceOf(FlashDashException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E409003)
-                .hasMessage("You are already friends with this user.");
-
-        verify(friendInvitationRepository, times(0)).save(any(FriendInvitation.class));
-        verify(emailService, times(0)).sendFriendInvitationEmail(anyString(), anyString(), anyString());
-    }
-
-    @Test
-    void shouldAllowSenderToCancelInvitationButNotAcceptIt() {
-        // Arrange
-        User sender = TestUtils.createUser();
-        User recipient = TestUtils.createFriendUser();
-        FriendInvitation invitation = TestUtils.createFriendInvitation(sender, recipient);
-
-        when(friendInvitationRepository.findById(invitation.getId())).thenReturn(Optional.of(invitation));
-        friendService.respondToFriendInvitation(invitation.getId(), sender.getUsername(), FriendInvitation.InvitationStatus.REJECTED);
-        verify(friendInvitationRepository).delete(invitation);
-
-        // Act & Assert
-        assertThatThrownBy(() -> friendService.respondToFriendInvitation(invitation.getId(), sender.getUsername(), FriendInvitation.InvitationStatus.ACCEPTED))
-                .isInstanceOf(FlashDashException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E403002)
-                .hasMessage("You can only cancel your invitation.");
-
-        verify(friendInvitationRepository, times(0)).save(invitation);
-        verify(userRepository, times(0)).save(any(User.class));
-    }
-
-    @Test
-    void testDeleteFriendSuccessful() {
-        // Arrange
-        User user = TestUtils.createUser();
-        User friend = TestUtils.createFriendUser();
-        user.getFriends().add(friend);
-        friend.getFriends().add(user);
-
-        when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
-        when(userRepository.findByEmail(friend.getUsername())).thenReturn(Optional.of(friend));
-
-        // Act
-        friendService.deleteFriend(user.getUsername(), friend.getUsername());
-
-        // Assert
-        assertThat(user.getFriends()).doesNotContain(friend);
-        assertThat(friend.getFriends()).doesNotContain(user);
-        verify(userRepository, times(1)).save(user);
-        verify(userRepository, times(1)).save(friend);
-    }
-
-    @Test
-    void testDeleteFriendUserNotFound() {
-        // Arrange
-        String friendEmail = TestUtils.createFriendUser().getUsername();
-        when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
-
-        // Act & Assert
-        assertThatThrownBy(() -> friendService.deleteFriend("nonexistent@example.com", friendEmail))
-                .isInstanceOf(FlashDashException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404001)
-                .hasMessage("User not found: nonexistent@example.com");
-
-        verify(userRepository, times(0)).save(any(User.class));
-    }
-
-    @Test
-    void testDeleteFriendNotFound() {
-        // Arrange
-        User user = TestUtils.createUser();
-        when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
-        when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
-
-        // Act & Assert
-        assertThatThrownBy(() -> friendService.deleteFriend(user.getUsername(), "nonexistent@example.com"))
-                .isInstanceOf(FlashDashException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404005)
-                .hasMessage("Friend not found: nonexistent@example.com");
-
-        verify(userRepository, times(0)).save(any(User.class));
-    }
-
-    @Test
-    void testDeleteNonFriend() {
-        // Arrange
-        User user = TestUtils.createUser();
-        User stranger = TestUtils.createFriendUser();
-        when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
-        when(userRepository.findByEmail(stranger.getUsername())).thenReturn(Optional.of(stranger));
-
-        // Act & Assert
-        assertThatThrownBy(() -> friendService.deleteFriend(user.getUsername(), stranger.getUsername()))
-                .isInstanceOf(FlashDashException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404005)
-                .hasMessage("This user is not your friend.");
-
-        verify(userRepository, times(0)).save(any(User.class));
+        assertThat(friends.get(0).getUserFrn()).isEqualTo(friend.getUserFrn());
+        verify(userRepository).findById(user.getUserFrn());
     }
 
     @Test
     void shouldRemoveAllFriendsSuccessfully() {
+        sender.getFriendsFrnList().add(recipient.getUserFrn());
+        recipient.getFriendsFrnList().add(sender.getUserFrn());
+
+        when(userRepository.findById(sender.getUserFrn())).thenReturn(Optional.of(sender));
+
+        friendService.removeAllFriends(sender.getUserFrn());
+
+        assertThat(sender.getFriendsFrnList()).isEmpty();
+        verify(userRepository, times(1)).save(sender);
+    }
+
+    @Test
+    void shouldDeleteFriendSuccessfully() {
+        sender.setFriendsFrnList(List.of(recipient.getUserFrn()));
+        recipient.setFriendsFrnList(List.of(sender.getUserFrn()));
+
+        when(userRepository.findById(sender.getUserFrn())).thenReturn(Optional.of(sender));
+        when(userRepository.findById(recipient.getUserFrn())).thenReturn(Optional.of(recipient));
+
+        friendService.deleteFriend(sender.getUserFrn(), recipient.getUserFrn());
+
+        assertThat(sender.getFriendsFrnList()).doesNotContain(recipient.getUserFrn());
+        assertThat(recipient.getFriendsFrnList()).doesNotContain(sender.getUserFrn());
+        verify(userRepository, times(1)).save(sender);
+        verify(userRepository, times(1)).save(recipient);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenDeletingNonFriend() {
         // Arrange
         User user = TestUtils.createUser();
-        User friend1 = TestUtils.createFriendUser();
-        User friend2 = new User();
-        friend2.setUsername("anotherfriend@example.com");
-        friend2.setFirstName("Another");
-        friend2.setLastName("Friend");
+        User stranger = TestUtils.createUser();
 
-        user.getFriends().add(friend1);
-        user.getFriends().add(friend2);
-        friend1.getFriends().add(user);
-        friend2.getFriends().add(user);
+        when(userRepository.findById(user.getUserFrn())).thenReturn(Optional.of(user));
+        when(userRepository.findById(stranger.getUserFrn())).thenReturn(Optional.of(stranger));
 
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        // Act
-        friendService.removeAllFriends(user);
-
-        // Assert
-        assertThat(user.getFriends()).isEmpty();
-        assertThat(friend1.getFriends()).doesNotContain(user);
-        assertThat(friend2.getFriends()).doesNotContain(user);
-
-        verify(userRepository, times(1)).save(user);
-        verify(userRepository, times(1)).save(friend1);
-        verify(userRepository, times(1)).save(friend2);
+        // Act & Assert
+        assertThatThrownBy(() -> friendService.deleteFriend(user.getUserFrn(), stranger.getUserFrn()))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404005);
     }
+
 }

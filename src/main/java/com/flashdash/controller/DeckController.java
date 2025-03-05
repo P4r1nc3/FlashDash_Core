@@ -24,41 +24,42 @@ public class DeckController {
 
     @PostMapping
     public ResponseEntity<DeckResponse> createDeck(@RequestBody DeckRequest deckRequest) {
-        User user = getAuthenticatedUser();
-        Deck deck = deckService.createDeck(deckRequest, user);
+        String userFrn = getAuthenticatedUser();
+        Deck deck = deckService.createDeck(deckRequest, userFrn);
         return ResponseEntity.ok(EntityToResponseMapper.toDeckResponse(deck));
     }
 
     @GetMapping
     public ResponseEntity<List<DeckResponse>> getAllDecks() {
-        User user = getAuthenticatedUser();
-        List<Deck> deckList = deckService.getAllDecks(user);
+        String userFrn = getAuthenticatedUser();
+        List<Deck> deckList = deckService.getAllDecks(userFrn);
         return ResponseEntity.ok(EntityToResponseMapper.toDeckResponseList(deckList));
     }
 
-    @GetMapping("/{deckId}")
-    public ResponseEntity<DeckResponse> getDeck(@PathVariable Long deckId) {
-        User user = getAuthenticatedUser();
-        Deck deck = deckService.getDeckById(deckId, user);
+    @GetMapping("/{deckFrn}")
+    public ResponseEntity<DeckResponse> getDeck(@PathVariable String deckFrn) {
+        String userFrn = getAuthenticatedUser();
+        Deck deck = deckService.getDeckByFrn(deckFrn, userFrn);
         return ResponseEntity.ok(EntityToResponseMapper.toDeckResponse(deck));
     }
 
-    @PutMapping("/{deckId}")
-    public ResponseEntity<DeckResponse> updateDeck(@PathVariable Long deckId, @RequestBody DeckRequest deckRequest) {
-        User user = getAuthenticatedUser();
-        Deck deck = deckService.updateDeck(deckId, deckRequest, user);
+    @PutMapping("/{deckFrn}")
+    public ResponseEntity<DeckResponse> updateDeck(@PathVariable String deckFrn, @RequestBody DeckRequest deckRequest) {
+        String userFrn = getAuthenticatedUser();
+        Deck deck = deckService.updateDeck(deckFrn, deckRequest, userFrn);
         return ResponseEntity.ok(EntityToResponseMapper.toDeckResponse(deck));
     }
 
-    @DeleteMapping("/{deckId}")
-    public ResponseEntity<Void> deleteDeck(@PathVariable Long deckId) {
-        User user = getAuthenticatedUser();
-        deckService.deleteDeck(deckId, user);
+    @DeleteMapping("/{deckFrn}")
+    public ResponseEntity<Void> deleteDeck(@PathVariable String deckFrn) {
+        String userFrn = getAuthenticatedUser();
+        deckService.deleteDeck(deckFrn, userFrn);
         return ResponseEntity.noContent().build();
     }
 
-    private User getAuthenticatedUser() {
+    private String getAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return (User) authentication.getPrincipal();
+        User user = (User) authentication.getPrincipal();
+        return user.getUserFrn();
     }
 }

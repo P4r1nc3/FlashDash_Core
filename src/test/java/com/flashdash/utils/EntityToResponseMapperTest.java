@@ -1,10 +1,6 @@
 package com.flashdash.utils;
 
-import com.flashdash.model.Deck;
-import com.flashdash.model.GameSession;
-import com.flashdash.model.GameSessionStatus;
-import com.flashdash.model.Question;
-import com.flashdash.model.User;
+import com.flashdash.model.*;
 import com.p4r1nc3.flashdash.core.model.DeckResponse;
 import com.p4r1nc3.flashdash.core.model.GameSessionResponse;
 import com.p4r1nc3.flashdash.core.model.QuestionResponse;
@@ -30,11 +26,12 @@ class EntityToResponseMapperTest {
 
         // Assert
         assertThat(deckResponse).isNotNull();
-        assertThat(deckResponse.getDeckId()).isEqualTo(deck.getId());
+        assertThat(deckResponse.getDeckId()).isEqualTo(EntityToResponseMapper.extractId(deck.getDeckFrn()));
+        assertThat(deckResponse.getDeckFrn()).isEqualTo(deck.getDeckFrn());
         assertThat(deckResponse.getName()).isEqualTo(deck.getName());
         assertThat(deckResponse.getDescription()).isEqualTo(deck.getDescription());
-        assertThat(deckResponse.getCreatedAt()).isEqualTo(deck.getCreatedAt().atOffset(java.time.ZoneOffset.UTC));
-        assertThat(deckResponse.getUpdatedAt()).isEqualTo(deck.getUpdatedAt().atOffset(java.time.ZoneOffset.UTC));
+        assertThat(deckResponse.getCreatedAt()).isEqualTo(deck.getCreatedAt().atOffset(ZoneOffset.UTC));
+        assertThat(deckResponse.getUpdatedAt()).isEqualTo(deck.getUpdatedAt().atOffset(ZoneOffset.UTC));
     }
 
     @Test
@@ -49,7 +46,7 @@ class EntityToResponseMapperTest {
         // Assert
         assertThat(deckResponses).isNotEmpty();
         assertThat(deckResponses).hasSize(decks.size());
-        assertThat(deckResponses.get(0).getDeckId()).isEqualTo(decks.get(0).getId());
+        assertThat(deckResponses.get(0).getDeckId()).isEqualTo(EntityToResponseMapper.extractId(decks.get(0).getDeckFrn()));
         assertThat(deckResponses.get(0).getName()).isEqualTo(decks.get(0).getName());
         assertThat(deckResponses.get(0).getDescription()).isEqualTo(decks.get(0).getDescription());
     }
@@ -66,13 +63,14 @@ class EntityToResponseMapperTest {
 
         // Assert
         assertThat(questionResponse).isNotNull();
-        assertThat(questionResponse.getQuestionId()).isEqualTo(question.getQuestionId());
+        assertThat(questionResponse.getQuestionId()).isEqualTo(EntityToResponseMapper.extractId(question.getQuestionFrn()));
+        assertThat(questionResponse.getQuestionFrn()).isEqualTo(question.getQuestionFrn());
         assertThat(questionResponse.getQuestion()).isEqualTo(question.getQuestion());
         assertThat(questionResponse.getCorrectAnswers()).isEqualTo(question.getCorrectAnswers());
         assertThat(questionResponse.getIncorrectAnswers()).isEqualTo(question.getIncorrectAnswers());
         assertThat(questionResponse.getDifficulty()).isEqualTo(QuestionResponse.DifficultyEnum.fromValue(question.getDifficulty()));
-        assertThat(questionResponse.getCreatedAt()).isEqualTo(question.getCreatedAt().atOffset(java.time.ZoneOffset.UTC));
-        assertThat(questionResponse.getUpdatedAt()).isEqualTo(question.getUpdatedAt().atOffset(java.time.ZoneOffset.UTC));
+        assertThat(questionResponse.getCreatedAt()).isEqualTo(question.getCreatedAt().atOffset(ZoneOffset.UTC));
+        assertThat(questionResponse.getUpdatedAt()).isEqualTo(question.getUpdatedAt().atOffset(ZoneOffset.UTC));
     }
 
     @Test
@@ -93,13 +91,13 @@ class EntityToResponseMapperTest {
         assertThat(questionResponses).hasSize(questions.size());
 
         for (int i = 0; i < questions.size(); i++) {
-            assertThat(questionResponses.get(i).getQuestionId()).isEqualTo(questions.get(i).getQuestionId());
+            assertThat(questionResponses.get(i).getQuestionId()).isEqualTo(EntityToResponseMapper.extractId(questions.get(i).getQuestionFrn()));
             assertThat(questionResponses.get(i).getQuestion()).isEqualTo(questions.get(i).getQuestion());
             assertThat(questionResponses.get(i).getCorrectAnswers()).isEqualTo(questions.get(i).getCorrectAnswers());
             assertThat(questionResponses.get(i).getIncorrectAnswers()).isEqualTo(questions.get(i).getIncorrectAnswers());
             assertThat(questionResponses.get(i).getDifficulty()).isEqualTo(QuestionResponse.DifficultyEnum.fromValue(questions.get(i).getDifficulty()));
-            assertThat(questionResponses.get(i).getCreatedAt()).isEqualTo(questions.get(i).getCreatedAt().atOffset(java.time.ZoneOffset.UTC));
-            assertThat(questionResponses.get(i).getUpdatedAt()).isEqualTo(questions.get(i).getUpdatedAt().atOffset(java.time.ZoneOffset.UTC));
+            assertThat(questionResponses.get(i).getCreatedAt()).isEqualTo(questions.get(i).getCreatedAt().atOffset(ZoneOffset.UTC));
+            assertThat(questionResponses.get(i).getUpdatedAt()).isEqualTo(questions.get(i).getUpdatedAt().atOffset(ZoneOffset.UTC));
         }
     }
 
@@ -108,7 +106,7 @@ class EntityToResponseMapperTest {
         // Arrange
         User user = TestUtils.createUser();
         Deck deck = TestUtils.createDeck(user);
-        GameSession gameSession = TestUtils.createGameSession(user, deck, GameSessionStatus.FINISHED);
+        GameSession gameSession = TestUtils.createGameSession(user, deck, "FINISHED");
         gameSession.setCorrectAnswersCount(5);
         gameSession.setQuestionCount(10);
         gameSession.setTotalScore(50);
@@ -120,6 +118,8 @@ class EntityToResponseMapperTest {
 
         // Assert
         assertThat(response).isNotNull();
+        assertThat(response.getGameSessionId()).isEqualTo(EntityToResponseMapper.extractId(gameSession.getGameSessionFrn()));
+        assertThat(response.getGameSessionFrn()).isEqualTo(gameSession.getGameSessionFrn());
         assertThat(response.getScore()).isEqualTo(50);
         assertThat(response.getCorrectAnswers()).isEqualTo(5);
         assertThat(response.getTotalQuestions()).isEqualTo(10);
@@ -135,8 +135,8 @@ class EntityToResponseMapperTest {
         User user = TestUtils.createUser();
         Deck deck = TestUtils.createDeck(user);
         List<GameSession> gameSessions = List.of(
-                TestUtils.createGameSession(user, deck, GameSessionStatus.FINISHED),
-                TestUtils.createGameSession(user, deck, GameSessionStatus.FINISHED)
+                TestUtils.createGameSession(user, deck, "FINISHED"),
+                TestUtils.createGameSession(user, deck, "FINISHED")
         );
 
         // Act
@@ -152,7 +152,7 @@ class EntityToResponseMapperTest {
         // Arrange
         User user = TestUtils.createUser();
         Deck deck = TestUtils.createDeck(user);
-        GameSession gameSession = TestUtils.createGameSession(user, deck, GameSessionStatus.PENDING);
+        GameSession gameSession = TestUtils.createGameSession(user, deck, "PENDING");
         gameSession.setCreatedAt(LocalDateTime.now());
 
         // Act

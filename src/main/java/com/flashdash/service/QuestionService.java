@@ -2,15 +2,12 @@ package com.flashdash.service;
 
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
-import com.flashdash.model.Deck;
-import com.flashdash.model.User;
 import com.flashdash.model.Question;
 import com.flashdash.repository.QuestionRepository;
 import com.p4r1nc3.flashdash.core.model.QuestionRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -27,94 +24,70 @@ public class QuestionService {
         this.deckService = deckService;
     }
 
-    public Question addQuestionToDeck(Long deckId, QuestionRequest questionRequest, User user) {
-        logger.info("Attempting to add question to deck with id: {} for user with email: {}", deckId, user.getUsername());
-        Deck deck = deckService.getDeckById(deckId, user);
-        logger.info("Deck with id: {} successfully retrieved for adding question", deckId);
+    public Question addQuestionToDeck(String deckFrn, QuestionRequest questionRequest, String userFrn) {
+        logger.info("Adding question to deck with FRN: {} for user FRN: {}", deckFrn, userFrn);
+
+        deckService.getDeckByFrn(deckFrn, userFrn);
 
         Question question = new Question();
+        question.setQuestionFrn(generateFrn("question"));
+        question.setDeckFrn(deckFrn);
         question.setQuestion(questionRequest.getQuestion());
         question.setCorrectAnswers(questionRequest.getCorrectAnswers());
         question.setIncorrectAnswers(questionRequest.getIncorrectAnswers());
         question.setDifficulty(questionRequest.getDifficulty().name());
         question.setCreatedAt(LocalDateTime.now());
         question.setUpdatedAt(LocalDateTime.now());
-        question.setDeck(deck);
 
         Question savedQuestion = questionRepository.save(question);
-
-        logger.info("Question successfully added to deck with id: {}. Question id: {}", deckId, savedQuestion.getQuestionId());
+        logger.info("Added question with FRN: {} to deck with FRN: {}", savedQuestion.getQuestionFrn(), deckFrn);
         return savedQuestion;
     }
 
-    public List<Question> getAllQuestionsInDeck(Long deckId, User user) {
-        logger.info("Fetching all questions for deck with id: {} and user with email: {}", deckId, user.getUsername());
-        Deck deck = deckService.getDeckById(deckId, user);
-        List<Question> questions = questionRepository.findAllByDeck(deck);
-
-        logger.info("Retrieved {} questions for deck with id: {}", questions.size(), deckId);
+    public List<Question> getAllQuestionsInDeck(String deckFrn, String userFrn) {
+        logger.info("Fetching all questions for deck FRN: {} and user FRN: {}", deckFrn, userFrn);
+        deckService.getDeckByFrn(deckFrn, userFrn);
+        List<Question> questions = questionRepository.findAllByDeckFrn(deckFrn);
+        logger.info("Retrieved {} questions for deck FRN: {}", questions.size(), deckFrn);
         return questions;
     }
 
-    public Question getQuestionById(Long deckId, Long questionId, User user) {
-        logger.info("Fetching question with id: {} from deck with id: {} for user with email: {}", questionId, deckId, user.getUsername());
-        Deck deck = deckService.getDeckById(deckId, user);
-        Question question = questionRepository.findByDeckAndQuestionId(deck, questionId)
-                .orElseThrow(() -> {
-                    logger.warn("Question with id: {} not found in deck with id: {}", questionId, deckId);
-                    return new FlashDashException(
-                            ErrorCode.E404003,
-                            "Question with id " + questionId + " not found in deck with id " + deckId
-                    );
-                });
+    public Question getQuestionByFrn(String deckFrn, String questionFrn, String userFrn) {
+        logger.info("Fetching question FRN: {} from deck FRN: {} for user FRN: {}", questionFrn, deckFrn, userFrn);
+        deckService.getDeckByFrn(deckFrn, userFrn);
 
-        logger.info("Successfully retrieved question with id: {} from deck with id: {}", questionId, deckId);
-        return question;
+        return questionRepository.findByDeckFrnAndQuestionFrn(deckFrn, questionFrn)
+                .orElseThrow(() -> {
+                    logger.warn("Question with FRN: {} not found in deck FRN: {}", questionFrn, deckFrn);
+                    return new FlashDashException(ErrorCode.E404003, "Question not found.");
+                });
     }
 
-    public Question updateQuestion(Long deckId, Long questionId, QuestionRequest questionRequest, User user) {
-        logger.info("Attempting to update question with id: {} in deck with id: {} for user with email: {}", questionId, deckId, user.getUsername());
-        Deck deck = deckService.getDeckById(deckId, user);
+    public Question updateQuestion(String deckFrn, String questionFrn, QuestionRequest questionRequest, String userFrn) {
+        logger.info("Updating question FRN: {} in deck FRN: {} for user FRN: {}", questionFrn, deckFrn, userFrn);
 
-        Question question = questionRepository.findByDeckAndQuestionId(deck, questionId)
-                .orElseThrow(() -> {
-                    logger.warn("Question with id: {} not found in deck with id: {}", questionId, deckId);
-                    return new FlashDashException(
-                            ErrorCode.E404003,
-                            "Question with id " + questionId + " not found in deck with id " + deckId
-                    );
-                });
-
-        // Update question details
+        Question question = getQuestionByFrn(deckFrn, questionFrn, userFrn);
         question.setQuestion(questionRequest.getQuestion());
         question.setCorrectAnswers(questionRequest.getCorrectAnswers());
         question.setIncorrectAnswers(questionRequest.getIncorrectAnswers());
         question.setDifficulty(questionRequest.getDifficulty().name());
         question.setUpdatedAt(LocalDateTime.now());
-        question.setVersion(question.getVersion() + 1);
-        question.setDeck(deck);
 
-        // Save the new version of the question
-        questionRepository.save(question);
-
-        logger.info("Successfully updated question with id: {} in deck with id: {}", questionId, deckId);
-        return question;
+        Question updatedQuestion = questionRepository.save(question);
+        logger.info("Successfully updated question FRN: {} in deck FRN: {}", questionFrn, deckFrn);
+        return updatedQuestion;
     }
 
-    public void deleteQuestion(Long deckId, Long questionId, User user) {
-        logger.info("Attempting to delete question with id: {} from deck with id: {} for user with email: {}", questionId, deckId, user.getUsername());
-        Deck deck = deckService.getDeckById(deckId, user);
+    public void deleteQuestion(String deckFrn, String questionFrn, String userFrn) {
+        logger.info("Deleting question FRN: {} from deck FRN: {} for user FRN: {}", questionFrn, deckFrn, userFrn);
 
-        Question question = questionRepository.findByDeckAndQuestionId(deck, questionId)
-                .orElseThrow(() -> {
-                    logger.warn("Question with id: {} not found in deck with id: {}", questionId, deckId);
-                    return new FlashDashException(
-                            ErrorCode.E404003,
-                            "Question with id " + questionId + " not found in deck with id " + deckId
-                    );
-                });
-
+        Question question = getQuestionByFrn(deckFrn, questionFrn, userFrn);
         questionRepository.delete(question);
-        logger.info("Successfully deleted question with id: {} from deck with id: {}", questionId, deckId);
+
+        logger.info("Successfully deleted question FRN: {} from deck FRN: {}", questionFrn, deckFrn);
+    }
+
+    private String generateFrn(String resourceType) {
+        return "frn:flashdash:" + resourceType + ":" + java.util.UUID.randomUUID();
     }
 }

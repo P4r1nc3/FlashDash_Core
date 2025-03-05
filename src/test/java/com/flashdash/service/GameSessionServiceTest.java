@@ -15,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -44,20 +45,20 @@ class GameSessionServiceTest {
     void setUp() {
         user = TestUtils.createUser();
         deck = TestUtils.createDeck(user);
-        gameSession = TestUtils.createGameSession(user, deck, GameSessionStatus.PENDING);
+        gameSession = TestUtils.createGameSession(user, deck, GameSessionStatus.PENDING.toString());
     }
 
     @Test
     void shouldStartNewGameSessionSuccessfully() {
         // Arrange
-        when(gameSessionRepository.findTopByDeckIdAndUserIdAndStatus(deck.getId(), user.getId(), GameSessionStatus.PENDING))
-                .thenReturn(null);
-        when(deckService.getDeckById(deck.getId(), user)).thenReturn(deck);
-        when(questionService.getAllQuestionsInDeck(deck.getId(), user))
+        when(gameSessionRepository.findTopByDeckFrnAndUserFrnAndStatus(deck.getDeckFrn(), user.getUserFrn(), GameSessionStatus.PENDING.toString()))
+                .thenReturn(Optional.empty());
+        when(deckService.getDeckByFrn(deck.getDeckFrn(), user.getUserFrn())).thenReturn(deck);
+        when(questionService.getAllQuestionsInDeck(deck.getDeckFrn(), user.getUserFrn()))
                 .thenReturn(List.of(TestUtils.createQuestion(deck, "Sample Question")));
 
         // Act
-        List<Question> questions = gameSessionService.startGameSession(deck.getId(), user);
+        List<Question> questions = gameSessionService.startGameSession(deck.getDeckFrn(), user.getUserFrn());
 
         // Assert
         assertThat(questions).isNotEmpty();
@@ -67,35 +68,35 @@ class GameSessionServiceTest {
     @Test
     void shouldResumeExistingGameSession() {
         // Arrange
-        when(gameSessionRepository.findTopByDeckIdAndUserIdAndStatus(deck.getId(), user.getId(), GameSessionStatus.PENDING))
-                .thenReturn(gameSession);
-        when(questionService.getAllQuestionsInDeck(deck.getId(), user))
+        when(gameSessionRepository.findTopByDeckFrnAndUserFrnAndStatus(deck.getDeckFrn(), user.getUserFrn(), GameSessionStatus.PENDING.toString()))
+                .thenReturn(Optional.of(gameSession));
+        when(questionService.getAllQuestionsInDeck(deck.getDeckFrn(), user.getUserFrn()))
                 .thenReturn(List.of(TestUtils.createQuestion(deck, "Sample Question")));
 
         // Act
-        List<Question> questions = gameSessionService.startGameSession(deck.getId(), user);
+        List<Question> questions = gameSessionService.startGameSession(deck.getDeckFrn(), user.getUserFrn());
 
         // Assert
         assertThat(questions).isNotEmpty();
-        verify(gameSessionRepository, never()).save(gameSession);
+        verify(gameSessionRepository, never()).save(any(GameSession.class));
     }
 
     @Test
     void shouldEndGameSessionSuccessfully() {
         // Arrange
-        QuestionRequest userAnswer = new QuestionRequest()
-                .question("Sample Question")
-                .correctAnswers(List.of("Correct Answer"));
+        QuestionRequest userAnswer = new QuestionRequest();
+        userAnswer.setQuestion("Sample Question");
+        userAnswer.setCorrectAnswers(List.of("Correct Answer"));
 
         Question correctQuestion = TestUtils.createQuestion(deck, "Sample Question");
         correctQuestion.setCorrectAnswers(List.of("Correct Answer"));
 
-        when(questionService.getAllQuestionsInDeck(deck.getId(), user)).thenReturn(List.of(correctQuestion));
-        when(gameSessionRepository.findTopByDeckIdAndUserIdAndStatus(deck.getId(), user.getId(), GameSessionStatus.PENDING))
-                .thenReturn(gameSession);
+        when(questionService.getAllQuestionsInDeck(deck.getDeckFrn(), user.getUserFrn())).thenReturn(List.of(correctQuestion));
+        when(gameSessionRepository.findTopByDeckFrnAndUserFrnAndStatus(deck.getDeckFrn(), user.getUserFrn(), GameSessionStatus.PENDING.toString()))
+                .thenReturn(Optional.of(gameSession));
 
         // Act
-        GameSession result = gameSessionService.endGameSession(deck.getId(), user, List.of(userAnswer));
+        GameSession result = gameSessionService.endGameSession(deck.getDeckFrn(), user.getUserFrn(), List.of(userAnswer));
 
         // Assert
         assertThat(result.getTotalScore()).isEqualTo(100);
@@ -107,17 +108,22 @@ class GameSessionServiceTest {
     @Test
     void shouldThrowExceptionWhenEndingSessionWithInvalidQuestion() {
         // Arrange
-        QuestionRequest invalidAnswer = new QuestionRequest()
-                .question("Invalid Question")
-                .correctAnswers(List.of("Wrong Answer"));
+        QuestionRequest invalidAnswer = new QuestionRequest();
+        invalidAnswer.setQuestion("Invalid Question");
+        invalidAnswer.setCorrectAnswers(List.of("Wrong Answer"));
 
         Question correctQuestion = TestUtils.createQuestion(deck, "Sample Question");
         correctQuestion.setCorrectAnswers(List.of("Correct Answer"));
 
-        when(questionService.getAllQuestionsInDeck(deck.getId(), user)).thenReturn(List.of(correctQuestion));
+        GameSession activeSession = TestUtils.createGameSession(user, deck, GameSessionStatus.PENDING.toString());
+
+        when(gameSessionRepository.findTopByDeckFrnAndUserFrnAndStatus(deck.getDeckFrn(), user.getUserFrn(), GameSessionStatus.PENDING.toString()))
+                .thenReturn(Optional.of(activeSession));
+
+        when(questionService.getAllQuestionsInDeck(deck.getDeckFrn(), user.getUserFrn())).thenReturn(List.of(correctQuestion));
 
         // Act & Assert
-        assertThatThrownBy(() -> gameSessionService.endGameSession(deck.getId(), user, List.of(invalidAnswer)))
+        assertThatThrownBy(() -> gameSessionService.endGameSession(deck.getDeckFrn(), user.getUserFrn(), List.of(invalidAnswer)))
                 .isInstanceOf(FlashDashException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404002)
                 .hasMessage("Matching question not found in the provided deck.");
@@ -126,29 +132,28 @@ class GameSessionServiceTest {
     @Test
     void shouldThrowExceptionWhenEndingSessionWithoutActiveSession() {
         // Arrange
-        QuestionRequest userAnswer = new QuestionRequest()
-                .question("Sample Question")
-                .correctAnswers(List.of("Correct Answer"));
+        QuestionRequest userAnswer = new QuestionRequest();
+        userAnswer.setQuestion("Sample Question");
+        userAnswer.setCorrectAnswers(List.of("Correct Answer"));
 
-        when(gameSessionRepository.findTopByDeckIdAndUserIdAndStatus(deck.getId(), user.getId(), GameSessionStatus.PENDING))
-                .thenReturn(null);
+        when(gameSessionRepository.findTopByDeckFrnAndUserFrnAndStatus(deck.getDeckFrn(), user.getUserFrn(), GameSessionStatus.PENDING.toString()))
+                .thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThatThrownBy(() -> gameSessionService.endGameSession(deck.getId(), user, List.of(userAnswer)))
+        assertThatThrownBy(() -> gameSessionService.endGameSession(deck.getDeckFrn(), user.getUserFrn(), List.of(userAnswer)))
                 .isInstanceOf(FlashDashException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404002)
-                .hasMessage("Matching question not found in the provided deck.");
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E400003)
+                .hasMessage("No active game session for this deck.");
     }
 
     @Test
     void shouldGetExistingGameSession() {
         // Arrange
-        deck.setId(1L);
-        user.setId(1L);
-        when(gameSessionRepository.findById(gameSession.getId())).thenReturn(java.util.Optional.of(gameSession));
+        when(gameSessionRepository.findByDeckFrnAndGameSessionFrnAndUserFrn(deck.getDeckFrn(), gameSession.getGameSessionFrn(), user.getUserFrn()))
+                .thenReturn(Optional.of(gameSession));
 
         // Act
-        GameSession retrievedSession = gameSessionService.getGameSession(1L, gameSession.getId(), user);
+        GameSession retrievedSession = gameSessionService.getGameSession(deck.getDeckFrn(), gameSession.getGameSessionFrn(), user.getUserFrn());
 
         // Assert
         assertThat(retrievedSession).isEqualTo(gameSession);
@@ -157,10 +162,11 @@ class GameSessionServiceTest {
     @Test
     void shouldThrowExceptionWhenGameSessionNotFound() {
         // Arrange
-        when(gameSessionRepository.findById(anyLong())).thenReturn(java.util.Optional.empty());
+        when(gameSessionRepository.findByDeckFrnAndGameSessionFrnAndUserFrn(anyString(), anyString(), anyString()))
+                .thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThatThrownBy(() -> gameSessionService.getGameSession(deck.getId(), 99L, user))
+        assertThatThrownBy(() -> gameSessionService.getGameSession(deck.getDeckFrn(), "invalid-frn", user.getUserFrn()))
                 .isInstanceOf(FlashDashException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404006)
                 .hasMessage("Game session not found");
@@ -169,10 +175,10 @@ class GameSessionServiceTest {
     @Test
     void shouldRemoveAllGameSessionsForUser() {
         // Arrange
-        when(gameSessionRepository.findAllByUser(user)).thenReturn(List.of(gameSession));
+        when(gameSessionRepository.findAllByUserFrn(user.getUserFrn())).thenReturn(List.of(gameSession));
 
         // Act
-        gameSessionService.removeAllGameSessionsForUser(user);
+        gameSessionService.removeAllGameSessionsForUser(user.getUserFrn());
 
         // Assert
         verify(gameSessionRepository).deleteAll(anyList());
@@ -181,12 +187,13 @@ class GameSessionServiceTest {
     @Test
     void shouldNotRemoveSessionsWhenUserHasNone() {
         // Arrange
-        when(gameSessionRepository.findAllByUser(user)).thenReturn(List.of());
+        when(gameSessionRepository.findAllByUserFrn(user.getUserFrn())).thenReturn(List.of());
 
         // Act
-        gameSessionService.removeAllGameSessionsForUser(user);
+        gameSessionService.removeAllGameSessionsForUser(user.getUserFrn());
 
         // Assert
-        verify(gameSessionRepository).deleteAll(List.of());
+        verify(gameSessionRepository).findAllByUserFrn(user.getUserFrn());
+        verify(gameSessionRepository, never()).deleteAll(anyList());
     }
 }

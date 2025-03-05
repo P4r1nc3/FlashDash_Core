@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/decks/{deckId}/questions")
+@RequestMapping("/decks/{deckFrn}/questions")
 public class QuestionController {
     private final QuestionService questionService;
 
@@ -23,46 +23,47 @@ public class QuestionController {
     }
 
     @PostMapping
-    public ResponseEntity<QuestionResponse> addQuestionToDeck(@PathVariable Long deckId, @RequestBody QuestionRequest questionRequest) {
-        User user = getAuthenticatedUser();
-        Question newQuestion = questionService.addQuestionToDeck(deckId, questionRequest, user);
+    public ResponseEntity<QuestionResponse> addQuestionToDeck(@PathVariable String deckFrn, @RequestBody QuestionRequest questionRequest) {
+        String userFrn = getAuthenticatedUser();
+        Question newQuestion = questionService.addQuestionToDeck(deckFrn, questionRequest, userFrn);
         return ResponseEntity.ok(EntityToResponseMapper.toQuestionResponse(newQuestion));
     }
 
     @GetMapping
-    public ResponseEntity<List<QuestionResponse>> getAllQuestionsInDeck(@PathVariable Long deckId) {
-        User user = getAuthenticatedUser();
-        List<Question> questions = questionService.getAllQuestionsInDeck(deckId, user);
+    public ResponseEntity<List<QuestionResponse>> getAllQuestionsInDeck(@PathVariable String deckFrn) {
+        String userFrn = getAuthenticatedUser();
+        List<Question> questions = questionService.getAllQuestionsInDeck(deckFrn, userFrn);
         return ResponseEntity.ok(EntityToResponseMapper.toQuestionResponseList(questions));
     }
 
-    @GetMapping("/{questionId}")
-    public ResponseEntity<QuestionResponse> getQuestion(@PathVariable Long deckId, @PathVariable Long questionId) {
-        User user = getAuthenticatedUser();
-        Question question = questionService.getQuestionById(deckId, questionId, user);
+    @GetMapping("/{questionFrn}")
+    public ResponseEntity<QuestionResponse> getQuestion(@PathVariable String deckFrn, @PathVariable String questionFrn) {
+        String userFrn = getAuthenticatedUser();
+        Question question = questionService.getQuestionByFrn(deckFrn, questionFrn, userFrn);
         return ResponseEntity.ok(EntityToResponseMapper.toQuestionResponse(question));
     }
 
-    @PutMapping("/{questionId}")
+    @PutMapping("/{questionFrn}")
     public ResponseEntity<QuestionResponse> updateQuestion(
-            @PathVariable Long deckId,
-            @PathVariable Long questionId,
+            @PathVariable String deckFrn,
+            @PathVariable String questionFrn,
             @RequestBody QuestionRequest questionRequest
     ) {
-        User user = getAuthenticatedUser();
-        Question updatedQuestion = questionService.updateQuestion(deckId, questionId, questionRequest, user);
+        String userFrn = getAuthenticatedUser();
+        Question updatedQuestion = questionService.updateQuestion(deckFrn, questionFrn, questionRequest, userFrn);
         return ResponseEntity.ok(EntityToResponseMapper.toQuestionResponse(updatedQuestion));
     }
 
-    @DeleteMapping("/{questionId}")
-    public ResponseEntity<Void> deleteQuestion(@PathVariable Long deckId, @PathVariable Long questionId) {
-        User user = getAuthenticatedUser();
-        questionService.deleteQuestion(deckId, questionId, user);
+    @DeleteMapping("/{questionFrn}")
+    public ResponseEntity<Void> deleteQuestion(@PathVariable String deckFrn, @PathVariable String questionFrn) {
+        String userFrn = getAuthenticatedUser();
+        questionService.deleteQuestion(deckFrn, questionFrn, userFrn);
         return ResponseEntity.noContent().build();
     }
 
-    private User getAuthenticatedUser() {
+    private String getAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return (User) authentication.getPrincipal();
+        User user = (User) authentication.getPrincipal();
+        return user.getUserFrn();
     }
 }
