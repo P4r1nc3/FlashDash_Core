@@ -18,8 +18,8 @@ public class EntityToResponseMapper {
 
     public static DeckResponse toDeckResponse(Deck deck) {
         DeckResponse deckResponse = new DeckResponse();
+        deckResponse.setDeckId(extractId(deck.getDeckFrn()));
         deckResponse.setDeckFrn(deck.getDeckFrn());
-        deckResponse.setUserFrn(deck.getUserFrn());
         deckResponse.setName(deck.getName());
         deckResponse.setDescription(deck.getDescription());
         deckResponse.setCreatedAt(deck.getCreatedAt().atOffset(ZoneOffset.UTC));
@@ -35,8 +35,8 @@ public class EntityToResponseMapper {
 
     public static QuestionResponse toQuestionResponse(Question question) {
         QuestionResponse response = new QuestionResponse();
+        response.setQuestionId(extractId(question.getQuestionFrn()));
         response.setQuestionFrn(question.getQuestionFrn());
-        response.setDeckFrn(question.getDeckFrn());
         response.setQuestion(question.getQuestion());
         response.setCorrectAnswers(question.getCorrectAnswers());
         response.setIncorrectAnswers(question.getIncorrectAnswers());
@@ -44,7 +44,7 @@ public class EntityToResponseMapper {
         try {
             response.setDifficulty(QuestionResponse.DifficultyEnum.fromValue(question.getDifficulty()));
         } catch (IllegalArgumentException e) {
-            response.setDifficulty(QuestionResponse.DifficultyEnum.EASY); // Domyślna wartość w razie błędu
+            response.setDifficulty(QuestionResponse.DifficultyEnum.EASY);
         }
 
         response.setCreatedAt(question.getCreatedAt().atOffset(ZoneOffset.UTC));
@@ -60,9 +60,8 @@ public class EntityToResponseMapper {
 
     public static GameSessionResponse toGameSessionResponse(GameSession gameSession) {
         GameSessionResponse response = new GameSessionResponse();
+        response.setGameSessionId(extractId(gameSession.getGameSessionFrn()));
         response.setGameSessionFrn(gameSession.getGameSessionFrn());
-        response.setDeckFrn(gameSession.getDeckFrn());
-        response.setUserFrn(gameSession.getUserFrn());
         response.setScore(gameSession.getTotalScore());
         response.setCorrectAnswers(gameSession.getCorrectAnswersCount());
         response.setTotalQuestions(gameSession.getQuestionCount());
@@ -90,5 +89,13 @@ public class EntityToResponseMapper {
         return gameSessions.stream()
                 .map(EntityToResponseMapper::toGameSessionResponse)
                 .collect(Collectors.toList());
+    }
+
+    private static String extractId(String frn) {
+        if (frn != null && frn.contains(":")) {
+            String[] parts = frn.split(":");
+            return parts[parts.length - 1];
+        }
+        return frn;
     }
 }
