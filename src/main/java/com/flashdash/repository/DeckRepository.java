@@ -10,6 +10,4 @@ import java.util.Optional;
 public interface DeckRepository extends JpaRepository<Deck, String> {
     List<Deck> findAllByUserFrn(String userFrn);
     Optional<Deck> findByDeckFrnAndUserFrn(String deckFrn, String userFrn);
-    @Transactional
-    void deleteByDeckFrn(String deckFrn);
 }
