@@ -1,15 +1,20 @@
 package com.flashdash.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flashdash.dto.response.FriendInvitationResponse;
 import com.flashdash.dto.response.UserResponse;
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
 import com.flashdash.model.FriendInvitation;
+import com.flashdash.model.User;
 import com.flashdash.repository.FriendInvitationRepository;
 import com.flashdash.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -18,6 +23,7 @@ public class FriendService {
     private final FriendInvitationRepository friendInvitationRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public FriendService(FriendInvitationRepository friendInvitationRepository,
                          UserRepository userRepository,
@@ -41,11 +47,23 @@ public class FriendService {
         invitation.setSentByFrn(senderFrn);
         invitation.setSentToFrn(recipientFrn);
         invitation.setStatus("PENDING");
+        invitation.setCreatedAt(LocalDateTime.now());
+        invitation.setUpdatedAt(LocalDateTime.now());
 
         friendInvitationRepository.save(invitation);
-        //TODO
-        emailService.sendFriendInvitationEmail(recipientFrn, senderFrn, "ds");
+
+        User sender = userRepository.findById(senderFrn)
+                .orElseThrow(() -> new FlashDashException(ErrorCode.E404002, "Sender not found"));
+        User recipient = userRepository.findById(recipientFrn)
+                .orElseThrow(() -> new FlashDashException(ErrorCode.E404002, "Recipient not found"));
+
+        emailService.sendFriendInvitationEmail(
+                recipient.getEmail(),
+                sender.getFirstName(),
+                sender.getLastName()
+        );
     }
+
 
     public List<FriendInvitationResponse> getReceivedFriendInvitations(String recipientFrn) {
         return friendInvitationRepository.findAllBySentToFrn(recipientFrn).stream()
@@ -59,46 +77,87 @@ public class FriendService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public void respondToFriendInvitation(String invitationFrn, String userFrn, String status) {
         FriendInvitation invitation = friendInvitationRepository.findById(invitationFrn)
                 .orElseThrow(() -> new FlashDashException(ErrorCode.E404004, "Invitation not found"));
 
-        boolean isSender = invitation.getSentByFrn().equals(userFrn);
         boolean isRecipient = invitation.getSentToFrn().equals(userFrn);
 
-        if (!isSender && !isRecipient) {
+        if (!isRecipient) {
             throw new FlashDashException(ErrorCode.E403001, "Unauthorized to respond to this invitation.");
         }
 
-        if (isSender && !"REJECTED".equals(status)) {
-            throw new FlashDashException(ErrorCode.E403002, "You can only cancel your invitation.");
+        if ("ACCEPTED".equals(status)) {
+            addFriendship(invitation.getSentByFrn(), invitation.getSentToFrn());
         }
 
-        if (isRecipient) {
-            invitation.setStatus(status);
-            friendInvitationRepository.save(invitation);
-
-            if ("ACCEPTED".equals(status)) {
-                userRepository.addFriend(invitation.getSentByFrn(), invitation.getSentToFrn());
-            }
-
-            friendInvitationRepository.delete(invitation);
-        }
+        friendInvitationRepository.delete(invitation);
     }
 
     public List<UserResponse> getFriends(String userFrn) {
-        return userRepository.findFriendsByUserFrn(userFrn).stream()
-                .map(UserResponse::new)
+        User user = userRepository.findById(userFrn)
+                .orElseThrow(() -> new FlashDashException(ErrorCode.E404002, "User not found"));
+
+        List<String> friendsFrnList = user.getFriendsFrnList();
+
+        return friendsFrnList.stream()
+                .map(friendFrn -> userRepository.findById(friendFrn)
+                        .map(UserResponse::new)
+                        .orElse(null))
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public void deleteFriend(String userFrn, String friendFrn) {
-        userRepository.removeFriend(userFrn, friendFrn);
+        removeFriendship(userFrn, friendFrn);
     }
 
     @Transactional
     public void removeAllFriends(String userFrn) {
-        userRepository.removeAllFriends(userFrn);
+        User user = userRepository.findById(userFrn)
+                .orElseThrow(() -> new FlashDashException(ErrorCode.E404002, "User not found"));
+        user.setFriendsFrnList(List.of());
+        userRepository.save(user);
+    }
+
+    private void addFriendship(String userFrn, String friendFrn) {
+        User user = userRepository.findById(userFrn)
+                .orElseThrow(() -> new FlashDashException(ErrorCode.E404002, "User not found"));
+        User friend = userRepository.findById(friendFrn)
+                .orElseThrow(() -> new FlashDashException(ErrorCode.E404002, "Friend not found"));
+
+        List<String> userFriends = user.getFriendsFrnList();
+        List<String> friendFriends = friend.getFriendsFrnList();
+
+        if (!userFriends.contains(friendFrn)) userFriends.add(friendFrn);
+        if (!friendFriends.contains(userFrn)) friendFriends.add(userFrn);
+
+        user.setFriendsFrnList(userFriends);
+        friend.setFriendsFrnList(friendFriends);
+
+        userRepository.save(user);
+        userRepository.save(friend);
+    }
+
+    private void removeFriendship(String userFrn, String friendFrn) {
+        User user = userRepository.findById(userFrn)
+                .orElseThrow(() -> new FlashDashException(ErrorCode.E404002, "User not found"));
+        User friend = userRepository.findById(friendFrn)
+                .orElseThrow(() -> new FlashDashException(ErrorCode.E404002, "Friend not found"));
+
+        List<String> userFriends = user.getFriendsFrnList();
+        List<String> friendFriends = friend.getFriendsFrnList();
+
+        userFriends.remove(friendFrn);
+        friendFriends.remove(userFrn);
+
+        user.setFriendsFrnList(userFriends);
+        friend.setFriendsFrnList(friendFriends);
+
+        userRepository.save(user);
+        userRepository.save(friend);
     }
 
     private FriendInvitationResponse mapToResponse(FriendInvitation invitation) {
