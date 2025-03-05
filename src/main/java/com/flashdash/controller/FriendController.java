@@ -35,9 +35,9 @@ public class FriendController {
     }
 
     @PostMapping("/invite")
-    public ResponseEntity<Void> sendFriendInvitation(@RequestParam String recipientFrn) {
+    public ResponseEntity<Void> sendFriendInvitation(@RequestParam String recipientEmail) {
         String userFrn = getAuthenticatedUser();
-        friendService.sendFriendInvitation(userFrn, recipientFrn);
+        friendService.sendFriendInvitation(userFrn, recipientEmail);
         return ResponseEntity.ok().build();
     }
 
