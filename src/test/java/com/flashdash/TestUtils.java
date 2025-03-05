@@ -36,24 +36,9 @@ public class TestUtils {
     public static User createUser() {
         User user = new User();
         user.setUserFrn(generateFrn("user"));
-        user.setEmail("test@example.com");
+        user.setEmail("user" + UUID.randomUUID() + "@example.com");
         user.setPassword("password123");
         user.setFirstName("Test");
-        user.setLastName("User");
-        user.setCreatedAt(LocalDateTime.now());
-        user.setUpdatedAt(LocalDateTime.now());
-        user.setEnabled(true);
-        user.setDailyNotifications(true);
-        user.setFriendsFrnList(List.of());
-        return user;
-    }
-
-    public static User createFriendUser() {
-        User user = new User();
-        user.setUserFrn(generateFrn("user"));
-        user.setEmail("friend@example.com");
-        user.setPassword("password123");
-        user.setFirstName("Friend");
         user.setLastName("User");
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
