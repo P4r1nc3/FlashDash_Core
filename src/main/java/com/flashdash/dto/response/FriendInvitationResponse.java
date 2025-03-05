@@ -3,44 +3,31 @@ package com.flashdash.dto.response;
 import java.time.LocalDateTime;
 
 public class FriendInvitationResponse {
-    private Long id;
-    private String senderFirstName;
-    private String senderLastName;
-    private String recipientFirstName;
-    private String recipientLastName;
+    private String invitationFrn;
+    private String senderFrn;
+    private String recipientFrn;
     private String status;
     private LocalDateTime createdAt;
 
-    public FriendInvitationResponse(Long id, String senderFirstName, String senderLastName,
-                                    String recipientFirstName, String recipientLastName,
+    public FriendInvitationResponse(String invitationFrn, String senderFrn, String recipientFrn,
                                     String status, LocalDateTime createdAt) {
-        this.id = id;
-        this.senderFirstName = senderFirstName;
-        this.senderLastName = senderLastName;
-        this.recipientFirstName = recipientFirstName;
-        this.recipientLastName = recipientLastName;
+        this.invitationFrn = invitationFrn;
+        this.senderFrn = senderFrn;
+        this.recipientFrn = recipientFrn;
         this.status = status;
         this.createdAt = createdAt;
     }
 
-    public Long getId() {
-        return id;
+    public String getInvitationFrn() {
+        return invitationFrn;
     }
 
-    public String getSenderFirstName() {
-        return senderFirstName;
+    public String getSenderFrn() {
+        return senderFrn;
     }
 
-    public String getSenderLastName() {
-        return senderLastName;
-    }
-
-    public String getRecipientFirstName() {
-        return recipientFirstName;
-    }
-
-    public String getRecipientLastName() {
-        return recipientLastName;
+    public String getRecipientFrn() {
+        return recipientFrn;
     }
 
     public String getStatus() {

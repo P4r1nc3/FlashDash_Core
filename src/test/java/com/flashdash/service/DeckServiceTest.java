@@ -46,7 +46,7 @@ class DeckServiceTest {
         when(deckRepository.save(any(Deck.class))).thenReturn(deck);
 
         // Act
-        Deck createdDeck = deckService.createDeck(deckRequest, user);
+        Deck createdDeck = deckService.createDeck(deckRequest, user.getUserFrn());
 
         // Assert
         assertThat(createdDeck).isNotNull();
@@ -60,44 +60,45 @@ class DeckServiceTest {
         // Arrange
         User user = TestUtils.createUser();
         List<Deck> decks = List.of(TestUtils.createDeck(user));
-        when(deckRepository.findAllByUser(user)).thenReturn(decks);
+        when(deckRepository.findAllByUserFrn(user.getUserFrn())).thenReturn(decks);
 
         // Act
-        List<Deck> retrievedDecks = deckService.getAllDecks(user);
+        List<Deck> retrievedDecks = deckService.getAllDecks(user.getUserFrn());
 
         // Assert
         assertThat(retrievedDecks).isNotEmpty();
         assertThat(retrievedDecks).isEqualTo(decks);
-        verify(deckRepository).findAllByUser(user);
+        verify(deckRepository).findAllByUserFrn(user.getUserFrn());
     }
 
     @Test
-    void shouldGetDeckByIdSuccessfully() {
+    void shouldGetDeckByFrnSuccessfully() {
         // Arrange
         User user = TestUtils.createUser();
         Deck deck = TestUtils.createDeck(user);
-        when(deckRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(deck));
+        when(deckRepository.findByDeckFrnAndUserFrn(deck.getDeckFrn(), user.getUserFrn())).thenReturn(Optional.of(deck));
 
         // Act
-        Deck retrievedDeck = deckService.getDeckById(1L, user);
+        Deck retrievedDeck = deckService.getDeckByFrn(deck.getDeckFrn(), user.getUserFrn());
 
         // Assert
         assertThat(retrievedDeck).isEqualTo(deck);
-        verify(deckRepository).findByIdAndUser(1L, user);
+        verify(deckRepository).findByDeckFrnAndUserFrn(deck.getDeckFrn(), user.getUserFrn());
     }
 
     @Test
-    void shouldThrowExceptionWhenDeckNotFoundById() {
+    void shouldThrowExceptionWhenDeckNotFoundByFrn() {
         // Arrange
         User user = TestUtils.createUser();
-        when(deckRepository.findByIdAndUser(1L, user)).thenReturn(Optional.empty());
+        String deckFrn = "frn:flashdash:deck:nonexistent";
+        when(deckRepository.findByDeckFrnAndUserFrn(deckFrn, user.getUserFrn())).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThatThrownBy(() -> deckService.getDeckById(1L, user))
+        assertThatThrownBy(() -> deckService.getDeckByFrn(deckFrn, user.getUserFrn()))
                 .isInstanceOf(FlashDashException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404002);
 
-        verify(deckRepository).findByIdAndUser(1L, user);
+        verify(deckRepository).findByDeckFrnAndUserFrn(deckFrn, user.getUserFrn());
     }
 
     @Test
@@ -109,16 +110,16 @@ class DeckServiceTest {
         deckRequest.setName("Updated Name");
         deckRequest.setDescription("Updated Description");
 
-        when(deckRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(deck));
+        when(deckRepository.findByDeckFrnAndUserFrn(deck.getDeckFrn(), user.getUserFrn())).thenReturn(Optional.of(deck));
         when(deckRepository.save(any(Deck.class))).thenReturn(deck);
 
         // Act
-        Deck updatedDeck = deckService.updateDeck(1L, deckRequest, user);
+        Deck updatedDeck = deckService.updateDeck(deck.getDeckFrn(), deckRequest, user.getUserFrn());
 
         // Assert
         assertThat(updatedDeck.getName()).isEqualTo("Updated Name");
         assertThat(updatedDeck.getDescription()).isEqualTo("Updated Description");
-        verify(deckRepository).findByIdAndUser(1L, user);
+        verify(deckRepository).findByDeckFrnAndUserFrn(deck.getDeckFrn(), user.getUserFrn());
         verify(deckRepository).save(deck);
     }
 
@@ -127,32 +128,34 @@ class DeckServiceTest {
         // Arrange
         User user = TestUtils.createUser();
         DeckRequest deckRequest = TestUtils.createDeckRequest();
-        when(deckRepository.findByIdAndUser(1L, user)).thenReturn(Optional.empty());
+        String deckFrn = "frn:flashdash:deck:nonexistent";
+
+        when(deckRepository.findByDeckFrnAndUserFrn(deckFrn, user.getUserFrn())).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThatThrownBy(() -> deckService.updateDeck(1L, deckRequest, user))
+        assertThatThrownBy(() -> deckService.updateDeck(deckFrn, deckRequest, user.getUserFrn()))
                 .isInstanceOf(FlashDashException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404002);
 
-        verify(deckRepository).findByIdAndUser(1L, user);
+        verify(deckRepository).findByDeckFrnAndUserFrn(deckFrn, user.getUserFrn());
     }
 
     @Test
-    void shouldSoftDeleteDeckSuccessfully() {
+    void shouldDeleteDeckSuccessfully() {
         // Arrange
         User user = TestUtils.createUser();
         Deck deck = TestUtils.createDeck(user);
 
-        when(deckRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(deck));
-        doNothing().when(questionRepository).deleteAllByDeck(deck);
+        when(deckRepository.findByDeckFrnAndUserFrn(deck.getDeckFrn(), user.getUserFrn())).thenReturn(Optional.of(deck));
+        doNothing().when(questionRepository).deleteAllByDeckFrn(deck.getDeckFrn());
         doNothing().when(deckRepository).delete(deck);
 
         // Act
-        deckService.deleteDeck(1L, user);
+        deckService.deleteDeck(deck.getDeckFrn(), user.getUserFrn());
 
         // Assert
-        verify(deckRepository).findByIdAndUser(1L, user);
-        verify(questionRepository).deleteAllByDeck(deck);
+        verify(deckRepository).findByDeckFrnAndUserFrn(deck.getDeckFrn(), user.getUserFrn());
+        verify(questionRepository).deleteAllByDeckFrn(deck.getDeckFrn());
         verify(deckRepository).delete(deck);
     }
 
@@ -160,14 +163,16 @@ class DeckServiceTest {
     void shouldThrowExceptionWhenDeletingNonExistentDeck() {
         // Arrange
         User user = TestUtils.createUser();
-        when(deckRepository.findByIdAndUser(1L, user)).thenReturn(Optional.empty());
+        String deckFrn = "frn:flashdash:deck:nonexistent";
+
+        when(deckRepository.findByDeckFrnAndUserFrn(deckFrn, user.getUserFrn())).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThatThrownBy(() -> deckService.deleteDeck(1L, user))
+        assertThatThrownBy(() -> deckService.deleteDeck(deckFrn, user.getUserFrn()))
                 .isInstanceOf(FlashDashException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404002);
 
-        verify(deckRepository).findByIdAndUser(1L, user);
+        verify(deckRepository).findByDeckFrnAndUserFrn(deckFrn, user.getUserFrn());
     }
 
     @Test
@@ -175,40 +180,41 @@ class DeckServiceTest {
         // Arrange
         User user = TestUtils.createUser();
         Deck deck1 = TestUtils.createDeck(user);
-        deck1.setId(1L);
         Deck deck2 = TestUtils.createDeck(user);
-        deck2.setId(2L);
         List<Deck> userDecks = List.of(deck1, deck2);
 
-        when(deckRepository.findAllByUser(user)).thenReturn(userDecks);
-        when(deckRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(deck1));
-        when(deckRepository.findByIdAndUser(2L, user)).thenReturn(Optional.of(deck2));
+        when(deckRepository.findAllByUserFrn(user.getUserFrn())).thenReturn(userDecks);
 
-        doNothing().when(questionRepository).deleteAllByDeck(any(Deck.class));
+        when(deckRepository.findByDeckFrnAndUserFrn(deck1.getDeckFrn(), user.getUserFrn())).thenReturn(Optional.of(deck1));
+        when(deckRepository.findByDeckFrnAndUserFrn(deck2.getDeckFrn(), user.getUserFrn())).thenReturn(Optional.of(deck2));
+
+        doNothing().when(questionRepository).deleteAllByDeckFrn(anyString());
         doNothing().when(deckRepository).delete(any(Deck.class));
 
         // Act
-        deckService.deleteAllDecksForUser(user);
+        deckService.deleteAllDecksForUser(user.getUserFrn());
 
         // Assert
-        verify(deckRepository).findAllByUser(user);
+        verify(deckRepository).findAllByUserFrn(user.getUserFrn());
+        verify(deckRepository, times(userDecks.size())).findByDeckFrnAndUserFrn(anyString(), anyString());
         verify(deckRepository, times(userDecks.size())).delete(any(Deck.class));
-        verify(questionRepository, times(userDecks.size())).deleteAllByDeck(any(Deck.class));
+        verify(questionRepository, times(userDecks.size())).deleteAllByDeckFrn(anyString());
     }
+
 
     @Test
     void shouldNotDeleteDecksWhenUserHasNone() {
         // Arrange
         User user = TestUtils.createUser();
-        when(deckRepository.findAllByUser(user)).thenReturn(List.of());
+        when(deckRepository.findAllByUserFrn(user.getUserFrn())).thenReturn(Collections.emptyList());
 
         // Act
-        deckService.deleteAllDecksForUser(user);
+        deckService.deleteAllDecksForUser(user.getUserFrn());
 
         // Assert
-        verify(deckRepository).findAllByUser(user);
+        verify(deckRepository).findAllByUserFrn(user.getUserFrn());
         verify(deckRepository, never()).delete(any(Deck.class));
-        verify(questionRepository, never()).deleteAllByDeck(any(Deck.class));
+        verify(questionRepository, never()).deleteAllByDeckFrn(anyString());
     }
 
     @Test
@@ -216,13 +222,14 @@ class DeckServiceTest {
         // Arrange
         User user = TestUtils.createUser();
 
-        when(deckRepository.findAllByUser(user)).thenReturn(Collections.emptyList());
+        when(deckRepository.findAllByUserFrn(user.getUserFrn())).thenReturn(Collections.emptyList());
 
-        // Act & Assert
-        deckService.deleteAllDecksForUser(user);
+        // Act
+        deckService.deleteAllDecksForUser(user.getUserFrn());
 
-        verify(deckRepository).findAllByUser(user);
+        // Assert
+        verify(deckRepository).findAllByUserFrn(user.getUserFrn());
         verify(deckRepository, never()).delete(any(Deck.class));
-        verify(questionRepository, never()).deleteAllByDeck(any(Deck.class));
+        verify(questionRepository, never()).deleteAllByDeckFrn(anyString());
     }
 }

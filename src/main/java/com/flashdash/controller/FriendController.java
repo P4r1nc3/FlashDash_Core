@@ -2,7 +2,7 @@ package com.flashdash.controller;
 
 import com.flashdash.dto.response.FriendInvitationResponse;
 import com.flashdash.dto.response.UserResponse;
-import com.flashdash.model.FriendInvitation;
+import com.flashdash.model.User;
 import com.flashdash.service.FriendService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -22,57 +22,49 @@ public class FriendController {
 
     @GetMapping
     public ResponseEntity<List<UserResponse>> getFriends() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String userEmail = authentication.getName();
-
-        List<UserResponse> friends = friendService.getFriends(userEmail);
+        String userFrn = getAuthenticatedUser();
+        List<UserResponse> friends = friendService.getFriends(userFrn);
         return ResponseEntity.ok(friends);
     }
 
-    @DeleteMapping("/{friendEmail}")
-    public ResponseEntity<Void> deleteFriend(@PathVariable String friendEmail) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String userEmail = authentication.getName();
-
-        friendService.deleteFriend(userEmail, friendEmail);
+    @DeleteMapping("/{friendFrn}")
+    public ResponseEntity<Void> deleteFriend(@PathVariable String friendFrn) {
+        String userFrn = getAuthenticatedUser();
+        friendService.deleteFriend(userFrn, friendFrn);
         return ResponseEntity.noContent().build();
     }
 
-
     @PostMapping("/invite")
-    public ResponseEntity<Void> sendFriendInvitation(@RequestParam String recipientEmail) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String senderEmail = authentication.getName();
-
-        friendService.sendFriendInvitation(senderEmail, recipientEmail);
+    public ResponseEntity<Void> sendFriendInvitation(@RequestParam String recipientFrn) {
+        String userFrn = getAuthenticatedUser();
+        friendService.sendFriendInvitation(userFrn, recipientFrn);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/invitations/received")
     public ResponseEntity<List<FriendInvitationResponse>> getReceivedInvitations() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String recipientEmail = authentication.getName();
-
-        List<FriendInvitationResponse> invitations = friendService.getReceivedFriendInvitations(recipientEmail);
+        String userFrn = getAuthenticatedUser();
+        List<FriendInvitationResponse> invitations = friendService.getReceivedFriendInvitations(userFrn);
         return ResponseEntity.ok(invitations);
     }
 
     @GetMapping("/invitations/sent")
     public ResponseEntity<List<FriendInvitationResponse>> getSentInvitations() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String senderEmail = authentication.getName();
-
-        List<FriendInvitationResponse> invitations = friendService.getSentFriendInvitations(senderEmail);
+        String userFrn = getAuthenticatedUser();
+        List<FriendInvitationResponse> invitations = friendService.getSentFriendInvitations(userFrn);
         return ResponseEntity.ok(invitations);
     }
 
-    @PutMapping("/invitations/{invitationId}")
-    public ResponseEntity<Void> respondToInvitation(@PathVariable Long invitationId,
-                                                    @RequestParam FriendInvitation.InvitationStatus status) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String userEmail = authentication.getName();
-
-        friendService.respondToFriendInvitation(invitationId, userEmail, status);
+    @PutMapping("/invitations/{invitationFrn}")
+    public ResponseEntity<Void> respondToInvitation(@PathVariable String invitationFrn, @RequestParam String status) {
+        String userFrn = getAuthenticatedUser();
+        friendService.respondToFriendInvitation(invitationFrn, userFrn, status);
         return ResponseEntity.ok().build();
+    }
+
+    private String getAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User user = (User) authentication.getPrincipal();
+        return user.getUserFrn();
     }
 }

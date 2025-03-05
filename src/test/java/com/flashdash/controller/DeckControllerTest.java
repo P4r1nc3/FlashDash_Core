@@ -28,7 +28,6 @@ import static org.mockito.Mockito.*;
 
 @SpringBootTest(classes = FlashDashApplication.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class DeckControllerTest {
 
     @Autowired
@@ -38,11 +37,13 @@ class DeckControllerTest {
     private DeckService deckService;
 
     private User user;
+    private String deckFrn;
     private MockedStatic<SecurityContextHolder> mockedSecurityContextHolder;
 
     @BeforeEach
     void setUp() {
         user = TestUtils.createUser();
+        deckFrn = TestUtils.createDeck(user).getDeckFrn();
 
         Authentication authentication = mock(Authentication.class);
         when(authentication.getPrincipal()).thenReturn(user);
@@ -60,12 +61,11 @@ class DeckControllerTest {
     }
 
     @Test
-    @Order(1)
     void testCreateDeckSuccessful() {
         // Arrange
         DeckRequest deckRequest = TestUtils.createDeckRequest();
         Deck deck = TestUtils.createDeck(user);
-        when(deckService.createDeck(any(DeckRequest.class), eq(user))).thenReturn(deck);
+        when(deckService.createDeck(any(DeckRequest.class), eq(user.getUserFrn()))).thenReturn(deck);
 
         // Act
         ResponseEntity<DeckResponse> responseEntity = deckController.createDeck(deckRequest);
@@ -76,14 +76,13 @@ class DeckControllerTest {
     }
 
     @Test
-    @Order(2)
     void testGetAllDecksSuccessful() {
         // Arrange
         Deck deck = TestUtils.createDeck(user);
         List<Deck> decks = List.of(deck);
         List<DeckResponse> expectedResponses = EntityToResponseMapper.toDeckResponseList(decks);
 
-        when(deckService.getAllDecks(eq(user))).thenReturn(decks);
+        when(deckService.getAllDecks(eq(user.getUserFrn()))).thenReturn(decks);
 
         // Act
         ResponseEntity<List<DeckResponse>> responseEntity = deckController.getAllDecks();
@@ -94,16 +93,15 @@ class DeckControllerTest {
     }
 
     @Test
-    @Order(3)
-    void testGetDeckByIdSuccessful() {
+    void testGetDeckByFrnSuccessful() {
         // Arrange
         Deck deck = TestUtils.createDeck(user);
         DeckResponse expectedResponse = EntityToResponseMapper.toDeckResponse(deck);
 
-        when(deckService.getDeckById(eq(1L), eq(user))).thenReturn(deck);
+        when(deckService.getDeckByFrn(eq(deckFrn), eq(user.getUserFrn()))).thenReturn(deck);
 
         // Act
-        ResponseEntity<DeckResponse> responseEntity = deckController.getDeck(1L);
+        ResponseEntity<DeckResponse> responseEntity = deckController.getDeck(deckFrn);
 
         // Assert
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -111,32 +109,30 @@ class DeckControllerTest {
     }
 
     @Test
-    @Order(4)
-    void testGetDeckByIdNotFound() {
+    void testGetDeckByFrnNotFound() {
         // Arrange
         doThrow(new FlashDashException(ErrorCode.E404001, "Deck not found"))
-                .when(deckService).getDeckById(eq(1L), eq(user));
+                .when(deckService).getDeckByFrn(eq(deckFrn), eq(user.getUserFrn()));
 
         // Act & Assert
         FlashDashException exception = assertThrows(
                 FlashDashException.class,
-                () -> deckController.getDeck(1L)
+                () -> deckController.getDeck(deckFrn)
         );
         assertEquals(ErrorCode.E404001, exception.getErrorCode());
         assertEquals("Deck not found", exception.getMessage());
     }
 
     @Test
-    @Order(5)
     void testUpdateDeckSuccessful() {
         // Arrange
         DeckRequest deckRequest = TestUtils.createDeckRequest();
         Deck deck = TestUtils.createDeck(user);
         deck.setName("Updated Name");
-        when(deckService.updateDeck(eq(1L), any(DeckRequest.class), eq(user))).thenReturn(deck);
+        when(deckService.updateDeck(eq(deckFrn), any(DeckRequest.class), eq(user.getUserFrn()))).thenReturn(deck);
 
         // Act
-        ResponseEntity<DeckResponse> responseEntity = deckController.updateDeck(1L, deckRequest);
+        ResponseEntity<DeckResponse> responseEntity = deckController.updateDeck(deckFrn, deckRequest);
 
         // Assert
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -144,48 +140,46 @@ class DeckControllerTest {
     }
 
     @Test
-    @Order(6)
     void testUpdateDeckNotFound() {
         // Arrange
         DeckRequest deckRequest = TestUtils.createDeckRequest();
         doThrow(new FlashDashException(ErrorCode.E404001, "Deck not found"))
-                .when(deckService).updateDeck(eq(1L), any(DeckRequest.class), eq(user));
+                .when(deckService).updateDeck(eq(deckFrn), any(DeckRequest.class), eq(user.getUserFrn()));
 
         // Act & Assert
         FlashDashException exception = assertThrows(
                 FlashDashException.class,
-                () -> deckController.updateDeck(1L, deckRequest)
+                () -> deckController.updateDeck(deckFrn, deckRequest)
         );
         assertEquals(ErrorCode.E404001, exception.getErrorCode());
         assertEquals("Deck not found", exception.getMessage());
     }
 
     @Test
-    @Order(7)
     void testDeleteDeckSuccessful() {
         // Arrange
-        doNothing().when(deckService).deleteDeck(eq(1L), eq(user));
+        doNothing().when(deckService).deleteDeck(eq(deckFrn), eq(user.getUserFrn()));
 
         // Act
-        ResponseEntity<Void> responseEntity = deckController.deleteDeck(1L);
+        ResponseEntity<Void> responseEntity = deckController.deleteDeck(deckFrn);
 
         // Assert
         assertEquals(HttpStatus.NO_CONTENT, responseEntity.getStatusCode());
-        verify(deckService, times(1)).deleteDeck(eq(1L), eq(user));
+        verify(deckService, times(1)).deleteDeck(eq(deckFrn), eq(user.getUserFrn()));
     }
 
     @Test
-    @Order(8)
     void testDeleteDeckNotFound() {
         // Arrange
         doThrow(new FlashDashException(ErrorCode.E404001, "Deck not found"))
-                .when(deckService).deleteDeck(eq(1L), eq(user));
+                .when(deckService).deleteDeck(eq(deckFrn), eq(user.getUserFrn()));
 
         // Act & Assert
         FlashDashException exception = assertThrows(
                 FlashDashException.class,
-                () -> deckController.deleteDeck(1L)
+                () -> deckController.deleteDeck(deckFrn)
         );
+
         assertEquals(ErrorCode.E404001, exception.getErrorCode());
         assertEquals("Deck not found", exception.getMessage());
     }

@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -72,12 +73,16 @@ public class AuthenticationService {
         String activationToken = UUID.randomUUID().toString();
 
         User user = new User();
+        user.setUserFrn(generateFrn("user"));
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
         user.setUsername(request.getEmail().trim().toLowerCase());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setActivationToken(activationToken);
         user.setDailyNotifications(true);
+        user.setCreatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
+        user.setEnabled(false);
 
         userRepository.save(user);
         emailService.sendActivationEmail(user.getUsername(), activationToken);
@@ -103,5 +108,9 @@ public class AuthenticationService {
         userRepository.save(user);
 
         logger.info("Account activated successfully for email: {}", user.getUsername());
+    }
+
+    private String generateFrn(String resourceType) {
+        return "frn:flashdash:" + resourceType + ":" + UUID.randomUUID();
     }
 }

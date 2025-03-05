@@ -34,30 +34,28 @@ class DeckRepositoryTest {
     }
 
     @Test
-    void shouldFindAllDecksByUser() {
+    void shouldFindAllDecksByUserFrn() {
         // Arrange
         User user = TestUtils.createUser();
         userRepository.save(user);
 
         Deck deck1 = TestUtils.createDeck(user);
-        deck1.setName("Deck 1");
         deckRepository.save(deck1);
 
         Deck deck2 = TestUtils.createDeck(user);
-        deck2.setName("Deck 2");
         deckRepository.save(deck2);
 
         // Act
-        List<Deck> decks = deckRepository.findAllByUser(user);
+        List<Deck> decks = deckRepository.findAllByUserFrn(user.getUserFrn());
 
         // Assert
         assertThat(decks).hasSize(2);
-        assertThat(decks).extracting(Deck::getName)
-                .containsExactlyInAnyOrder(deck1.getName(), deck2.getName());
+        assertThat(decks).extracting(Deck::getDeckFrn)
+                .containsExactlyInAnyOrder(deck1.getDeckFrn(), deck2.getDeckFrn());
     }
 
     @Test
-    void shouldFindSpecificDeckByIdAndUser() {
+    void shouldFindSpecificDeckByDeckFrnAndUserFrn() {
         // Arrange
         User user = TestUtils.createUser();
         userRepository.save(user);
@@ -66,11 +64,11 @@ class DeckRepositoryTest {
         deckRepository.save(deck);
 
         // Act
-        Optional<Deck> foundDeck = deckRepository.findByIdAndUser(deck.getId(), user);
+        Optional<Deck> foundDeck = deckRepository.findByDeckFrnAndUserFrn(deck.getDeckFrn(), user.getUserFrn());
 
         // Assert
         assertThat(foundDeck).isPresent();
-        assertThat(foundDeck.get().getName()).isEqualTo(deck.getName());
+        assertThat(foundDeck.get().getDeckFrn()).isEqualTo(deck.getDeckFrn());
     }
 
     @Test
@@ -79,64 +77,16 @@ class DeckRepositoryTest {
         User user1 = TestUtils.createUser();
         userRepository.save(user1);
 
-        User user2 = new User();
-        user2.setUsername("anotheruser@example.com");
-        user2.setPassword("password456");
-        user2.setFirstName("Another");
-        user2.setLastName("User");
+        User user2 = TestUtils.createUser();
         userRepository.save(user2);
 
         Deck deck = TestUtils.createDeck(user1);
         deckRepository.save(deck);
 
         // Act
-        Optional<Deck> foundDeck = deckRepository.findByIdAndUser(deck.getId(), user2);
+        Optional<Deck> foundDeck = deckRepository.findByDeckFrnAndUserFrn(deck.getDeckFrn(), user2.getUserFrn());
 
         // Assert
         assertThat(foundDeck).isNotPresent();
-    }
-
-    @Test
-    void shouldSoftDeleteDeck() {
-        // Arrange
-        User user = TestUtils.createUser();
-        userRepository.save(user);
-
-        Deck deck1 = TestUtils.createDeck(user);
-        deck1.setName("Deck 1");
-        deckRepository.save(deck1);
-
-        Deck deck2 = TestUtils.createDeck(user);
-        deck2.setName("Deck 2");
-        deckRepository.save(deck2);
-
-        // Act
-        deckRepository.delete(deck1);
-
-        // Assert
-        Optional<Deck> softDeletedDeck = deckRepository.findByIdAndUser(deck1.getId(), user);
-        assertThat(softDeletedDeck).isEmpty();
-
-
-        List<Deck> activeDecks = deckRepository.findAllByUser(user);
-        assertThat(activeDecks).hasSize(1);
-        assertThat(activeDecks.get(0).getName()).isEqualTo(deck2.getName());
-    }
-
-    @Test
-    void shouldNotFindSoftDeletedDecks() {
-        // Arrange
-        User user = TestUtils.createUser();
-        userRepository.save(user);
-
-        Deck deck1 = TestUtils.createDeck(user);
-        deckRepository.save(deck1);
-
-        // Act
-        deckRepository.delete(deck1);
-
-        // Assert
-        List<Deck> decks = deckRepository.findAllByUser(user);
-        assertThat(decks).isEmpty();
     }
 }

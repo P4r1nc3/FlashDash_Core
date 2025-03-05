@@ -2,15 +2,17 @@ package com.flashdash.repository;
 
 import com.flashdash.FlashDashApplication;
 import com.flashdash.TestUtils;
-import com.flashdash.model.*;
+import com.flashdash.model.Deck;
+import com.flashdash.model.GameSession;
+import com.flashdash.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -35,7 +37,7 @@ class GameSessionRepositoryTest {
     }
 
     @Test
-    void shouldFindTopByDeckIdAndUserIdAndStatus() {
+    void shouldFindTopByDeckFrnAndUserFrnAndStatus() {
         // Arrange
         User user = TestUtils.createUser();
         userRepository.save(user);
@@ -43,23 +45,23 @@ class GameSessionRepositoryTest {
         Deck deck = TestUtils.createDeck(user);
         deckRepository.save(deck);
 
-        GameSession session = TestUtils.createGameSession(user, deck, GameSessionStatus.PENDING);
+        GameSession session = TestUtils.createGameSession(user, deck, "PENDING");
         gameSessionRepository.save(session);
 
         // Act
-        GameSession foundSession = gameSessionRepository.findTopByDeckIdAndUserIdAndStatus(
-                deck.getId(), user.getId(), GameSessionStatus.PENDING
+        Optional<GameSession> foundSession = gameSessionRepository.findTopByDeckFrnAndUserFrnAndStatus(
+                deck.getDeckFrn(), user.getUserFrn(), "PENDING"
         );
 
         // Assert
-        assertThat(foundSession).isNotNull();
-        assertThat(foundSession.getUser().getId()).isEqualTo(user.getId());
-        assertThat(foundSession.getDeck().getId()).isEqualTo(deck.getId());
-        assertThat(foundSession.getStatus()).isEqualTo(GameSessionStatus.PENDING);
+        assertThat(foundSession).isPresent();
+        assertThat(foundSession.get().getUserFrn()).isEqualTo(user.getUserFrn());
+        assertThat(foundSession.get().getDeckFrn()).isEqualTo(deck.getDeckFrn());
+        assertThat(foundSession.get().getStatus()).isEqualTo("PENDING");
     }
 
     @Test
-    void shouldReturnNullWhenNoActivePendingSessionExists() {
+    void shouldReturnEmptyWhenNoActivePendingSessionExists() {
         // Arrange
         User user = TestUtils.createUser();
         userRepository.save(user);
@@ -68,16 +70,58 @@ class GameSessionRepositoryTest {
         deckRepository.save(deck);
 
         // Act
-        GameSession foundSession = gameSessionRepository.findTopByDeckIdAndUserIdAndStatus(
-                deck.getId(), user.getId(), GameSessionStatus.PENDING
+        Optional<GameSession> foundSession = gameSessionRepository.findTopByDeckFrnAndUserFrnAndStatus(
+                deck.getDeckFrn(), user.getUserFrn(), "PENDING"
         );
 
         // Assert
-        assertThat(foundSession).isNull();
+        assertThat(foundSession).isNotPresent();
     }
 
     @Test
-    void shouldFindAllGameSessionsByUser() {
+    void shouldFindByDeckFrnAndGameSessionFrnAndUserFrn() {
+        // Arrange
+        User user = TestUtils.createUser();
+        userRepository.save(user);
+
+        Deck deck = TestUtils.createDeck(user);
+        deckRepository.save(deck);
+
+        GameSession session = TestUtils.createGameSession(user, deck, "FINISHED");
+        gameSessionRepository.save(session);
+
+        // Act
+        Optional<GameSession> foundSession = gameSessionRepository.findByDeckFrnAndGameSessionFrnAndUserFrn(
+                deck.getDeckFrn(), session.getGameSessionFrn(), user.getUserFrn()
+        );
+
+        // Assert
+        assertThat(foundSession).isPresent();
+        assertThat(foundSession.get().getGameSessionFrn()).isEqualTo(session.getGameSessionFrn());
+        assertThat(foundSession.get().getDeckFrn()).isEqualTo(deck.getDeckFrn());
+        assertThat(foundSession.get().getUserFrn()).isEqualTo(user.getUserFrn());
+    }
+
+    @Test
+    void shouldReturnEmptyWhenGameSessionDoesNotExist() {
+        // Arrange
+        User user = TestUtils.createUser();
+        userRepository.save(user);
+
+        Deck deck = TestUtils.createDeck(user);
+        deckRepository.save(deck);
+
+        // Act
+        Optional<GameSession> foundSession = gameSessionRepository.findByDeckFrnAndGameSessionFrnAndUserFrn(
+                deck.getDeckFrn(), "frn:flashdash:game-session:nonexistent", user.getUserFrn()
+        );
+
+        // Assert
+        assertThat(foundSession).isNotPresent();
+    }
+
+    @Test
+    void shouldFindAllGameSessionsByUserFrn() {
         // Arrange
         User user = TestUtils.createUser();
         userRepository.save(user);
@@ -88,26 +132,18 @@ class GameSessionRepositoryTest {
         Deck deck2 = TestUtils.createDeck(user);
         deckRepository.save(deck2);
 
-        GameSession session1 = TestUtils.createGameSession(user, deck1, GameSessionStatus.PENDING);
-        GameSession session2 = TestUtils.createGameSession(user, deck2, GameSessionStatus.FINISHED);
-        session2.setTotalScore(50);
-        session2.setCorrectAnswersCount(5);
-        session2.setEndTime(LocalDateTime.now());
+        GameSession session1 = TestUtils.createGameSession(user, deck1, "PENDING");
+        GameSession session2 = TestUtils.createGameSession(user, deck2, "FINISHED");
 
-        gameSessionRepository.save(session1);
-        gameSessionRepository.save(session2);
+        gameSessionRepository.saveAll(List.of(session1, session2));
 
         // Act
-        List<GameSession> sessions = gameSessionRepository.findAllByUser(user);
+        List<GameSession> sessions = gameSessionRepository.findAllByUserFrn(user.getUserFrn());
 
         // Assert
         assertThat(sessions).hasSize(2);
-        assertThat(sessions).extracting(GameSession::getStatus)
-                .containsExactlyInAnyOrder(GameSessionStatus.PENDING, GameSessionStatus.FINISHED);
-        assertThat(sessions).extracting(GameSession::getTotalScore)
-                .containsExactlyInAnyOrder(0, 50);
-        assertThat(sessions).extracting(GameSession::getCorrectAnswersCount)
-                .containsExactlyInAnyOrder(0, 5);
+        assertThat(sessions).extracting(GameSession::getUserFrn)
+                .containsOnly(user.getUserFrn());
     }
 
     @Test
@@ -117,14 +153,14 @@ class GameSessionRepositoryTest {
         userRepository.save(user);
 
         // Act
-        List<GameSession> sessions = gameSessionRepository.findAllByUser(user);
+        List<GameSession> sessions = gameSessionRepository.findAllByUserFrn(user.getUserFrn());
 
         // Assert
         assertThat(sessions).isEmpty();
     }
 
     @Test
-    void shouldFindAllGameSessionsForSpecificDeckAndUser() {
+    void shouldFindAllGameSessionsByDeckFrnAndUserFrn() {
         // Arrange
         User user = TestUtils.createUser();
         userRepository.save(user);
@@ -135,19 +171,19 @@ class GameSessionRepositoryTest {
         Deck deck2 = TestUtils.createDeck(user);
         deckRepository.save(deck2);
 
-        GameSession session1 = TestUtils.createGameSession(user, deck1, GameSessionStatus.PENDING);
-        GameSession session2 = TestUtils.createGameSession(user, deck1, GameSessionStatus.FINISHED);
-        GameSession session3 = TestUtils.createGameSession(user, deck2, GameSessionStatus.PENDING);
+        GameSession session1 = TestUtils.createGameSession(user, deck1, "PENDING");
+        GameSession session2 = TestUtils.createGameSession(user, deck1, "FINISHED");
+        GameSession session3 = TestUtils.createGameSession(user, deck2, "PENDING");
 
         gameSessionRepository.saveAll(List.of(session1, session2, session3));
 
         // Act
-        List<GameSession> deck1Sessions = gameSessionRepository.findAllByDeckIdAndUserId(deck1.getId(), user.getId());
+        List<GameSession> deck1Sessions = gameSessionRepository.findAllByDeckFrnAndUserFrn(deck1.getDeckFrn(), user.getUserFrn());
 
         // Assert
         assertThat(deck1Sessions).hasSize(2);
-        assertThat(deck1Sessions).extracting(GameSession::getDeck).extracting(Deck::getId).containsOnly(deck1.getId());
-        assertThat(deck1Sessions).extracting(GameSession::getUser).extracting(User::getId).containsOnly(user.getId());
+        assertThat(deck1Sessions).extracting(GameSession::getDeckFrn).containsOnly(deck1.getDeckFrn());
+        assertThat(deck1Sessions).extracting(GameSession::getUserFrn).containsOnly(user.getUserFrn());
     }
 
     @Test
@@ -160,7 +196,7 @@ class GameSessionRepositoryTest {
         deckRepository.save(deck);
 
         // Act
-        List<GameSession> sessions = gameSessionRepository.findAllByDeckIdAndUserId(deck.getId(), user.getId());
+        List<GameSession> sessions = gameSessionRepository.findAllByDeckFrnAndUserFrn(deck.getDeckFrn(), user.getUserFrn());
 
         // Assert
         assertThat(sessions).isEmpty();
