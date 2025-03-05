@@ -35,13 +35,14 @@ class UserRepositoryTest {
         userRepository.save(user);
 
         // Act
-        Optional<User> foundUser = userRepository.findByEmail("test@example.com");
+        Optional<User> foundUser = userRepository.findByEmail(user.getEmail());
 
         // Assert
         assertThat(foundUser).isPresent();
-        assertThat(foundUser.get().getUsername()).isEqualTo("test@example.com");
-        assertThat(foundUser.get().getFirstName()).isEqualTo("Test");
-        assertThat(foundUser.get().getLastName()).isEqualTo("User");
+        assertThat(foundUser.get().getUserFrn()).isEqualTo(user.getUserFrn());
+        assertThat(foundUser.get().getEmail()).isEqualTo(user.getEmail());
+        assertThat(foundUser.get().getFirstName()).isEqualTo(user.getFirstName());
+        assertThat(foundUser.get().getLastName()).isEqualTo(user.getLastName());
     }
 
     @Test
@@ -57,7 +58,7 @@ class UserRepositoryTest {
     void shouldFindUserByActivationToken() {
         // Arrange
         User user = TestUtils.createUser();
-        String activationToken = "some-activation-token";
+        String activationToken = "test-activation-token";
         user.setActivationToken(activationToken);
         userRepository.save(user);
 
@@ -67,7 +68,7 @@ class UserRepositoryTest {
         // Assert
         assertThat(foundUser).isPresent();
         assertThat(foundUser.get().getActivationToken()).isEqualTo(activationToken);
-        assertThat(foundUser.get().getUsername()).isEqualTo("test@example.com");
+        assertThat(foundUser.get().getUserFrn()).isEqualTo(user.getUserFrn());
     }
 
     @Test
@@ -86,7 +87,7 @@ class UserRepositoryTest {
         userWithNotifications.setDailyNotifications(true);
         userRepository.save(userWithNotifications);
 
-        User userWithoutNotifications = TestUtils.createFriendUser();
+        User userWithoutNotifications = TestUtils.createUser();
         userWithoutNotifications.setDailyNotifications(false);
         userRepository.save(userWithoutNotifications);
 
@@ -95,7 +96,7 @@ class UserRepositoryTest {
 
         // Assert
         assertThat(usersWithNotifications).hasSize(1);
-        assertThat(usersWithNotifications.get(0).getUsername()).isEqualTo(userWithNotifications.getUsername());
+        assertThat(usersWithNotifications.get(0).getUserFrn()).isEqualTo(userWithNotifications.getUserFrn());
         assertThat(usersWithNotifications.get(0).isDailyNotifications()).isTrue();
     }
 
