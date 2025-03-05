@@ -5,6 +5,8 @@ import com.flashdash.exception.FlashDashException;
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.model.User;
 import com.flashdash.repository.UserRepository;
+import com.flashdash.utils.FrnGenerator;
+import com.flashdash.utils.ResourceType;
 import com.p4r1nc3.flashdash.core.model.AuthenticationResponse;
 import com.p4r1nc3.flashdash.core.model.LoginRequest;
 import com.p4r1nc3.flashdash.core.model.RegisterRequest;
@@ -73,7 +75,7 @@ public class AuthenticationService {
         String activationToken = UUID.randomUUID().toString();
 
         User user = new User();
-        user.setUserFrn(generateFrn("user"));
+        user.setUserFrn(FrnGenerator.generateFrn(ResourceType.USER));
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
         user.setUsername(request.getEmail().trim().toLowerCase());
@@ -108,9 +110,5 @@ public class AuthenticationService {
         userRepository.save(user);
 
         logger.info("Account activated successfully for email: {}", user.getUsername());
-    }
-
-    private String generateFrn(String resourceType) {
-        return "frn:flashdash:" + resourceType + ":" + UUID.randomUUID();
     }
 }

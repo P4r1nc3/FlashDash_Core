@@ -9,6 +9,7 @@ import com.flashdash.repository.UserRepository;
 import com.p4r1nc3.flashdash.core.model.AuthenticationResponse;
 import com.p4r1nc3.flashdash.core.model.LoginRequest;
 import com.p4r1nc3.flashdash.core.model.RegisterRequest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,15 +39,21 @@ class AuthenticationServiceTest {
     @MockitoBean
     private EmailService emailService;
 
+    private User user;
+
+    @BeforeEach
+    void setUp() {
+        user = TestUtils.createUser();
+    }
+
     @Test
     void shouldLoginSuccessfully() {
         // Arrange
-        User user = TestUtils.createUser();
         user.setEnabled(true);
         when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
 
-        LoginRequest loginRequest = TestUtils.createLoginRequest();
+        LoginRequest loginRequest = TestUtils.createLoginRequest(user);
 
         // Act
         AuthenticationResponse response = authenticationService.login(loginRequest);
@@ -62,7 +69,7 @@ class AuthenticationServiceTest {
     @Test
     void shouldThrowExceptionWhenUserNotFoundDuringLogin() {
         // Arrange
-        LoginRequest loginRequest = TestUtils.createLoginRequest();
+        LoginRequest loginRequest = TestUtils.createLoginRequest(user);
         when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.empty());
 
         // Act & Assert
@@ -77,12 +84,11 @@ class AuthenticationServiceTest {
     @Test
     void shouldThrowExceptionWhenPasswordDoesNotMatch() {
         // Arrange
-        User user = TestUtils.createUser();
         user.setEnabled(true);
         when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
 
-        LoginRequest loginRequest = TestUtils.createLoginRequest();
+        LoginRequest loginRequest = TestUtils.createLoginRequest(user);
 
         // Act & Assert
         assertThatThrownBy(() -> authenticationService.login(loginRequest))
@@ -96,7 +102,7 @@ class AuthenticationServiceTest {
     @Test
     void shouldRegisterSuccessfully() {
         // Arrange
-        RegisterRequest registerRequest = TestUtils.createRegisterRequest();
+        RegisterRequest registerRequest = TestUtils.createRegisterRequest(user);
         when(userRepository.findByEmail(registerRequest.getEmail())).thenReturn(Optional.empty());
         when(passwordEncoder.encode(registerRequest.getPassword())).thenReturn("encodedPassword");
 
@@ -114,10 +120,9 @@ class AuthenticationServiceTest {
     @Test
     void shouldNotSendActivationEmailWhenUserAlreadyExists() {
         // Arrange
-        User existingUser = TestUtils.createUser();
-        when(userRepository.findByEmail(existingUser.getUsername())).thenReturn(Optional.of(existingUser));
+        when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
 
-        RegisterRequest registerRequest = TestUtils.createRegisterRequest();
+        RegisterRequest registerRequest = TestUtils.createRegisterRequest(user);
 
         // Act & Assert
         assertThatThrownBy(() -> authenticationService.register(registerRequest))
@@ -133,6 +138,7 @@ class AuthenticationServiceTest {
     void shouldActivateAccountSuccessfully() {
         // Arrange
         User user = TestUtils.createUser();
+        user.setEnabled(false);
         String activationToken = "validToken";
         user.setActivationToken(activationToken);
         when(userRepository.findByActivationToken(activationToken)).thenReturn(Optional.of(user));
@@ -183,11 +189,10 @@ class AuthenticationServiceTest {
     @Test
     void shouldThrowExceptionWhenAccountIsNotActivated() {
         // Arrange
-        User user = TestUtils.createUser();
         user.setEnabled(false);
         when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
 
-        LoginRequest loginRequest = TestUtils.createLoginRequest();
+        LoginRequest loginRequest = TestUtils.createLoginRequest(user);
 
         // Act & Assert
         assertThatThrownBy(() -> authenticationService.login(loginRequest))

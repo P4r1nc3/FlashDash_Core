@@ -4,10 +4,12 @@ import com.flashdash.FlashDashApplication;
 import com.flashdash.TestUtils;
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
+import com.flashdash.model.User;
 import com.flashdash.service.AuthenticationService;
 import com.p4r1nc3.flashdash.core.model.AuthenticationResponse;
 import com.p4r1nc3.flashdash.core.model.LoginRequest;
 import com.p4r1nc3.flashdash.core.model.RegisterRequest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,10 +34,17 @@ class AuthenticationControllerTest {
     @MockitoBean
     private AuthenticationService authenticationService;
 
+    private User user;
+
+    @BeforeEach
+    void setUp() {
+        user = TestUtils.createUser();
+    }
+
     @Test
     public void testLoginSuccessful() {
         // Arrange
-        LoginRequest loginRequest = TestUtils.createLoginRequest();
+        LoginRequest loginRequest = TestUtils.createLoginRequest(user);
         AuthenticationResponse authenticationResponse = TestUtils.createAuthenticationResponse();
         when(authenticationService.login(loginRequest)).thenReturn(authenticationResponse);
 
@@ -50,7 +59,7 @@ class AuthenticationControllerTest {
     @Test
     public void testLoginUserNotFound() {
         // Arrange
-        LoginRequest loginRequest = TestUtils.createLoginRequest();
+        LoginRequest loginRequest = TestUtils.createLoginRequest(user);
         String expectedMessage = "User with email not found. Please check the email and try again.";
         doThrow(new FlashDashException(ErrorCode.E404001, expectedMessage))
                 .when(authenticationService)
@@ -68,7 +77,7 @@ class AuthenticationControllerTest {
     @Test
     public void testLoginInvalidPassword() {
         // Arrange
-        LoginRequest loginRequest = TestUtils.createLoginRequest();
+        LoginRequest loginRequest = TestUtils.createLoginRequest(user);
         String expectedMessage = "Invalid password for email. Please check your credentials and try again.";
         doThrow(new FlashDashException(ErrorCode.E401002, expectedMessage))
                 .when(authenticationService)
@@ -86,7 +95,7 @@ class AuthenticationControllerTest {
     @Test
     public void testRegisterSuccessful() {
         // Arrange
-        RegisterRequest registerRequest = TestUtils.createRegisterRequest();
+        RegisterRequest registerRequest = TestUtils.createRegisterRequest(user);
         AuthenticationResponse authenticationResponse = TestUtils.createAuthenticationResponse();
         when(authenticationService.register(registerRequest)).thenReturn(authenticationResponse);
 
@@ -103,7 +112,7 @@ class AuthenticationControllerTest {
     @Test
     public void testRegisterUserAlreadyExists() {
         // Arrange
-        RegisterRequest registerRequest = TestUtils.createRegisterRequest();
+        RegisterRequest registerRequest = TestUtils.createRegisterRequest(user);
         String expectedMessage = "User with email already exists. Please use a different email to register.";
         doThrow(new FlashDashException(ErrorCode.E409001, expectedMessage))
                 .when(authenticationService)
@@ -122,9 +131,6 @@ class AuthenticationControllerTest {
     public void testActivateAccountSuccessful() {
         // Arrange
         String activationToken = "validActivationToken";
-
-        // Nie musimy mockować, bo metoda `activateAccount` w serwisie nic nie zwraca.
-        // Po prostu weryfikujemy, że została wywołana.
 
         // Act
         ResponseEntity<String> responseEntity = authenticationController.activateAccount(activationToken);
