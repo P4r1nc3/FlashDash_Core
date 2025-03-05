@@ -1,15 +1,16 @@
 package com.flashdash.model;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @Entity
 @Getter
@@ -42,18 +43,35 @@ public class User implements UserDetails {
     @Column(name = "enabled", nullable = false)
     private boolean enabled;
 
-    @Column(name = "activation_token", unique = true, nullable = true, length = 256)
+    @Column(name = "activation_token", unique = true, length = 256)
     private String activationToken;
 
     @Column(name = "daily_notifications", nullable = false)
     private boolean dailyNotifications;
 
-    @ElementCollection
-    @CollectionTable(name = "user_friends", joinColumns = @JoinColumn(name = "user_frn"))
-    @Column(name = "friend_frn", length = 256)
-    private List<String> friendsFrn = new ArrayList<>();
+    @Column(name = "friends_frn", columnDefinition = "JSON", nullable = false)
+    private String friendsFrn = "[]";
 
-    public User() {}
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    public List<String> getFriendsFrnList() {
+        try {
+            if (friendsFrn == null || friendsFrn.trim().isEmpty()) {
+                return new ArrayList<>();
+            }
+            return objectMapper.readValue(friendsFrn, new TypeReference<List<String>>() {});
+        } catch (JsonProcessingException e) {
+            return new ArrayList<>();
+        }
+    }
+
+    public void setFriendsFrnList(List<String> friends) {
+        try {
+            this.friendsFrn = objectMapper.writeValueAsString(friends);
+        } catch (JsonProcessingException e) {
+            this.friendsFrn = "[]";
+        }
+    }
 
     @Override
     public String getUsername() {
