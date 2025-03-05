@@ -1,6 +1,8 @@
 package com.flashdash;
 
 import com.flashdash.model.*;
+import com.flashdash.utils.FrnGenerator;
+import com.flashdash.utils.ResourceType;
 import com.p4r1nc3.flashdash.core.model.*;
 import org.springframework.mail.SimpleMailMessage;
 
@@ -10,20 +12,19 @@ import java.util.UUID;
 
 public class TestUtils {
 
-    public static RegisterRequest createRegisterRequest() {
+    public static RegisterRequest createRegisterRequest(User user) {
         RegisterRequest registerRequest = new RegisterRequest();
-        registerRequest.setUsername("testuser");
-        registerRequest.setFirstName("Test");
-        registerRequest.setLastName("User");
-        registerRequest.setEmail("test@example.com");
-        registerRequest.setPassword("password123");
+        registerRequest.setFirstName(user.getFirstName());
+        registerRequest.setLastName(user.getLastName());
+        registerRequest.setEmail(user.getEmail());
+        registerRequest.setPassword(user.getPassword());
         return registerRequest;
     }
 
-    public static LoginRequest createLoginRequest() {
+    public static LoginRequest createLoginRequest(User user) {
         LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setEmail("test@example.com");
-        loginRequest.setPassword("password123");
+        loginRequest.setEmail(user.getUsername());
+        loginRequest.setPassword(user.getPassword());
         return loginRequest;
     }
 
@@ -35,7 +36,7 @@ public class TestUtils {
 
     public static User createUser() {
         User user = new User();
-        user.setUserFrn(generateFrn("user"));
+        user.setUserFrn(FrnGenerator.generateFrn(ResourceType.USER));
         user.setEmail("user" + UUID.randomUUID() + "@example.com");
         user.setPassword("password123");
         user.setFirstName("Test");
@@ -50,7 +51,7 @@ public class TestUtils {
 
     public static FriendInvitation createFriendInvitation(User sender, User recipient) {
         FriendInvitation invitation = new FriendInvitation();
-        invitation.setInvitationFrn(generateFrn("friend-invitation"));
+        invitation.setInvitationFrn(FrnGenerator.generateFrn(ResourceType.INVITATION));
         invitation.setSentByFrn(sender.getUserFrn());
         invitation.setSentToFrn(recipient.getUserFrn());
         invitation.setStatus("PENDING");
@@ -68,7 +69,7 @@ public class TestUtils {
 
     public static Deck createDeck(User user) {
         Deck deck = new Deck();
-        deck.setDeckFrn(generateFrn("deck"));
+        deck.setDeckFrn(FrnGenerator.generateFrn(ResourceType.DECK));
         deck.setUserFrn(user.getUserFrn());
         deck.setName("Sample Deck");
         deck.setDescription("This is a sample deck.");
@@ -88,7 +89,7 @@ public class TestUtils {
 
     public static Question createQuestion(Deck deck, String content) {
         Question question = new Question();
-        question.setQuestionFrn(generateFrn("question"));
+        question.setQuestionFrn(FrnGenerator.generateFrn(ResourceType.QUESTION));
         question.setDeckFrn(deck.getDeckFrn());
         question.setQuestion(content);
         question.setCorrectAnswers(List.of("Correct Answer 1", "Correct Answer 2"));
@@ -101,7 +102,7 @@ public class TestUtils {
 
     public static GameSession createGameSession(User user, Deck deck, String status) {
         GameSession session = new GameSession();
-        session.setGameSessionFrn(generateFrn("game-session"));
+        session.setGameSessionFrn(FrnGenerator.generateFrn(ResourceType.GAME_SESSION));
         session.setUserFrn(user.getUserFrn());
         session.setDeckFrn(deck.getDeckFrn());
         session.setStatus(status);
@@ -141,9 +142,5 @@ public class TestUtils {
         message.setText("Hi there! You've received a new friend invitation from " + senderFirstName + " " + senderLastName + ". Visit the FlashDash app to accept or decline.");
         message.setFrom("flashdashservice@gmail.com");
         return message;
-    }
-
-    private static String generateFrn(String resourceType) {
-        return "frn:flashdash:" + resourceType + ":" + UUID.randomUUID();
     }
 }

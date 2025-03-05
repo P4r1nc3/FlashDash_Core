@@ -1,6 +1,8 @@
 package com.flashdash.service;
 
 import com.flashdash.model.User;
+import com.flashdash.utils.FrnGenerator;
+import com.flashdash.utils.ResourceType;
 import com.p4r1nc3.flashdash.core.model.DeckRequest;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
@@ -31,7 +33,7 @@ public class DeckService {
         logger.info("Creating new deck for user FRN: {}", userFrn);
 
         Deck deck = new Deck();
-        deck.setDeckFrn(generateFrn("deck"));
+        deck.setDeckFrn(FrnGenerator.generateFrn(ResourceType.DECK));
         deck.setUserFrn(userFrn);
         deck.setName(deckRequest.getName());
         deck.setDescription(deckRequest.getDescription());
@@ -97,9 +99,5 @@ public class DeckService {
         decks.forEach(deck -> deleteDeck(deck.getDeckFrn(), userFrn));
 
         logger.info("Successfully deleted all decks for userFRN: {}", userFrn);
-    }
-
-    private String generateFrn(String resourceType) {
-        return "frn:flashdash:" + resourceType + ":" + java.util.UUID.randomUUID();
     }
 }

@@ -4,6 +4,8 @@ import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
 import com.flashdash.model.Question;
 import com.flashdash.repository.QuestionRepository;
+import com.flashdash.utils.FrnGenerator;
+import com.flashdash.utils.ResourceType;
 import com.p4r1nc3.flashdash.core.model.QuestionRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +32,7 @@ public class QuestionService {
         deckService.getDeckByFrn(deckFrn, userFrn);
 
         Question question = new Question();
-        question.setQuestionFrn(generateFrn("question"));
+        question.setQuestionFrn(FrnGenerator.generateFrn(ResourceType.QUESTION));
         question.setDeckFrn(deckFrn);
         question.setQuestion(questionRequest.getQuestion());
         question.setCorrectAnswers(questionRequest.getCorrectAnswers());
@@ -85,9 +87,5 @@ public class QuestionService {
         questionRepository.delete(question);
 
         logger.info("Successfully deleted question FRN: {} from deck FRN: {}", questionFrn, deckFrn);
-    }
-
-    private String generateFrn(String resourceType) {
-        return "frn:flashdash:" + resourceType + ":" + java.util.UUID.randomUUID();
     }
 }
