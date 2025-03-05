@@ -1,9 +1,10 @@
 package com.flashdash.dto.response;
 
+import com.flashdash.model.User;
 import java.time.LocalDateTime;
 
 public class UserResponse {
-    private String userFrn; // ✅ Dodane
+    private String userFrn;
     private String firstName;
     private String lastName;
     private String email;
@@ -13,19 +14,14 @@ public class UserResponse {
 
     public UserResponse() {}
 
-    // 🔹 Nowy konstruktor tylko dla FRN
-    public UserResponse(String userFrn) {
-        this.userFrn = userFrn;
-    }
-
-    // 🔹 Istniejący konstruktor dla pełnych danych użytkownika
-    public UserResponse(String firstName, String lastName, String email, boolean dailyNotifications, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.email = email;
-        this.dailyNotifications = dailyNotifications;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
+    public UserResponse(User user) {
+        this.userFrn = user.getUserFrn();
+        this.firstName = user.getFirstName();
+        this.lastName = user.getLastName();
+        this.email = user.getEmail();
+        this.dailyNotifications = user.isDailyNotifications();
+        this.createdAt = user.getCreatedAt();
+        this.updatedAt = user.getUpdatedAt();
     }
 
     public String getUserFrn() {
