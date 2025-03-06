@@ -2,13 +2,15 @@ package com.flashdash.controller;
 
 import com.flashdash.FlashDashApplication;
 import com.flashdash.TestUtils;
-import com.flashdash.dto.response.FriendInvitationResponse;
 import com.flashdash.dto.response.UserResponse;
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
 import com.flashdash.model.FriendInvitation;
 import com.flashdash.model.User;
 import com.flashdash.service.FriendService;
+import com.flashdash.utils.EntityToResponseMapper;
+import com.p4r1nc3.flashdash.core.model.FriendInvitationResponseReceived;
+import com.p4r1nc3.flashdash.core.model.FriendInvitationResponseSent;
 import org.junit.jupiter.api.*;
 import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +36,9 @@ class FriendControllerTest {
 
     @MockitoBean
     private FriendService friendService;
+
+    @MockitoBean
+    private EntityToResponseMapper entityToResponseMapper;
 
     private MockedStatic<SecurityContextHolder> mockedSecurityContextHolder;
 
@@ -63,11 +68,11 @@ class FriendControllerTest {
     }
 
     @Test
-    void testGetFriendsSuccessful() {
+    void shouldGetFriendsSuccessfully() {
         // Arrange
         UserResponse friendResponse = new UserResponse(friendUser);
-
         List<UserResponse> friends = List.of(friendResponse);
+
         when(friendService.getFriends(userFrn)).thenReturn(friends);
 
         // Act
@@ -79,47 +84,59 @@ class FriendControllerTest {
     }
 
     @Test
-    void testSendFriendInvitationSuccessful() {
+    void shouldSendFriendInvitationSuccessfully() {
         // Arrange
-        String recipientFrn = friendUser.getUserFrn();
-        doNothing().when(friendService).sendFriendInvitation(userFrn, recipientFrn);
+        String recipientEmail = friendUser.getEmail();
+        doNothing().when(friendService).sendFriendInvitation(userFrn, recipientEmail);
 
         // Act
-        ResponseEntity<Void> responseEntity = friendController.sendFriendInvitation(recipientFrn);
+        ResponseEntity<Void> responseEntity = friendController.sendFriendInvitation(recipientEmail);
 
         // Assert
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        verify(friendService, times(1)).sendFriendInvitation(userFrn, recipientFrn);
+        verify(friendService, times(1)).sendFriendInvitation(userFrn, recipientEmail);
     }
 
     @Test
-    void testGetReceivedInvitationsSuccessful() {
+    void shouldGetReceivedFriendInvitationsSuccessfully() {
         // Arrange
-        FriendInvitation invitation = TestUtils.createFriendInvitation(friendUser, testUser);
-        FriendInvitationResponse invitationResponse = new FriendInvitationResponse(
-                invitation.getInvitationFrn(),
-                invitation.getSentByFrn(),
-                invitation.getSentToFrn(),
-                invitation.getStatus(),
-                invitation.getCreatedAt()
-        );
+        List<FriendInvitation> invitations = List.of(TestUtils.createFriendInvitation(friendUser, testUser));
+        List<FriendInvitationResponseReceived> expectedResponses = List.of(new FriendInvitationResponseReceived());
 
-        List<FriendInvitationResponse> invitations = List.of(invitationResponse);
         when(friendService.getReceivedFriendInvitations(userFrn)).thenReturn(invitations);
+        when(entityToResponseMapper.mapToReceivedResponse(invitations)).thenReturn(expectedResponses);
 
         // Act
-        ResponseEntity<List<FriendInvitationResponse>> responseEntity = friendController.getReceivedInvitations();
+        ResponseEntity<List<FriendInvitationResponseReceived>> responseEntity = friendController.getReceivedInvitations();
 
         // Assert
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals(invitations, responseEntity.getBody());
+        assertEquals(expectedResponses, responseEntity.getBody());
     }
 
     @Test
-    void testRespondToInvitationSuccessful() {
+    void shouldGetSentFriendInvitationsSuccessfully() {
+        // Arrange
+        List<FriendInvitation> invitations = List.of(TestUtils.createFriendInvitation(testUser, friendUser));
+        List<FriendInvitationResponseSent> expectedResponses = List.of(new FriendInvitationResponseSent());
+
+        when(friendService.getSentFriendInvitations(userFrn)).thenReturn(invitations);
+        when(entityToResponseMapper.mapToSentResponse(invitations)).thenReturn(expectedResponses);
+
+        // Act
+        ResponseEntity<List<FriendInvitationResponseSent>> responseEntity = friendController.getSentInvitations();
+
+        // Assert
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(expectedResponses, responseEntity.getBody());
+    }
+
+    @Test
+    void shouldRespondToInvitationSuccessfully() {
         // Arrange
         String invitationFrn = "frn:flashdash:invitation:123";
         String status = "ACCEPTED";
+
         doNothing().when(friendService).respondToFriendInvitation(invitationFrn, userFrn, status);
 
         // Act
@@ -131,7 +148,7 @@ class FriendControllerTest {
     }
 
     @Test
-    void testDeleteFriendSuccessful() {
+    void shouldDeleteFriendSuccessfully() {
         // Arrange
         String friendFrn = friendUser.getUserFrn();
         doNothing().when(friendService).deleteFriend(userFrn, friendFrn);
@@ -148,12 +165,12 @@ class FriendControllerTest {
     void shouldThrowExceptionWhenSendingInvitationToSelf() {
         // Arrange
         doThrow(new FlashDashException(ErrorCode.E403003, "You cannot send an invitation to yourself."))
-                .when(friendService).sendFriendInvitation(userFrn, userFrn);
+                .when(friendService).sendFriendInvitation(userFrn, testUser.getEmail());
 
         // Act & Assert
         FlashDashException exception = assertThrows(
                 FlashDashException.class,
-                () -> friendController.sendFriendInvitation(userFrn)
+                () -> friendController.sendFriendInvitation(testUser.getEmail())
         );
         assertEquals(ErrorCode.E403003, exception.getErrorCode());
         assertEquals("You cannot send an invitation to yourself.", exception.getMessage());
@@ -163,21 +180,22 @@ class FriendControllerTest {
     void shouldThrowExceptionWhenUserIsAlreadyAFriend() {
         // Arrange
         doThrow(new FlashDashException(ErrorCode.E409003, "You are already friends with this user."))
-                .when(friendService).sendFriendInvitation(userFrn, friendUser.getUserFrn());
+                .when(friendService).sendFriendInvitation(userFrn, friendUser.getEmail());
 
         // Act & Assert
         FlashDashException exception = assertThrows(
                 FlashDashException.class,
-                () -> friendController.sendFriendInvitation(friendUser.getUserFrn())
+                () -> friendController.sendFriendInvitation(friendUser.getEmail())
         );
         assertEquals(ErrorCode.E409003, exception.getErrorCode());
         assertEquals("You are already friends with this user.", exception.getMessage());
     }
 
     @Test
-    void testDeleteFriendNotFound() {
+    void shouldThrowExceptionWhenDeletingNonExistentFriend() {
         // Arrange
         String friendFrn = friendUser.getUserFrn();
+
         doThrow(new FlashDashException(ErrorCode.E404005, "Friend not found: " + friendFrn))
                 .when(friendService).deleteFriend(userFrn, friendFrn);
 

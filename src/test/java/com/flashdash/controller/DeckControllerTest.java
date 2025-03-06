@@ -11,30 +11,29 @@ import com.flashdash.utils.EntityToResponseMapper;
 import com.p4r1nc3.flashdash.core.model.DeckRequest;
 import com.p4r1nc3.flashdash.core.model.DeckResponse;
 import org.junit.jupiter.api.*;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.MockedStatic;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest(classes = FlashDashApplication.class)
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DeckControllerTest {
 
-    @Autowired
     private DeckController deckController;
 
-    @MockitoBean
+    @Mock
     private DeckService deckService;
+
+    @Mock
+    private EntityToResponseMapper entityToResponseMapper;
 
     private User user;
     private String deckFrn;
@@ -42,6 +41,9 @@ class DeckControllerTest {
 
     @BeforeEach
     void setUp() {
+        MockitoAnnotations.openMocks(this);
+        deckController = new DeckController(deckService, entityToResponseMapper);
+
         user = TestUtils.createUser();
         deckFrn = TestUtils.createDeck(user).getDeckFrn();
 
@@ -65,14 +67,17 @@ class DeckControllerTest {
         // Arrange
         DeckRequest deckRequest = TestUtils.createDeckRequest();
         Deck deck = TestUtils.createDeck(user);
+        DeckResponse deckResponse = new DeckResponse();
+
         when(deckService.createDeck(any(DeckRequest.class), eq(user.getUserFrn()))).thenReturn(deck);
+        when(entityToResponseMapper.toDeckResponse(deck)).thenReturn(deckResponse);
 
         // Act
         ResponseEntity<DeckResponse> responseEntity = deckController.createDeck(deckRequest);
 
         // Assert
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals(EntityToResponseMapper.toDeckResponse(deck), responseEntity.getBody());
+        assertEquals(deckResponse, responseEntity.getBody());
     }
 
     @Test
@@ -80,9 +85,10 @@ class DeckControllerTest {
         // Arrange
         Deck deck = TestUtils.createDeck(user);
         List<Deck> decks = List.of(deck);
-        List<DeckResponse> expectedResponses = EntityToResponseMapper.toDeckResponseList(decks);
+        List<DeckResponse> expectedResponses = List.of(new DeckResponse());
 
         when(deckService.getAllDecks(eq(user.getUserFrn()))).thenReturn(decks);
+        when(entityToResponseMapper.toDeckResponseList(decks)).thenReturn(expectedResponses);
 
         // Act
         ResponseEntity<List<DeckResponse>> responseEntity = deckController.getAllDecks();
@@ -96,9 +102,10 @@ class DeckControllerTest {
     void testGetDeckByFrnSuccessful() {
         // Arrange
         Deck deck = TestUtils.createDeck(user);
-        DeckResponse expectedResponse = EntityToResponseMapper.toDeckResponse(deck);
+        DeckResponse expectedResponse = new DeckResponse();
 
         when(deckService.getDeckByFrn(eq(deckFrn), eq(user.getUserFrn()))).thenReturn(deck);
+        when(entityToResponseMapper.toDeckResponse(deck)).thenReturn(expectedResponse);
 
         // Act
         ResponseEntity<DeckResponse> responseEntity = deckController.getDeck(deckFrn);
@@ -129,14 +136,17 @@ class DeckControllerTest {
         DeckRequest deckRequest = TestUtils.createDeckRequest();
         Deck deck = TestUtils.createDeck(user);
         deck.setName("Updated Name");
+        DeckResponse expectedResponse = new DeckResponse();
+
         when(deckService.updateDeck(eq(deckFrn), any(DeckRequest.class), eq(user.getUserFrn()))).thenReturn(deck);
+        when(entityToResponseMapper.toDeckResponse(deck)).thenReturn(expectedResponse);
 
         // Act
         ResponseEntity<DeckResponse> responseEntity = deckController.updateDeck(deckFrn, deckRequest);
 
         // Assert
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals(EntityToResponseMapper.toDeckResponse(deck), responseEntity.getBody());
+        assertEquals(expectedResponse, responseEntity.getBody());
     }
 
     @Test
