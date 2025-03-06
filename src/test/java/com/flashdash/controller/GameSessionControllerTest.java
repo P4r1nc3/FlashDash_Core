@@ -77,7 +77,7 @@ class GameSessionControllerTest {
         List<QuestionResponse> expectedResponses = List.of(new QuestionResponse());
 
         when(gameSessionService.startGameSession(eq(deckFrn), eq(user.getUserFrn()))).thenReturn(questions);
-        when(entityToResponseMapper.toQuestionResponseList(questions)).thenReturn(expectedResponses);
+        when(entityToResponseMapper.mapToQuestionResponse(questions)).thenReturn(expectedResponses);
 
         // Act
         ResponseEntity<List<QuestionResponse>> responseEntity = gameSessionController.startGameSession(deckFrn);
@@ -95,7 +95,7 @@ class GameSessionControllerTest {
 
         when(gameSessionService.endGameSession(eq(deckFrn), eq(user.getUserFrn()), anyList()))
                 .thenReturn(gameSession);
-        when(entityToResponseMapper.toGameSessionResponse(gameSession)).thenReturn(expectedResponse);
+        when(entityToResponseMapper.mapToGameSessionResponse(gameSession)).thenReturn(expectedResponse);
 
         // Act
         ResponseEntity<GameSessionResponse> responseEntity = gameSessionController.endGameSession(deckFrn, userAnswers);
@@ -129,7 +129,7 @@ class GameSessionControllerTest {
         List<GameSessionResponse> expectedResponses = List.of(new GameSessionResponse());
 
         when(gameSessionService.getGameSessions(eq(deckFrn), eq(user.getUserFrn()))).thenReturn(gameSessions);
-        when(entityToResponseMapper.toGameSessionResponseList(gameSessions)).thenReturn(expectedResponses);
+        when(entityToResponseMapper.mapToGameSessionResponse(gameSessions)).thenReturn(expectedResponses);
 
         // Act
         ResponseEntity<List<GameSessionResponse>> responseEntity = gameSessionController.getGameSessions(deckFrn);
@@ -146,7 +146,7 @@ class GameSessionControllerTest {
 
         when(gameSessionService.getGameSession(eq(deckFrn), eq(gameSessionFrn), eq(user.getUserFrn())))
                 .thenReturn(gameSession);
-        when(entityToResponseMapper.toGameSessionResponse(gameSession)).thenReturn(expectedResponse);
+        when(entityToResponseMapper.mapToGameSessionResponse(gameSession)).thenReturn(expectedResponse);
 
         // Act
         ResponseEntity<GameSessionResponse> responseEntity = gameSessionController.getGameSession(deckFrn, gameSessionFrn);

@@ -79,7 +79,7 @@ class FriendControllerTest {
         List<FriendResponse> expectedResponses = List.of(friendResponse);
 
         when(friendService.getFriends(userFrn)).thenReturn(friends);
-        when(entityToResponseMapper.toFriendResponseList(friends)).thenReturn(expectedResponses);
+        when(entityToResponseMapper.mapToFriendResponse(friends)).thenReturn(expectedResponses);
 
         // Act
         ResponseEntity<List<FriendResponse>> responseEntity = friendController.getFriends();

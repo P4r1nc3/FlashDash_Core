@@ -27,7 +27,7 @@ public class UserController {
         String email = authentication.getName();
 
         User user = userService.getCurrentUser(email);
-        return ResponseEntity.ok(entityToResponseMapper.toUserResponse(user));
+        return ResponseEntity.ok(entityToResponseMapper.mapToUserResponse(user));
     }
 
     @DeleteMapping

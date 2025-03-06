@@ -37,7 +37,7 @@ class EntityToResponseMapperTest {
         Deck deck = TestUtils.createDeck(user);
 
         // Act
-        DeckResponse deckResponse = mapper.toDeckResponse(deck);
+        DeckResponse deckResponse = mapper.mapToDeckResponse(deck);
 
         // Assert
         assertThat(deckResponse).isNotNull();
@@ -56,7 +56,7 @@ class EntityToResponseMapperTest {
         List<Deck> decks = List.of(TestUtils.createDeck(user));
 
         // Act
-        List<DeckResponse> deckResponses = mapper.toDeckResponseList(decks);
+        List<DeckResponse> deckResponses = mapper.mapToDeckResponse(decks);
 
         // Assert
         assertThat(deckResponses).isNotEmpty();
@@ -74,7 +74,7 @@ class EntityToResponseMapperTest {
         Question question = TestUtils.createQuestion(deck, "What is Java?");
 
         // Act
-        QuestionResponse questionResponse = mapper.toQuestionResponse(question);
+        QuestionResponse questionResponse = mapper.mapToQuestionResponse(question);
 
         // Assert
         assertThat(questionResponse).isNotNull();
@@ -99,7 +99,7 @@ class EntityToResponseMapperTest {
         );
 
         // Act
-        List<QuestionResponse> questionResponses = mapper.toQuestionResponseList(questions);
+        List<QuestionResponse> questionResponses = mapper.mapToQuestionResponse(questions);
 
         // Assert
         assertThat(questionResponses).isNotEmpty();
@@ -129,7 +129,7 @@ class EntityToResponseMapperTest {
         gameSession.setEndTime(LocalDateTime.now());
 
         // Act
-        GameSessionResponse response = mapper.toGameSessionResponse(gameSession);
+        GameSessionResponse response = mapper.mapToGameSessionResponse(gameSession);
 
         // Assert
         assertThat(response).isNotNull();
@@ -155,7 +155,7 @@ class EntityToResponseMapperTest {
         );
 
         // Act
-        List<GameSessionResponse> responses = mapper.toGameSessionResponseList(gameSessions);
+        List<GameSessionResponse> responses = mapper.mapToGameSessionResponse(gameSessions);
 
         // Assert
         assertThat(responses).isNotEmpty();
@@ -171,7 +171,7 @@ class EntityToResponseMapperTest {
         gameSession.setCreatedAt(LocalDateTime.now());
 
         // Act
-        GameSessionResponse response = mapper.toGameSessionResponse(gameSession);
+        GameSessionResponse response = mapper.mapToGameSessionResponse(gameSession);
 
         // Assert
         assertThat(response).isNotNull();
@@ -241,7 +241,7 @@ class EntityToResponseMapperTest {
         User user = TestUtils.createUser();
 
         // Act
-        UserResponse response = mapper.toUserResponse(user);
+        UserResponse response = mapper.mapToUserResponse(user);
 
         // Assert
         assertThat(response).isNotNull();
@@ -265,7 +265,7 @@ class EntityToResponseMapperTest {
         User user = TestUtils.createUser();
 
         // Act
-        FriendResponse response = mapper.toFriendResponse(user);
+        FriendResponse response = mapper.mapToFriendResponse(user);
 
         // Assert
         assertThat(response).isNotNull();
@@ -287,7 +287,7 @@ class EntityToResponseMapperTest {
         List<User> users = List.of(user1, user2);
 
         // Act
-        List<FriendResponse> friendResponses = mapper.toFriendResponseList(users);
+        List<FriendResponse> friendResponses = mapper.mapToFriendResponse(users);
 
         // Assert
         assertThat(friendResponses).isNotEmpty();

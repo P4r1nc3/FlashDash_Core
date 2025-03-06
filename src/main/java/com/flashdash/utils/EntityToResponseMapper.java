@@ -5,7 +5,6 @@ import com.flashdash.repository.UserRepository;
 import com.p4r1nc3.flashdash.core.model.*;
 import org.springframework.stereotype.Component;
 
-import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,7 +18,7 @@ public class EntityToResponseMapper {
         this.userRepository = userRepository;
     }
 
-    public DeckResponse toDeckResponse(Deck deck) {
+    public DeckResponse mapToDeckResponse(Deck deck) {
         DeckResponse deckResponse = new DeckResponse();
         deckResponse.setDeckId(extractId(deck.getDeckFrn()));
         deckResponse.setDeckFrn(deck.getDeckFrn());
@@ -30,13 +29,13 @@ public class EntityToResponseMapper {
         return deckResponse;
     }
 
-    public List<DeckResponse> toDeckResponseList(List<Deck> deckList) {
+    public List<DeckResponse> mapToDeckResponse(List<Deck> deckList) {
         return deckList.stream()
-                .map(this::toDeckResponse)
+                .map(this::mapToDeckResponse)
                 .collect(Collectors.toList());
     }
 
-    public QuestionResponse toQuestionResponse(Question question) {
+    public QuestionResponse mapToQuestionResponse(Question question) {
         QuestionResponse response = new QuestionResponse();
         response.setQuestionId(extractId(question.getQuestionFrn()));
         response.setQuestionFrn(question.getQuestionFrn());
@@ -55,13 +54,13 @@ public class EntityToResponseMapper {
         return response;
     }
 
-    public List<QuestionResponse> toQuestionResponseList(List<Question> questions) {
+    public List<QuestionResponse> mapToQuestionResponse(List<Question> questions) {
         return questions.stream()
-                .map(this::toQuestionResponse)
+                .map(this::mapToQuestionResponse)
                 .collect(Collectors.toList());
     }
 
-    public GameSessionResponse toGameSessionResponse(GameSession gameSession) {
+    public GameSessionResponse mapToGameSessionResponse(GameSession gameSession) {
         GameSessionResponse response = new GameSessionResponse();
         response.setGameSessionId(extractId(gameSession.getGameSessionFrn()));
         response.setGameSessionFrn(gameSession.getGameSessionFrn());
@@ -88,9 +87,9 @@ public class EntityToResponseMapper {
         return response;
     }
 
-    public List<GameSessionResponse> toGameSessionResponseList(List<GameSession> gameSessions) {
+    public List<GameSessionResponse> mapToGameSessionResponse(List<GameSession> gameSessions) {
         return gameSessions.stream()
-                .map(this::toGameSessionResponse)
+                .map(this::mapToGameSessionResponse)
                 .collect(Collectors.toList());
     }
 
@@ -154,7 +153,7 @@ public class EntityToResponseMapper {
                 .collect(Collectors.toList());
     }
 
-    public UserResponse toUserResponse(User user) {
+    public UserResponse mapToUserResponse(User user) {
         UserResponse response = new UserResponse();
         response.setUserId(extractId(user.getUserFrn()));
         response.setUserFrn(user.getUserFrn());
@@ -172,7 +171,7 @@ public class EntityToResponseMapper {
         return response;
     }
 
-    public FriendResponse toFriendResponse(User user) {
+    public FriendResponse mapToFriendResponse(User user) {
         FriendResponse response = new FriendResponse();
         response.setUserId(extractId(user.getUserFrn()));
         response.setUserFrn(user.getUserFrn());
@@ -186,9 +185,9 @@ public class EntityToResponseMapper {
         return response;
     }
 
-    public List<FriendResponse> toFriendResponseList(List<User> users) {
+    public List<FriendResponse> mapToFriendResponse(List<User> users) {
         return users.stream()
-                .map(this::toFriendResponse)
+                .map(this::mapToFriendResponse)
                 .collect(Collectors.toList());
     }
 

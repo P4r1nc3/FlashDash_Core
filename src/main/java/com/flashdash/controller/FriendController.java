@@ -29,7 +29,7 @@ public class FriendController {
     public ResponseEntity<List<FriendResponse>> getFriends() {
         String userFrn = getAuthenticatedUser();
         List<User> users = friendService.getFriends(userFrn);
-        return ResponseEntity.ok(entityToResponseMapper.toFriendResponseList(users));
+        return ResponseEntity.ok(entityToResponseMapper.mapToFriendResponse(users));
     }
 
     @DeleteMapping("/{friendFrn}")
