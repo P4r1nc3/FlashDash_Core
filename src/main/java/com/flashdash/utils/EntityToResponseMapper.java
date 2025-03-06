@@ -105,14 +105,14 @@ public class EntityToResponseMapper {
         response.setUpdatedAt(invitation.getUpdatedAt().atOffset(ZoneOffset.UTC));
 
         if (sender != null) {
-            FriendInvitationResponseReceivedSender senderResponse = new FriendInvitationResponseReceivedSender();
-            senderResponse.setUserId(extractId(sender.getUserFrn()));
-            senderResponse.setUserFrn(sender.getUserFrn());
-            senderResponse.setFirstName(sender.getFirstName());
-            senderResponse.setLastName(sender.getLastName());
-            senderResponse.setEmail(sender.getEmail());
+            UserSummary userSummary = new UserSummary();
+            userSummary.setUserId(extractId(sender.getUserFrn()));
+            userSummary.setUserFrn(sender.getUserFrn());
+            userSummary.setFirstName(sender.getFirstName());
+            userSummary.setLastName(sender.getLastName());
+            userSummary.setEmail(sender.getEmail());
 
-            response.setSender(senderResponse);
+            response.setSender(userSummary);
         }
 
         return response;
@@ -135,14 +135,14 @@ public class EntityToResponseMapper {
         response.setUpdatedAt(invitation.getUpdatedAt().atOffset(ZoneOffset.UTC));
 
         if (recipient != null) {
-            FriendInvitationResponseSentRecipient recipientResponse = new FriendInvitationResponseSentRecipient();
-            recipientResponse.setUserId(extractId(recipient.getUserFrn()));
-            recipientResponse.setUserFrn(recipient.getUserFrn());
-            recipientResponse.setFirstName(recipient.getFirstName());
-            recipientResponse.setLastName(recipient.getLastName());
-            recipientResponse.setEmail(recipient.getEmail());
+            UserSummary userSummary = new UserSummary();
+            userSummary.setUserId(extractId(recipient.getUserFrn()));
+            userSummary.setUserFrn(recipient.getUserFrn());
+            userSummary.setFirstName(recipient.getFirstName());
+            userSummary.setLastName(recipient.getLastName());
+            userSummary.setEmail(recipient.getEmail());
 
-            response.setRecipient(recipientResponse);
+            response.setRecipient(userSummary);
         }
 
         return response;
