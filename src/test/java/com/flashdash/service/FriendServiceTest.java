@@ -2,7 +2,6 @@ package com.flashdash.service;
 
 import com.flashdash.FlashDashApplication;
 import com.flashdash.TestUtils;
-import com.flashdash.dto.response.UserResponse;
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
 import com.flashdash.model.FriendInvitation;
@@ -16,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -145,19 +145,43 @@ class FriendServiceTest {
 
     @Test
     void shouldGetFriendsSuccessfully() {
+        // Arrange
         User user = TestUtils.createUser();
-        User friend = TestUtils.createUser();
-        user.setFriendsFrnList(List.of(friend.getUserFrn()));
-        friend.setFriendsFrnList(List.of(user.getUserFrn()));
+        User friend1 = TestUtils.createUser();
+        User friend2 = TestUtils.createUser();
+
+        user.setFriendsFrnList(List.of(friend1.getUserFrn(), friend2.getUserFrn()));
 
         when(userRepository.findById(user.getUserFrn())).thenReturn(Optional.of(user));
-        when(userRepository.findById(friend.getUserFrn())).thenReturn(Optional.of(friend));
+        when(userRepository.findByUserFrnIn(user.getFriendsFrnList())).thenReturn(List.of(friend1, friend2));
 
-        List<UserResponse> friends = friendService.getFriends(user.getUserFrn());
+        // Act
+        List<User> friends = friendService.getFriends(user.getUserFrn());
 
-        assertThat(friends).hasSize(1);
-        assertThat(friends.get(0).getUserFrn()).isEqualTo(friend.getUserFrn());
+        // Assert
+        assertThat(friends).hasSize(2);
+        assertThat(friends).extracting(User::getUserFrn)
+                .containsExactlyInAnyOrder(friend1.getUserFrn(), friend2.getUserFrn());
+
         verify(userRepository).findById(user.getUserFrn());
+        verify(userRepository).findByUserFrnIn(user.getFriendsFrnList());
+    }
+
+    @Test
+    void shouldReturnEmptyListWhenUserHasNoFriends() {
+        // Arrange
+        User user = TestUtils.createUser();
+        user.setFriendsFrnList(Collections.emptyList());
+
+        when(userRepository.findById(user.getUserFrn())).thenReturn(Optional.of(user));
+
+        // Act
+        List<User> friends = friendService.getFriends(user.getUserFrn());
+
+        // Assert
+        assertThat(friends).isEmpty();
+        verify(userRepository).findById(user.getUserFrn());
+        verify(userRepository, never()).findByUserFrnIn(any());
     }
 
     @Test

@@ -1,7 +1,6 @@
 package com.flashdash.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.flashdash.dto.response.UserResponse;
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
 import com.flashdash.model.FriendInvitation;
@@ -14,9 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Service
 public class FriendService {
@@ -93,18 +91,13 @@ public class FriendService {
         friendInvitationRepository.delete(invitation);
     }
 
-    public List<UserResponse> getFriends(String userFrn) {
+    public List<User> getFriends(String userFrn) {
         User user = userRepository.findById(userFrn)
                 .orElseThrow(() -> new FlashDashException(ErrorCode.E404002, "User not found"));
 
         List<String> friendsFrnList = user.getFriendsFrnList();
 
-        return friendsFrnList.stream()
-                .map(friendFrn -> userRepository.findById(friendFrn)
-                        .map(UserResponse::new)
-                        .orElse(null))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+        return friendsFrnList.isEmpty() ? Collections.emptyList() : userRepository.findByUserFrnIn(friendsFrnList);
     }
 
     @Transactional
