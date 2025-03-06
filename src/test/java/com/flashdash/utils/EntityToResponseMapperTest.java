@@ -234,4 +234,28 @@ class EntityToResponseMapperTest {
 
         assertThat(responses).hasSize(invitations.size());
     }
+
+    @Test
+    void shouldConvertUserToUserResponse() {
+        // Arrange
+        User user = TestUtils.createUser();
+
+        // Act
+        UserResponse response = mapper.toUserResponse(user);
+
+        // Assert
+        assertThat(response).isNotNull();
+        assertThat(response.getUserId()).isEqualTo(mapper.extractId(user.getUserFrn()));
+        assertThat(response.getUserFrn()).isEqualTo(user.getUserFrn());
+        assertThat(response.getEmail()).isEqualTo(user.getEmail());
+        assertThat(response.getUsername()).isEqualTo(user.getUsername());
+        assertThat(response.getFirstName()).isEqualTo(user.getFirstName());
+        assertThat(response.getLastName()).isEqualTo(user.getLastName());
+        assertThat(response.getCreatedAt()).isEqualTo(user.getCreatedAt().atOffset(ZoneOffset.UTC));
+        assertThat(response.getUpdatedAt()).isEqualTo(user.getUpdatedAt().atOffset(ZoneOffset.UTC));
+        assertThat(response.getDailyNotifications()).isEqualTo(user.isDailyNotifications());
+        assertThat(response.getGamesPlayed()).isEqualTo(user.getGamesPlayed());
+        assertThat(response.getPoints()).isEqualTo(user.getPoints());
+        assertThat(response.getStreak()).isEqualTo(user.getStreak());
+    }
 }

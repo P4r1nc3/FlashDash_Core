@@ -1,8 +1,10 @@
 package com.flashdash.controller;
 
-import com.flashdash.dto.response.UserResponse;
+import com.flashdash.model.User;
 import com.flashdash.service.UserService;
+import com.flashdash.utils.EntityToResponseMapper;
 import com.p4r1nc3.flashdash.core.model.ChangePasswordRequest;
+import com.p4r1nc3.flashdash.core.model.UserResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -12,9 +14,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/users")
 public class UserController {
     private final UserService userService;
+    private final EntityToResponseMapper entityToResponseMapper;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, EntityToResponseMapper entityToResponseMapper) {
         this.userService = userService;
+        this.entityToResponseMapper = entityToResponseMapper;
     }
 
     @GetMapping
@@ -22,8 +26,8 @@ public class UserController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
 
-        UserResponse userResponse = userService.getCurrentUser(email);
-        return ResponseEntity.ok(userResponse);
+        User user = userService.getCurrentUser(email);
+        return ResponseEntity.ok(entityToResponseMapper.toUserResponse(user));
     }
 
     @DeleteMapping
@@ -42,5 +46,11 @@ public class UserController {
 
         userService.changePassword(email, request);
         return ResponseEntity.ok().build();
+    }
+
+    private User getAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User user = (User) authentication.getPrincipal();
+        return user;
     }
 }

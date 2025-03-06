@@ -154,6 +154,24 @@ public class EntityToResponseMapper {
                 .collect(Collectors.toList());
     }
 
+    public UserResponse toUserResponse(User user) {
+        UserResponse response = new UserResponse();
+        response.setUserId(extractId(user.getUserFrn()));
+        response.setUserFrn(user.getUserFrn());
+        response.setEmail(user.getEmail());
+        response.setUsername(user.getUsername());
+        response.setFirstName(user.getFirstName());
+        response.setLastName(user.getLastName());
+        response.setCreatedAt(user.getCreatedAt().atOffset(ZoneOffset.UTC));
+        response.setUpdatedAt(user.getUpdatedAt().atOffset(ZoneOffset.UTC));
+        response.setDailyNotifications(user.isDailyNotifications());
+        response.setGamesPlayed(user.getGamesPlayed());
+        response.setPoints(user.getPoints());
+        response.setStreak(user.getStreak());
+
+        return response;
+    }
+
     public String extractId(String frn) {
         if (frn != null && frn.contains(":")) {
             String[] parts = frn.split(":");
