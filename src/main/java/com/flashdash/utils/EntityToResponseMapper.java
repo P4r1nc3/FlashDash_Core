@@ -1,22 +1,25 @@
 package com.flashdash.utils;
 
-import com.flashdash.model.Deck;
-import com.flashdash.model.GameSession;
-import com.flashdash.model.Question;
-import com.p4r1nc3.flashdash.core.model.DeckResponse;
-import com.p4r1nc3.flashdash.core.model.GameSessionResponse;
-import com.p4r1nc3.flashdash.core.model.QuestionResponse;
+import com.flashdash.model.*;
+import com.flashdash.repository.UserRepository;
+import com.p4r1nc3.flashdash.core.model.*;
+import org.springframework.stereotype.Component;
 
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Component
 public class EntityToResponseMapper {
 
-    private EntityToResponseMapper() {
+    private final UserRepository userRepository;
+
+    public EntityToResponseMapper(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
-    public static DeckResponse toDeckResponse(Deck deck) {
+    public DeckResponse toDeckResponse(Deck deck) {
         DeckResponse deckResponse = new DeckResponse();
         deckResponse.setDeckId(extractId(deck.getDeckFrn()));
         deckResponse.setDeckFrn(deck.getDeckFrn());
@@ -27,13 +30,13 @@ public class EntityToResponseMapper {
         return deckResponse;
     }
 
-    public static List<DeckResponse> toDeckResponseList(List<Deck> deckList) {
+    public List<DeckResponse> toDeckResponseList(List<Deck> deckList) {
         return deckList.stream()
-                .map(EntityToResponseMapper::toDeckResponse)
+                .map(this::toDeckResponse)
                 .collect(Collectors.toList());
     }
 
-    public static QuestionResponse toQuestionResponse(Question question) {
+    public QuestionResponse toQuestionResponse(Question question) {
         QuestionResponse response = new QuestionResponse();
         response.setQuestionId(extractId(question.getQuestionFrn()));
         response.setQuestionFrn(question.getQuestionFrn());
@@ -52,13 +55,13 @@ public class EntityToResponseMapper {
         return response;
     }
 
-    public static List<QuestionResponse> toQuestionResponseList(List<Question> questions) {
+    public List<QuestionResponse> toQuestionResponseList(List<Question> questions) {
         return questions.stream()
-                .map(EntityToResponseMapper::toQuestionResponse)
+                .map(this::toQuestionResponse)
                 .collect(Collectors.toList());
     }
 
-    public static GameSessionResponse toGameSessionResponse(GameSession gameSession) {
+    public GameSessionResponse toGameSessionResponse(GameSession gameSession) {
         GameSessionResponse response = new GameSessionResponse();
         response.setGameSessionId(extractId(gameSession.getGameSessionFrn()));
         response.setGameSessionFrn(gameSession.getGameSessionFrn());
@@ -85,13 +88,73 @@ public class EntityToResponseMapper {
         return response;
     }
 
-    public static List<GameSessionResponse> toGameSessionResponseList(List<GameSession> gameSessions) {
+    public List<GameSessionResponse> toGameSessionResponseList(List<GameSession> gameSessions) {
         return gameSessions.stream()
-                .map(EntityToResponseMapper::toGameSessionResponse)
+                .map(this::toGameSessionResponse)
                 .collect(Collectors.toList());
     }
 
-    public static String extractId(String frn) {
+    public FriendInvitationResponseReceived mapToReceivedResponse(FriendInvitation invitation) {
+        User sender = userRepository.findById(invitation.getSentByFrn()).orElse(null);
+
+        FriendInvitationResponseReceived response = new FriendInvitationResponseReceived();
+        response.setInvitationId(extractId(invitation.getInvitationFrn()));
+        response.setInvitationFrn(invitation.getInvitationFrn());
+        response.setStatus(invitation.getStatus());
+        response.setCreatedAt(invitation.getCreatedAt().atOffset(ZoneOffset.UTC));
+        response.setUpdatedAt(invitation.getUpdatedAt().atOffset(ZoneOffset.UTC));
+
+        if (sender != null) {
+            FriendInvitationResponseReceivedSender senderResponse = new FriendInvitationResponseReceivedSender();
+            senderResponse.setUserId(extractId(sender.getUserFrn()));
+            senderResponse.setUserFrn(sender.getUserFrn());
+            senderResponse.setFirstName(sender.getFirstName());
+            senderResponse.setLastName(sender.getLastName());
+            senderResponse.setEmail(sender.getEmail());
+
+            response.setSender(senderResponse);
+        }
+
+        return response;
+    }
+
+    public List<FriendInvitationResponseReceived> mapToReceivedResponse(List<FriendInvitation> invitations) {
+        return invitations.stream()
+                .map(this::mapToReceivedResponse)
+                .collect(Collectors.toList());
+    }
+
+    public FriendInvitationResponseSent mapToSentResponse(FriendInvitation invitation) {
+        User recipient = userRepository.findById(invitation.getSentToFrn()).orElse(null);
+
+        FriendInvitationResponseSent response = new FriendInvitationResponseSent();
+        response.setInvitationId(extractId(invitation.getInvitationFrn()));
+        response.setInvitationFrn(invitation.getInvitationFrn());
+        response.setStatus(invitation.getStatus());
+        response.setCreatedAt(invitation.getCreatedAt().atOffset(ZoneOffset.UTC));
+        response.setUpdatedAt(invitation.getUpdatedAt().atOffset(ZoneOffset.UTC));
+
+        if (recipient != null) {
+            FriendInvitationResponseSentRecipient recipientResponse = new FriendInvitationResponseSentRecipient();
+            recipientResponse.setUserId(extractId(recipient.getUserFrn()));
+            recipientResponse.setUserFrn(recipient.getUserFrn());
+            recipientResponse.setFirstName(recipient.getFirstName());
+            recipientResponse.setLastName(recipient.getLastName());
+            recipientResponse.setEmail(recipient.getEmail());
+
+            response.setRecipient(recipientResponse);
+        }
+
+        return response;
+    }
+
+    public List<FriendInvitationResponseSent> mapToSentResponse(List<FriendInvitation> invitations) {
+        return invitations.stream()
+                .map(this::mapToSentResponse)
+                .collect(Collectors.toList());
+    }
+
+    public String extractId(String frn) {
         if (frn != null && frn.contains(":")) {
             String[] parts = frn.split(":");
             return parts[parts.length - 1];

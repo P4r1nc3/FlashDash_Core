@@ -17,37 +17,39 @@ import java.util.List;
 @RequestMapping("/decks")
 public class DeckController {
     private final DeckService deckService;
+    private final EntityToResponseMapper entityToResponseMapper;
 
-    public DeckController(DeckService deckService) {
+    public DeckController(DeckService deckService, EntityToResponseMapper entityToResponseMapper) {
         this.deckService = deckService;
+        this.entityToResponseMapper = entityToResponseMapper;
     }
 
     @PostMapping
     public ResponseEntity<DeckResponse> createDeck(@RequestBody DeckRequest deckRequest) {
         String userFrn = getAuthenticatedUser();
         Deck deck = deckService.createDeck(deckRequest, userFrn);
-        return ResponseEntity.ok(EntityToResponseMapper.toDeckResponse(deck));
+        return ResponseEntity.ok(entityToResponseMapper.toDeckResponse(deck));
     }
 
     @GetMapping
     public ResponseEntity<List<DeckResponse>> getAllDecks() {
         String userFrn = getAuthenticatedUser();
         List<Deck> deckList = deckService.getAllDecks(userFrn);
-        return ResponseEntity.ok(EntityToResponseMapper.toDeckResponseList(deckList));
+        return ResponseEntity.ok(entityToResponseMapper.toDeckResponseList(deckList));
     }
 
     @GetMapping("/{deckFrn}")
     public ResponseEntity<DeckResponse> getDeck(@PathVariable String deckFrn) {
         String userFrn = getAuthenticatedUser();
         Deck deck = deckService.getDeckByFrn(deckFrn, userFrn);
-        return ResponseEntity.ok(EntityToResponseMapper.toDeckResponse(deck));
+        return ResponseEntity.ok(entityToResponseMapper.toDeckResponse(deck));
     }
 
     @PutMapping("/{deckFrn}")
     public ResponseEntity<DeckResponse> updateDeck(@PathVariable String deckFrn, @RequestBody DeckRequest deckRequest) {
         String userFrn = getAuthenticatedUser();
         Deck deck = deckService.updateDeck(deckFrn, deckRequest, userFrn);
-        return ResponseEntity.ok(EntityToResponseMapper.toDeckResponse(deck));
+        return ResponseEntity.ok(entityToResponseMapper.toDeckResponse(deck));
     }
 
     @DeleteMapping("/{deckFrn}")

@@ -1,7 +1,6 @@
 package com.flashdash.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.flashdash.dto.response.FriendInvitationResponse;
 import com.flashdash.dto.response.UserResponse;
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
@@ -17,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -69,16 +67,12 @@ public class FriendService {
         );
     }
 
-    public List<FriendInvitationResponse> getReceivedFriendInvitations(String recipientFrn) {
-        return friendInvitationRepository.findAllBySentToFrn(recipientFrn).stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+    public List<FriendInvitation> getReceivedFriendInvitations(String recipientFrn) {
+        return friendInvitationRepository.findAllBySentToFrn(recipientFrn);
     }
 
-    public List<FriendInvitationResponse> getSentFriendInvitations(String senderFrn) {
-        return friendInvitationRepository.findAllBySentByFrn(senderFrn).stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+    public List<FriendInvitation> getSentFriendInvitations(String senderFrn) {
+        return friendInvitationRepository.findAllBySentByFrn(senderFrn);
     }
 
     @Transactional
@@ -166,15 +160,5 @@ public class FriendService {
 
         userRepository.save(user);
         userRepository.save(friend);
-    }
-
-    private FriendInvitationResponse mapToResponse(FriendInvitation invitation) {
-        return new FriendInvitationResponse(
-                invitation.getInvitationFrn(),
-                invitation.getSentByFrn(),
-                invitation.getSentToFrn(),
-                invitation.getStatus(),
-                invitation.getCreatedAt()
-        );
     }
 }

@@ -20,37 +20,39 @@ import java.util.List;
 public class GameSessionController {
 
     private final GameSessionService gameSessionService;
+    private final EntityToResponseMapper entityToResponseMapper;
 
-    public GameSessionController(GameSessionService gameSessionService) {
+    public GameSessionController(GameSessionService gameSessionService, EntityToResponseMapper entityToResponseMapper) {
         this.gameSessionService = gameSessionService;
+        this.entityToResponseMapper = entityToResponseMapper;
     }
 
     @PostMapping("/start")
     public ResponseEntity<List<QuestionResponse>> startGameSession(@PathVariable String deckFrn) {
         String userFrn = getAuthenticatedUser();
         List<Question> questions = gameSessionService.startGameSession(deckFrn, userFrn);
-        return ResponseEntity.ok(EntityToResponseMapper.toQuestionResponseList(questions));
+        return ResponseEntity.ok(entityToResponseMapper.toQuestionResponseList(questions));
     }
 
     @PostMapping("/end")
     public ResponseEntity<GameSessionResponse> endGameSession(@PathVariable String deckFrn, @RequestBody List<QuestionRequest> userAnswers) {
         String userFrn = getAuthenticatedUser();
         GameSession gameSession = gameSessionService.endGameSession(deckFrn, userFrn, userAnswers);
-        return ResponseEntity.ok(EntityToResponseMapper.toGameSessionResponse(gameSession));
+        return ResponseEntity.ok(entityToResponseMapper.toGameSessionResponse(gameSession));
     }
 
     @GetMapping
     public ResponseEntity<List<GameSessionResponse>> getGameSessions(@PathVariable String deckFrn) {
         String userFrn = getAuthenticatedUser();
         List<GameSession> gameSessionList = gameSessionService.getGameSessions(deckFrn, userFrn);
-        return ResponseEntity.ok(EntityToResponseMapper.toGameSessionResponseList(gameSessionList));
+        return ResponseEntity.ok(entityToResponseMapper.toGameSessionResponseList(gameSessionList));
     }
 
     @GetMapping("/{gameSessionFrn}")
     public ResponseEntity<GameSessionResponse> getGameSession(@PathVariable String deckFrn, @PathVariable String gameSessionFrn) {
         String userFrn = getAuthenticatedUser();
         GameSession gameSession = gameSessionService.getGameSession(deckFrn, gameSessionFrn, userFrn);
-        return ResponseEntity.ok(EntityToResponseMapper.toGameSessionResponse(gameSession));
+        return ResponseEntity.ok(entityToResponseMapper.toGameSessionResponse(gameSession));
     }
 
     private String getAuthenticatedUser() {
