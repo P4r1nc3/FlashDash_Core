@@ -1,9 +1,12 @@
 package com.flashdash.controller;
 
-import com.flashdash.dto.response.FriendInvitationResponse;
 import com.flashdash.dto.response.UserResponse;
+import com.flashdash.model.FriendInvitation;
 import com.flashdash.model.User;
 import com.flashdash.service.FriendService;
+import com.flashdash.utils.EntityToResponseMapper;
+import com.p4r1nc3.flashdash.core.model.FriendInvitationResponseReceived;
+import com.p4r1nc3.flashdash.core.model.FriendInvitationResponseSent;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,9 +18,11 @@ import java.util.List;
 @RequestMapping("/friends")
 public class FriendController {
     private final FriendService friendService;
+    private final EntityToResponseMapper entityToResponseMapper;
 
-    public FriendController(FriendService friendService) {
+    public FriendController(FriendService friendService, EntityToResponseMapper entityToResponseMapper) {
         this.friendService = friendService;
+        this.entityToResponseMapper = entityToResponseMapper;
     }
 
     @GetMapping
@@ -42,17 +47,17 @@ public class FriendController {
     }
 
     @GetMapping("/invitations/received")
-    public ResponseEntity<List<FriendInvitationResponse>> getReceivedInvitations() {
+    public ResponseEntity<List<FriendInvitationResponseReceived>> getReceivedInvitations() {
         String userFrn = getAuthenticatedUser();
-        List<FriendInvitationResponse> invitations = friendService.getReceivedFriendInvitations(userFrn);
-        return ResponseEntity.ok(invitations);
+        List<FriendInvitation> invitations = friendService.getReceivedFriendInvitations(userFrn);
+        return ResponseEntity.ok(entityToResponseMapper.mapToReceivedResponse(invitations));
     }
 
     @GetMapping("/invitations/sent")
-    public ResponseEntity<List<FriendInvitationResponse>> getSentInvitations() {
+    public ResponseEntity<List<FriendInvitationResponseSent>> getSentInvitations() {
         String userFrn = getAuthenticatedUser();
-        List<FriendInvitationResponse> invitations = friendService.getSentFriendInvitations(userFrn);
-        return ResponseEntity.ok(invitations);
+        List<FriendInvitation> invitations = friendService.getSentFriendInvitations(userFrn);
+        return ResponseEntity.ok(entityToResponseMapper.mapToSentResponse(invitations));
     }
 
     @PutMapping("/invitations/{invitationFrn}")
