@@ -172,6 +172,26 @@ public class EntityToResponseMapper {
         return response;
     }
 
+    public FriendResponse toFriendResponse(User user) {
+        FriendResponse response = new FriendResponse();
+        response.setUserId(extractId(user.getUserFrn()));
+        response.setUserFrn(user.getUserFrn());
+        response.setUsername(user.getUsername());
+        response.setFirstName(user.getFirstName());
+        response.setLastName(user.getLastName());
+        response.setGamesPlayed(user.getGamesPlayed());
+        response.setPoints(user.getPoints());
+        response.setStreak(user.getStreak());
+
+        return response;
+    }
+
+    public List<FriendResponse> toFriendResponseList(List<User> users) {
+        return users.stream()
+                .map(this::toFriendResponse)
+                .collect(Collectors.toList());
+    }
+
     public String extractId(String frn) {
         if (frn != null && frn.contains(":")) {
             String[] parts = frn.split(":");

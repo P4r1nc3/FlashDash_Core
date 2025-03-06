@@ -258,4 +258,49 @@ class EntityToResponseMapperTest {
         assertThat(response.getPoints()).isEqualTo(user.getPoints());
         assertThat(response.getStreak()).isEqualTo(user.getStreak());
     }
+
+    @Test
+    void shouldConvertUserToFriendResponse() {
+        // Arrange
+        User user = TestUtils.createUser();
+
+        // Act
+        FriendResponse response = mapper.toFriendResponse(user);
+
+        // Assert
+        assertThat(response).isNotNull();
+        assertThat(response.getUserId()).isEqualTo(mapper.extractId(user.getUserFrn()));
+        assertThat(response.getUserFrn()).isEqualTo(user.getUserFrn());
+        assertThat(response.getUsername()).isEqualTo(user.getUsername());
+        assertThat(response.getFirstName()).isEqualTo(user.getFirstName());
+        assertThat(response.getLastName()).isEqualTo(user.getLastName());
+        assertThat(response.getGamesPlayed()).isEqualTo(user.getGamesPlayed());
+        assertThat(response.getPoints()).isEqualTo(user.getPoints());
+        assertThat(response.getStreak()).isEqualTo(user.getStreak());
+    }
+
+    @Test
+    void shouldConvertUserListToFriendResponseList() {
+        // Arrange
+        User user1 = TestUtils.createUser();
+        User user2 = TestUtils.createUser();
+        List<User> users = List.of(user1, user2);
+
+        // Act
+        List<FriendResponse> friendResponses = mapper.toFriendResponseList(users);
+
+        // Assert
+        assertThat(friendResponses).isNotEmpty();
+        assertThat(friendResponses).hasSize(users.size());
+
+        for (int i = 0; i < users.size(); i++) {
+            assertThat(friendResponses.get(i).getUserFrn()).isEqualTo(users.get(i).getUserFrn());
+            assertThat(friendResponses.get(i).getUsername()).isEqualTo(users.get(i).getUsername());
+            assertThat(friendResponses.get(i).getFirstName()).isEqualTo(users.get(i).getFirstName());
+            assertThat(friendResponses.get(i).getLastName()).isEqualTo(users.get(i).getLastName());
+            assertThat(friendResponses.get(i).getGamesPlayed()).isEqualTo(users.get(i).getGamesPlayed());
+            assertThat(friendResponses.get(i).getPoints()).isEqualTo(users.get(i).getPoints());
+            assertThat(friendResponses.get(i).getStreak()).isEqualTo(users.get(i).getStreak());
+        }
+    }
 }
