@@ -1,8 +1,8 @@
 package com.flashdash.controller;
 
-import com.flashdash.dto.request.ChangePasswordRequest;
 import com.flashdash.dto.response.UserResponse;
 import com.flashdash.service.UserService;
+import com.p4r1nc3.flashdash.core.model.ChangePasswordRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

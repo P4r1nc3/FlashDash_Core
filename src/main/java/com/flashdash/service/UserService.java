@@ -1,11 +1,11 @@
 package com.flashdash.service;
 
-import com.flashdash.dto.request.ChangePasswordRequest;
 import com.flashdash.dto.response.UserResponse;
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
 import com.flashdash.model.User;
 import com.flashdash.repository.UserRepository;
+import com.p4r1nc3.flashdash.core.model.ChangePasswordRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.userdetails.UserDetails;
