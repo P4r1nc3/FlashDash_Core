@@ -36,6 +36,9 @@ class GameSessionControllerTest {
     @MockitoBean
     private GameSessionService gameSessionService;
 
+    @MockitoBean
+    private EntityToResponseMapper entityToResponseMapper;
+
     private User user;
     private Deck deck;
     private GameSession gameSession;
@@ -68,13 +71,13 @@ class GameSessionControllerTest {
     }
 
     @Test
-    void testStartGameSessionSuccessful() {
+    void shouldStartGameSessionSuccessfully() {
         // Arrange
-        Question question = TestUtils.createQuestion(deck, "What is Java?");
-        List<Question> questions = List.of(question);
-        List<QuestionResponse> expectedResponses = EntityToResponseMapper.toQuestionResponseList(questions);
+        List<Question> questions = List.of(TestUtils.createQuestion(deck, "What is Java?"));
+        List<QuestionResponse> expectedResponses = List.of(new QuestionResponse());
 
         when(gameSessionService.startGameSession(eq(deckFrn), eq(user.getUserFrn()))).thenReturn(questions);
+        when(entityToResponseMapper.toQuestionResponseList(questions)).thenReturn(expectedResponses);
 
         // Act
         ResponseEntity<List<QuestionResponse>> responseEntity = gameSessionController.startGameSession(deckFrn);
@@ -85,19 +88,17 @@ class GameSessionControllerTest {
     }
 
     @Test
-    void testEndGameSessionSuccessful() {
+    void shouldEndGameSessionSuccessfully() {
         // Arrange
-        QuestionRequest userAnswer = new QuestionRequest()
-                .question("What is Java?")
-                .correctAnswers(List.of("A programming language"));
+        List<QuestionRequest> userAnswers = List.of(new QuestionRequest().question("What is Java?"));
+        GameSessionResponse expectedResponse = new GameSessionResponse();
 
         when(gameSessionService.endGameSession(eq(deckFrn), eq(user.getUserFrn()), anyList()))
                 .thenReturn(gameSession);
-
-        GameSessionResponse expectedResponse = EntityToResponseMapper.toGameSessionResponse(gameSession);
+        when(entityToResponseMapper.toGameSessionResponse(gameSession)).thenReturn(expectedResponse);
 
         // Act
-        ResponseEntity<GameSessionResponse> responseEntity = gameSessionController.endGameSession(deckFrn, List.of(userAnswer));
+        ResponseEntity<GameSessionResponse> responseEntity = gameSessionController.endGameSession(deckFrn, userAnswers);
 
         // Assert
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -105,9 +106,9 @@ class GameSessionControllerTest {
     }
 
     @Test
-    void testEndGameSessionNoActiveSession() {
+    void shouldThrowExceptionWhenEndingGameSessionWithoutActiveSession() {
         // Arrange
-        QuestionRequest userAnswer = new QuestionRequest().question("What is Java?").correctAnswers(List.of("A programming language"));
+        List<QuestionRequest> userAnswers = List.of(new QuestionRequest().question("What is Java?"));
 
         doThrow(new FlashDashException(ErrorCode.E400003, "No active game session for this deck."))
                 .when(gameSessionService).endGameSession(eq(deckFrn), eq(user.getUserFrn()), anyList());
@@ -115,19 +116,20 @@ class GameSessionControllerTest {
         // Act & Assert
         FlashDashException exception = assertThrows(
                 FlashDashException.class,
-                () -> gameSessionController.endGameSession(deckFrn, List.of(userAnswer))
+                () -> gameSessionController.endGameSession(deckFrn, userAnswers)
         );
         assertEquals(ErrorCode.E400003, exception.getErrorCode());
         assertEquals("No active game session for this deck.", exception.getMessage());
     }
 
     @Test
-    void testGetAllGameSessionsSuccessful() {
+    void shouldGetAllGameSessionsSuccessfully() {
         // Arrange
         List<GameSession> gameSessions = List.of(gameSession);
-        List<GameSessionResponse> expectedResponses = EntityToResponseMapper.toGameSessionResponseList(gameSessions);
+        List<GameSessionResponse> expectedResponses = List.of(new GameSessionResponse());
 
         when(gameSessionService.getGameSessions(eq(deckFrn), eq(user.getUserFrn()))).thenReturn(gameSessions);
+        when(entityToResponseMapper.toGameSessionResponseList(gameSessions)).thenReturn(expectedResponses);
 
         // Act
         ResponseEntity<List<GameSessionResponse>> responseEntity = gameSessionController.getGameSessions(deckFrn);
@@ -138,12 +140,13 @@ class GameSessionControllerTest {
     }
 
     @Test
-    void testGetSingleGameSessionSuccessful() {
+    void shouldGetSingleGameSessionSuccessfully() {
         // Arrange
-        GameSessionResponse expectedResponse = EntityToResponseMapper.toGameSessionResponse(gameSession);
+        GameSessionResponse expectedResponse = new GameSessionResponse();
 
         when(gameSessionService.getGameSession(eq(deckFrn), eq(gameSessionFrn), eq(user.getUserFrn())))
                 .thenReturn(gameSession);
+        when(entityToResponseMapper.toGameSessionResponse(gameSession)).thenReturn(expectedResponse);
 
         // Act
         ResponseEntity<GameSessionResponse> responseEntity = gameSessionController.getGameSession(deckFrn, gameSessionFrn);
@@ -154,7 +157,7 @@ class GameSessionControllerTest {
     }
 
     @Test
-    void testGetSingleGameSessionNotFound() {
+    void shouldThrowExceptionWhenGettingNonExistentGameSession() {
         // Arrange
         doThrow(new FlashDashException(ErrorCode.E404006, "Game session not found"))
                 .when(gameSessionService).getGameSession(eq(deckFrn), eq("frn:flashdash:game-session:999"), eq(user.getUserFrn()));
