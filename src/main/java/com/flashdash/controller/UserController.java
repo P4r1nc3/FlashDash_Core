@@ -47,10 +47,4 @@ public class UserController {
         userService.changePassword(email, request);
         return ResponseEntity.ok().build();
     }
-
-    private User getAuthenticatedUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User user = (User) authentication.getPrincipal();
-        return user;
-    }
 }
