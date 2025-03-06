@@ -81,9 +81,12 @@ public class AuthenticationService {
         user.setUsername(request.getEmail().trim().toLowerCase());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setActivationToken(activationToken);
-        user.setDailyNotifications(true);
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
+        user.setDailyNotifications(true);
+        user.setGamesPlayed(0);
+        user.setPoints(0);
+        user.setStreak(0);
         user.setEnabled(false);
 
         userRepository.save(user);

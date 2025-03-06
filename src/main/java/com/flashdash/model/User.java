@@ -46,11 +46,20 @@ public class User implements UserDetails {
     @Column(name = "activation_token", unique = true, length = 256)
     private String activationToken;
 
+    @Column(name = "friends_frn", columnDefinition = "JSON", nullable = false)
+    private String friendsFrn = "[]";
+
     @Column(name = "daily_notifications", nullable = false)
     private boolean dailyNotifications;
 
-    @Column(name = "friends_frn", columnDefinition = "JSON", nullable = false)
-    private String friendsFrn = "[]";
+    @Column(name = "games_played", nullable = false)
+    private Integer gamesPlayed;
+
+    @Column(name = "points", nullable = false)
+    private Integer points;
+
+    @Column(name = "streak", nullable = false)
+    private Integer streak;
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
