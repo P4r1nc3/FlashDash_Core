@@ -1,4 +1,4 @@
-package com.flashdash.dto.response;
+package com.flashdash.exception;
 
 import java.time.LocalDateTime;
 

@@ -37,7 +37,7 @@ class EntityToResponseMapperTest {
         Deck deck = TestUtils.createDeck(user);
 
         // Act
-        DeckResponse deckResponse = mapper.toDeckResponse(deck);
+        DeckResponse deckResponse = mapper.mapToDeckResponse(deck);
 
         // Assert
         assertThat(deckResponse).isNotNull();
@@ -56,7 +56,7 @@ class EntityToResponseMapperTest {
         List<Deck> decks = List.of(TestUtils.createDeck(user));
 
         // Act
-        List<DeckResponse> deckResponses = mapper.toDeckResponseList(decks);
+        List<DeckResponse> deckResponses = mapper.mapToDeckResponse(decks);
 
         // Assert
         assertThat(deckResponses).isNotEmpty();
@@ -74,7 +74,7 @@ class EntityToResponseMapperTest {
         Question question = TestUtils.createQuestion(deck, "What is Java?");
 
         // Act
-        QuestionResponse questionResponse = mapper.toQuestionResponse(question);
+        QuestionResponse questionResponse = mapper.mapToQuestionResponse(question);
 
         // Assert
         assertThat(questionResponse).isNotNull();
@@ -99,7 +99,7 @@ class EntityToResponseMapperTest {
         );
 
         // Act
-        List<QuestionResponse> questionResponses = mapper.toQuestionResponseList(questions);
+        List<QuestionResponse> questionResponses = mapper.mapToQuestionResponse(questions);
 
         // Assert
         assertThat(questionResponses).isNotEmpty();
@@ -129,7 +129,7 @@ class EntityToResponseMapperTest {
         gameSession.setEndTime(LocalDateTime.now());
 
         // Act
-        GameSessionResponse response = mapper.toGameSessionResponse(gameSession);
+        GameSessionResponse response = mapper.mapToGameSessionResponse(gameSession);
 
         // Assert
         assertThat(response).isNotNull();
@@ -155,7 +155,7 @@ class EntityToResponseMapperTest {
         );
 
         // Act
-        List<GameSessionResponse> responses = mapper.toGameSessionResponseList(gameSessions);
+        List<GameSessionResponse> responses = mapper.mapToGameSessionResponse(gameSessions);
 
         // Assert
         assertThat(responses).isNotEmpty();
@@ -171,7 +171,7 @@ class EntityToResponseMapperTest {
         gameSession.setCreatedAt(LocalDateTime.now());
 
         // Act
-        GameSessionResponse response = mapper.toGameSessionResponse(gameSession);
+        GameSessionResponse response = mapper.mapToGameSessionResponse(gameSession);
 
         // Assert
         assertThat(response).isNotNull();
@@ -233,5 +233,74 @@ class EntityToResponseMapperTest {
         List<FriendInvitationResponseSent> responses = mapper.mapToSentResponse(invitations);
 
         assertThat(responses).hasSize(invitations.size());
+    }
+
+    @Test
+    void shouldConvertUserToUserResponse() {
+        // Arrange
+        User user = TestUtils.createUser();
+
+        // Act
+        UserResponse response = mapper.mapToUserResponse(user);
+
+        // Assert
+        assertThat(response).isNotNull();
+        assertThat(response.getUserId()).isEqualTo(mapper.extractId(user.getUserFrn()));
+        assertThat(response.getUserFrn()).isEqualTo(user.getUserFrn());
+        assertThat(response.getEmail()).isEqualTo(user.getEmail());
+        assertThat(response.getUsername()).isEqualTo(user.getUsername());
+        assertThat(response.getFirstName()).isEqualTo(user.getFirstName());
+        assertThat(response.getLastName()).isEqualTo(user.getLastName());
+        assertThat(response.getCreatedAt()).isEqualTo(user.getCreatedAt().atOffset(ZoneOffset.UTC));
+        assertThat(response.getUpdatedAt()).isEqualTo(user.getUpdatedAt().atOffset(ZoneOffset.UTC));
+        assertThat(response.getDailyNotifications()).isEqualTo(user.isDailyNotifications());
+        assertThat(response.getGamesPlayed()).isEqualTo(user.getGamesPlayed());
+        assertThat(response.getPoints()).isEqualTo(user.getPoints());
+        assertThat(response.getStreak()).isEqualTo(user.getStreak());
+    }
+
+    @Test
+    void shouldConvertUserToFriendResponse() {
+        // Arrange
+        User user = TestUtils.createUser();
+
+        // Act
+        FriendResponse response = mapper.mapToFriendResponse(user);
+
+        // Assert
+        assertThat(response).isNotNull();
+        assertThat(response.getUserId()).isEqualTo(mapper.extractId(user.getUserFrn()));
+        assertThat(response.getUserFrn()).isEqualTo(user.getUserFrn());
+        assertThat(response.getUsername()).isEqualTo(user.getUsername());
+        assertThat(response.getFirstName()).isEqualTo(user.getFirstName());
+        assertThat(response.getLastName()).isEqualTo(user.getLastName());
+        assertThat(response.getGamesPlayed()).isEqualTo(user.getGamesPlayed());
+        assertThat(response.getPoints()).isEqualTo(user.getPoints());
+        assertThat(response.getStreak()).isEqualTo(user.getStreak());
+    }
+
+    @Test
+    void shouldConvertUserListToFriendResponseList() {
+        // Arrange
+        User user1 = TestUtils.createUser();
+        User user2 = TestUtils.createUser();
+        List<User> users = List.of(user1, user2);
+
+        // Act
+        List<FriendResponse> friendResponses = mapper.mapToFriendResponse(users);
+
+        // Assert
+        assertThat(friendResponses).isNotEmpty();
+        assertThat(friendResponses).hasSize(users.size());
+
+        for (int i = 0; i < users.size(); i++) {
+            assertThat(friendResponses.get(i).getUserFrn()).isEqualTo(users.get(i).getUserFrn());
+            assertThat(friendResponses.get(i).getUsername()).isEqualTo(users.get(i).getUsername());
+            assertThat(friendResponses.get(i).getFirstName()).isEqualTo(users.get(i).getFirstName());
+            assertThat(friendResponses.get(i).getLastName()).isEqualTo(users.get(i).getLastName());
+            assertThat(friendResponses.get(i).getGamesPlayed()).isEqualTo(users.get(i).getGamesPlayed());
+            assertThat(friendResponses.get(i).getPoints()).isEqualTo(users.get(i).getPoints());
+            assertThat(friendResponses.get(i).getStreak()).isEqualTo(users.get(i).getStreak());
+        }
     }
 }
