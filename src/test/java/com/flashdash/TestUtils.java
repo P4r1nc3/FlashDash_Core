@@ -46,6 +46,9 @@ public class TestUtils {
         user.setEnabled(true);
         user.setDailyNotifications(true);
         user.setFriendsFrnList(List.of());
+        user.setGamesPlayed(10);
+        user.setPoints(140);
+        user.setStreak(4);
         return user;
     }
 

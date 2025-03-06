@@ -28,21 +28,21 @@ public class QuestionController {
     public ResponseEntity<QuestionResponse> addQuestionToDeck(@PathVariable String deckFrn, @RequestBody QuestionRequest questionRequest) {
         String userFrn = getAuthenticatedUser();
         Question newQuestion = questionService.addQuestionToDeck(deckFrn, questionRequest, userFrn);
-        return ResponseEntity.ok(entityToResponseMapper.toQuestionResponse(newQuestion));
+        return ResponseEntity.ok(entityToResponseMapper.mapToQuestionResponse(newQuestion));
     }
 
     @GetMapping
     public ResponseEntity<List<QuestionResponse>> getAllQuestionsInDeck(@PathVariable String deckFrn) {
         String userFrn = getAuthenticatedUser();
         List<Question> questions = questionService.getAllQuestionsInDeck(deckFrn, userFrn);
-        return ResponseEntity.ok(entityToResponseMapper.toQuestionResponseList(questions));
+        return ResponseEntity.ok(entityToResponseMapper.mapToQuestionResponse(questions));
     }
 
     @GetMapping("/{questionFrn}")
     public ResponseEntity<QuestionResponse> getQuestion(@PathVariable String deckFrn, @PathVariable String questionFrn) {
         String userFrn = getAuthenticatedUser();
         Question question = questionService.getQuestionByFrn(deckFrn, questionFrn, userFrn);
-        return ResponseEntity.ok(entityToResponseMapper.toQuestionResponse(question));
+        return ResponseEntity.ok(entityToResponseMapper.mapToQuestionResponse(question));
     }
 
     @PutMapping("/{questionFrn}")
@@ -53,7 +53,7 @@ public class QuestionController {
     ) {
         String userFrn = getAuthenticatedUser();
         Question updatedQuestion = questionService.updateQuestion(deckFrn, questionFrn, questionRequest, userFrn);
-        return ResponseEntity.ok(entityToResponseMapper.toQuestionResponse(updatedQuestion));
+        return ResponseEntity.ok(entityToResponseMapper.mapToQuestionResponse(updatedQuestion));
     }
 
     @DeleteMapping("/{questionFrn}")

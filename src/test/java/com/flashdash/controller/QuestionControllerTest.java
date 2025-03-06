@@ -74,7 +74,7 @@ class QuestionControllerTest {
 
         when(questionService.addQuestionToDeck(eq(deck.getDeckFrn()), any(QuestionRequest.class), eq(user.getUserFrn())))
                 .thenReturn(question);
-        when(entityToResponseMapper.toQuestionResponse(question)).thenReturn(expectedResponse);
+        when(entityToResponseMapper.mapToQuestionResponse(question)).thenReturn(expectedResponse);
 
         // Act
         ResponseEntity<QuestionResponse> responseEntity = questionController.addQuestionToDeck(deck.getDeckFrn(), questionRequest);
@@ -97,7 +97,7 @@ class QuestionControllerTest {
 
         when(questionService.getAllQuestionsInDeck(eq(deck.getDeckFrn()), eq(user.getUserFrn())))
                 .thenReturn(questions);
-        when(entityToResponseMapper.toQuestionResponseList(questions)).thenReturn(expectedResponses);
+        when(entityToResponseMapper.mapToQuestionResponse(questions)).thenReturn(expectedResponses);
 
         // Act
         ResponseEntity<List<QuestionResponse>> responseEntity = questionController.getAllQuestionsInDeck(deck.getDeckFrn());
@@ -119,7 +119,7 @@ class QuestionControllerTest {
 
         when(questionService.getQuestionByFrn(eq(deckFrn), eq(questionFrn), eq(user.getUserFrn())))
                 .thenReturn(question);
-        when(entityToResponseMapper.toQuestionResponse(question)).thenReturn(expectedResponse);
+        when(entityToResponseMapper.mapToQuestionResponse(question)).thenReturn(expectedResponse);
 
         // Act
         ResponseEntity<QuestionResponse> responseEntity = questionController.getQuestion(deckFrn, questionFrn);
@@ -161,7 +161,7 @@ class QuestionControllerTest {
 
         when(questionService.updateQuestion(eq(deck.getDeckFrn()), eq(updatedQuestion.getQuestionFrn()), any(QuestionRequest.class), eq(user.getUserFrn())))
                 .thenReturn(updatedQuestion);
-        when(entityToResponseMapper.toQuestionResponse(updatedQuestion)).thenReturn(expectedResponse);
+        when(entityToResponseMapper.mapToQuestionResponse(updatedQuestion)).thenReturn(expectedResponse);
 
         // Act
         ResponseEntity<QuestionResponse> responseEntity = questionController.updateQuestion(deck.getDeckFrn(), updatedQuestion.getQuestionFrn(), questionRequest);

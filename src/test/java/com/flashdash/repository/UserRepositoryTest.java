@@ -113,4 +113,24 @@ class UserRepositoryTest {
         // Assert
         assertThat(usersWithNotifications).isEmpty();
     }
+
+    @Test
+    void shouldFindUsersByUserFrnList() {
+        // Arrange
+        User user1 = TestUtils.createUser();
+        userRepository.save(user1);
+
+        User user2 = TestUtils.createUser();
+        userRepository.save(user2);
+
+        List<String> userFrns = List.of(user1.getUserFrn(), user2.getUserFrn());
+
+        // Act
+        List<User> foundUsers = userRepository.findByUserFrnIn(userFrns);
+
+        // Assert
+        assertThat(foundUsers).hasSize(2);
+        assertThat(foundUsers).extracting(User::getUserFrn).containsExactlyInAnyOrder(user1.getUserFrn(), user2.getUserFrn());
+    }
+
 }

@@ -2,12 +2,11 @@ package com.flashdash.service;
 
 import com.flashdash.FlashDashApplication;
 import com.flashdash.TestUtils;
-import com.flashdash.dto.request.ChangePasswordRequest;
-import com.flashdash.dto.response.UserResponse;
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
 import com.flashdash.model.User;
 import com.flashdash.repository.UserRepository;
+import com.p4r1nc3.flashdash.core.model.ChangePasswordRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -57,17 +56,17 @@ class UserServiceTest {
         when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
 
         // Act
-        UserResponse userResponse = userService.getCurrentUser(user.getEmail());
+        User returnedUser = userService.getCurrentUser(user.getEmail());
 
         // Assert
-        assertThat(userResponse).isNotNull();
-        assertThat(userResponse.getFirstName()).isEqualTo(user.getFirstName());
-        assertThat(userResponse.getLastName()).isEqualTo(user.getLastName());
-        assertThat(userResponse.getEmail()).isEqualTo(user.getEmail());
-        assertThat(userResponse.getCreatedAt()).isEqualTo(user.getCreatedAt());
-        assertThat(userResponse.getUpdatedAt()).isEqualTo(user.getUpdatedAt());
+        assertThat(returnedUser).isNotNull();
+        assertThat(returnedUser.getFirstName()).isEqualTo(returnedUser.getFirstName());
+        assertThat(returnedUser.getLastName()).isEqualTo(returnedUser.getLastName());
+        assertThat(returnedUser.getEmail()).isEqualTo(returnedUser.getEmail());
+        assertThat(returnedUser.getCreatedAt()).isEqualTo(returnedUser.getCreatedAt());
+        assertThat(returnedUser.getUpdatedAt()).isEqualTo(returnedUser.getUpdatedAt());
 
-        verify(userRepository).findByEmail(user.getEmail());
+        verify(userRepository).findByEmail(returnedUser.getEmail());
     }
 
     @Test

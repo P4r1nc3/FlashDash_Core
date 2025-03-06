@@ -28,28 +28,28 @@ public class DeckController {
     public ResponseEntity<DeckResponse> createDeck(@RequestBody DeckRequest deckRequest) {
         String userFrn = getAuthenticatedUser();
         Deck deck = deckService.createDeck(deckRequest, userFrn);
-        return ResponseEntity.ok(entityToResponseMapper.toDeckResponse(deck));
+        return ResponseEntity.ok(entityToResponseMapper.mapToDeckResponse(deck));
     }
 
     @GetMapping
     public ResponseEntity<List<DeckResponse>> getAllDecks() {
         String userFrn = getAuthenticatedUser();
         List<Deck> deckList = deckService.getAllDecks(userFrn);
-        return ResponseEntity.ok(entityToResponseMapper.toDeckResponseList(deckList));
+        return ResponseEntity.ok(entityToResponseMapper.mapToDeckResponse(deckList));
     }
 
     @GetMapping("/{deckFrn}")
     public ResponseEntity<DeckResponse> getDeck(@PathVariable String deckFrn) {
         String userFrn = getAuthenticatedUser();
         Deck deck = deckService.getDeckByFrn(deckFrn, userFrn);
-        return ResponseEntity.ok(entityToResponseMapper.toDeckResponse(deck));
+        return ResponseEntity.ok(entityToResponseMapper.mapToDeckResponse(deck));
     }
 
     @PutMapping("/{deckFrn}")
     public ResponseEntity<DeckResponse> updateDeck(@PathVariable String deckFrn, @RequestBody DeckRequest deckRequest) {
         String userFrn = getAuthenticatedUser();
         Deck deck = deckService.updateDeck(deckFrn, deckRequest, userFrn);
-        return ResponseEntity.ok(entityToResponseMapper.toDeckResponse(deck));
+        return ResponseEntity.ok(entityToResponseMapper.mapToDeckResponse(deck));
     }
 
     @DeleteMapping("/{deckFrn}")

@@ -1,11 +1,10 @@
 package com.flashdash.service;
 
-import com.flashdash.dto.request.ChangePasswordRequest;
-import com.flashdash.dto.response.UserResponse;
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
 import com.flashdash.model.User;
 import com.flashdash.repository.UserRepository;
+import com.p4r1nc3.flashdash.core.model.ChangePasswordRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -37,7 +36,7 @@ public class UserService implements UserDetailsService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public UserResponse getCurrentUser(String email) {
+    public User getCurrentUser(String email) {
         logger.info("Attempting to retrieve user information for email: {}", email);
 
         User user = userRepository.findByEmail(email)
@@ -49,18 +48,9 @@ public class UserService implements UserDetailsService {
                     );
                 });
 
-        logger.info("User found with email: {}. Constructing response.", email);
+        logger.info("User found with email: {}.", email);
 
-        UserResponse response = new UserResponse();
-        response.setFirstName(user.getFirstName());
-        response.setLastName(user.getLastName());
-        response.setEmail(user.getUsername());
-        response.setDailyNotifications(user.isDailyNotifications());
-        response.setCreatedAt(user.getCreatedAt());
-        response.setUpdatedAt(user.getUpdatedAt());
-
-        logger.info("Response successfully constructed for user with email: {}", email);
-        return response;
+        return user;
     }
 
     public void changePassword(String email, ChangePasswordRequest request) {

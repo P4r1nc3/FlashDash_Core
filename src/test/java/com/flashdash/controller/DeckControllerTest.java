@@ -1,6 +1,5 @@
 package com.flashdash.controller;
 
-import com.flashdash.FlashDashApplication;
 import com.flashdash.TestUtils;
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
@@ -70,7 +69,7 @@ class DeckControllerTest {
         DeckResponse deckResponse = new DeckResponse();
 
         when(deckService.createDeck(any(DeckRequest.class), eq(user.getUserFrn()))).thenReturn(deck);
-        when(entityToResponseMapper.toDeckResponse(deck)).thenReturn(deckResponse);
+        when(entityToResponseMapper.mapToDeckResponse(deck)).thenReturn(deckResponse);
 
         // Act
         ResponseEntity<DeckResponse> responseEntity = deckController.createDeck(deckRequest);
@@ -88,7 +87,7 @@ class DeckControllerTest {
         List<DeckResponse> expectedResponses = List.of(new DeckResponse());
 
         when(deckService.getAllDecks(eq(user.getUserFrn()))).thenReturn(decks);
-        when(entityToResponseMapper.toDeckResponseList(decks)).thenReturn(expectedResponses);
+        when(entityToResponseMapper.mapToDeckResponse(decks)).thenReturn(expectedResponses);
 
         // Act
         ResponseEntity<List<DeckResponse>> responseEntity = deckController.getAllDecks();
@@ -105,7 +104,7 @@ class DeckControllerTest {
         DeckResponse expectedResponse = new DeckResponse();
 
         when(deckService.getDeckByFrn(eq(deckFrn), eq(user.getUserFrn()))).thenReturn(deck);
-        when(entityToResponseMapper.toDeckResponse(deck)).thenReturn(expectedResponse);
+        when(entityToResponseMapper.mapToDeckResponse(deck)).thenReturn(expectedResponse);
 
         // Act
         ResponseEntity<DeckResponse> responseEntity = deckController.getDeck(deckFrn);
@@ -139,7 +138,7 @@ class DeckControllerTest {
         DeckResponse expectedResponse = new DeckResponse();
 
         when(deckService.updateDeck(eq(deckFrn), any(DeckRequest.class), eq(user.getUserFrn()))).thenReturn(deck);
-        when(entityToResponseMapper.toDeckResponse(deck)).thenReturn(expectedResponse);
+        when(entityToResponseMapper.mapToDeckResponse(deck)).thenReturn(expectedResponse);
 
         // Act
         ResponseEntity<DeckResponse> responseEntity = deckController.updateDeck(deckFrn, deckRequest);

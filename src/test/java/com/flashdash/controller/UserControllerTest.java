@@ -2,12 +2,12 @@ package com.flashdash.controller;
 
 import com.flashdash.FlashDashApplication;
 import com.flashdash.TestUtils;
-import com.flashdash.dto.request.ChangePasswordRequest;
-import com.flashdash.dto.response.UserResponse;
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
 import com.flashdash.model.User;
 import com.flashdash.service.UserService;
+import com.p4r1nc3.flashdash.core.model.ChangePasswordRequest;
+import com.p4r1nc3.flashdash.core.model.UserResponse;
 import org.junit.jupiter.api.*;
 import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,14 +18,14 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.time.ZoneOffset;
+
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest(classes = FlashDashApplication.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class UserControllerTest {
 
     @Autowired
@@ -58,7 +58,6 @@ class UserControllerTest {
     }
 
     @Test
-    @Order(1)
     void shouldReturnCurrentUserSuccessfully() {
         // Arrange
         UserResponse userResponse = new UserResponse();
@@ -66,10 +65,10 @@ class UserControllerTest {
         userResponse.setLastName(user.getLastName());
         userResponse.setEmail(user.getUsername());
         userResponse.setDailyNotifications(user.isDailyNotifications());
-        userResponse.setCreatedAt(user.getCreatedAt());
-        userResponse.setUpdatedAt(user.getUpdatedAt());
+        userResponse.setCreatedAt(user.getCreatedAt().atOffset(ZoneOffset.UTC));
+        userResponse.setUpdatedAt(user.getUpdatedAt().atOffset(ZoneOffset.UTC));
 
-        when(userService.getCurrentUser(user.getUsername())).thenReturn(userResponse);
+        when(userService.getCurrentUser(user.getUsername())).thenReturn(user);
 
         // Act
         ResponseEntity<UserResponse> response = userController.getUser();
@@ -84,7 +83,6 @@ class UserControllerTest {
     }
 
     @Test
-    @Order(2)
     void shouldHandleUserNotFound() {
         // Arrange
         when(userService.getCurrentUser(user.getUsername())).thenThrow(new FlashDashException(
@@ -97,12 +95,11 @@ class UserControllerTest {
                 FlashDashException.class,
                 () -> userController.getUser()
         );
-        assertEquals(ErrorCode.E404001, exception.getErrorCode());
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.E404001);
         verify(userService).getCurrentUser(user.getUsername());
     }
 
     @Test
-    @Order(3)
     void shouldChangePasswordSuccessfully() {
         // Arrange
         ChangePasswordRequest request = new ChangePasswordRequest();
@@ -121,7 +118,6 @@ class UserControllerTest {
     }
 
     @Test
-    @Order(4)
     void shouldThrowExceptionWhenChangingPasswordWithIncorrectOldPassword() {
         // Arrange
         ChangePasswordRequest request = new ChangePasswordRequest();
@@ -137,17 +133,16 @@ class UserControllerTest {
                 () -> userController.changePassword(request)
         );
 
-        assertEquals(ErrorCode.E401002, exception.getErrorCode());
-        assertEquals("Incorrect old password.", exception.getMessage());
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.E401002);
+        assertThat(exception.getMessage()).isEqualTo("Incorrect old password.");
         verify(userService, times(1)).changePassword(user.getUsername(), request);
     }
 
     @Test
-    @Order(5)
-    void shouldThrowExceptionWhenChangingPasswordNonExistentUser() {
+    void shouldThrowExceptionWhenChangingPasswordForNonExistentUser() {
         // Arrange
         ChangePasswordRequest request = new ChangePasswordRequest();
-        request.setOldPassword("wrongOldPassword");
+        request.setOldPassword("oldPassword");
         request.setNewPassword("newPassword");
 
         doThrow(new FlashDashException(ErrorCode.E404001, "User not found."))
@@ -159,13 +154,12 @@ class UserControllerTest {
                 () -> userController.changePassword(request)
         );
 
-        assertEquals(ErrorCode.E404001, exception.getErrorCode());
-        assertEquals("User not found.", exception.getMessage());
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.E404001);
+        assertThat(exception.getMessage()).isEqualTo("User not found.");
         verify(userService, times(1)).changePassword(user.getUsername(), request);
     }
 
     @Test
-    @Order(6)
     void shouldDeleteUserSuccessfully() {
         // Arrange
         doNothing().when(userService).deleteUser(user.getUsername());
@@ -180,7 +174,6 @@ class UserControllerTest {
     }
 
     @Test
-    @Order(7)
     void shouldThrowExceptionWhenDeletingNonExistentUser() {
         // Arrange
         doThrow(new FlashDashException(ErrorCode.E404001, "User not found."))
@@ -192,9 +185,8 @@ class UserControllerTest {
                 () -> userController.deleteUser()
         );
 
-        assertEquals(ErrorCode.E404001, exception.getErrorCode());
-        assertEquals("User not found.", exception.getMessage());
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.E404001);
+        assertThat(exception.getMessage()).isEqualTo("User not found.");
         verify(userService, times(1)).deleteUser(user.getUsername());
     }
-
 }
