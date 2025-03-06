@@ -2,7 +2,6 @@ package com.flashdash.controller;
 
 import com.flashdash.FlashDashApplication;
 import com.flashdash.TestUtils;
-import com.flashdash.dto.response.UserResponse;
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
 import com.flashdash.model.FriendInvitation;
@@ -11,6 +10,7 @@ import com.flashdash.service.FriendService;
 import com.flashdash.utils.EntityToResponseMapper;
 import com.p4r1nc3.flashdash.core.model.FriendInvitationResponseReceived;
 import com.p4r1nc3.flashdash.core.model.FriendInvitationResponseSent;
+import com.p4r1nc3.flashdash.core.model.FriendResponse;
 import org.junit.jupiter.api.*;
 import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,17 +70,23 @@ class FriendControllerTest {
     @Test
     void shouldGetFriendsSuccessfully() {
         // Arrange
-        UserResponse friendResponse = new UserResponse(friendUser);
-        List<UserResponse> friends = List.of(friendResponse);
+        FriendResponse friendResponse = new FriendResponse();
+        friendResponse.setUserFrn(friendUser.getUserFrn());
+        friendResponse.setFirstName(friendUser.getFirstName());
+        friendResponse.setLastName(friendUser.getLastName());
+
+        List<User> friends = List.of(friendUser);
+        List<FriendResponse> expectedResponses = List.of(friendResponse);
 
         when(friendService.getFriends(userFrn)).thenReturn(friends);
+        when(entityToResponseMapper.toFriendResponseList(friends)).thenReturn(expectedResponses);
 
         // Act
-        ResponseEntity<List<UserResponse>> responseEntity = friendController.getFriends();
+        ResponseEntity<List<FriendResponse>> responseEntity = friendController.getFriends();
 
         // Assert
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals(friends, responseEntity.getBody());
+        assertEquals(expectedResponses, responseEntity.getBody());
     }
 
     @Test
@@ -208,3 +214,4 @@ class FriendControllerTest {
         assertEquals("Friend not found: " + friendFrn, exception.getMessage());
     }
 }
+
