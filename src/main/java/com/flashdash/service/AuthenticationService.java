@@ -3,6 +3,7 @@ package com.flashdash.service;
 import com.flashdash.config.JwtManager;
 import com.flashdash.exception.FlashDashException;
 import com.flashdash.exception.ErrorCode;
+import com.flashdash.model.ActivityType;
 import com.flashdash.model.User;
 import com.flashdash.repository.UserRepository;
 import com.flashdash.utils.FrnGenerator;
@@ -26,15 +27,18 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final JwtManager jwtManager;
     private final EmailService emailService;
+    private final ActivityService activityService;
 
     public AuthenticationService(UserRepository userRepository,
                                  PasswordEncoder passwordEncoder,
                                  JwtManager jwtManager,
-                                 EmailService emailService) {
+                                 EmailService emailService,
+                                 ActivityService activityService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtManager = jwtManager;
         this.emailService = emailService;
+        this.activityService = activityService;
     }
 
     public AuthenticationResponse login(LoginRequest request) {
@@ -58,6 +62,8 @@ public class AuthenticationService {
 
         String token = jwtManager.generateToken(user.getUsername());
         logger.info("Login successful for email: {}", request.getEmail());
+
+        activityService.logActivity(user.getUserFrn(), user.getUserFrn(), ActivityType.ACCOUNT_LOGIN);
 
         AuthenticationResponse authenticationResponse = new AuthenticationResponse();
         authenticationResponse.setToken(token);
@@ -92,6 +98,8 @@ public class AuthenticationService {
         userRepository.save(user);
         emailService.sendActivationEmail(user.getUsername(), activationToken);
 
+        activityService.logActivity(user.getUserFrn(), user.getUserFrn(), ActivityType.ACCOUNT_REGISTRATION);
+
         AuthenticationResponse authenticationResponse = new AuthenticationResponse();
         authenticationResponse.setToken("Account created. Please check your email to activate.");
 
@@ -111,6 +119,7 @@ public class AuthenticationService {
 
         user.setEnabled(true);
         userRepository.save(user);
+        activityService.logActivity(user.getUserFrn(), user.getUserFrn(), ActivityType.ACCOUNT_CONFIRMATION);
 
         logger.info("Account activated successfully for email: {}", user.getUsername());
     }
