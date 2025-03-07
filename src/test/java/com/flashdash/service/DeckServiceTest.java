@@ -31,6 +31,9 @@ class DeckServiceTest {
     private DeckService deckService;
 
     @MockitoBean
+    private ActivityService activityService;
+
+    @MockitoBean
     private DeckRepository deckRepository;
 
     @MockitoBean

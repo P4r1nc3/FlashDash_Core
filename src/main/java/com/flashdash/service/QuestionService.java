@@ -2,6 +2,7 @@ package com.flashdash.service;
 
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
+import com.flashdash.model.ActivityType;
 import com.flashdash.model.Question;
 import com.flashdash.repository.QuestionRepository;
 import com.flashdash.utils.FrnGenerator;
@@ -18,12 +19,16 @@ public class QuestionService {
 
     private static final Logger logger = LoggerFactory.getLogger(QuestionService.class);
 
-    private final QuestionRepository questionRepository;
+    private final ActivityService activityService;
     private final DeckService deckService;
+    private final QuestionRepository questionRepository;
 
-    public QuestionService(QuestionRepository questionRepository, DeckService deckService) {
-        this.questionRepository = questionRepository;
+    public QuestionService(ActivityService activityService,
+                           DeckService deckService,
+                           QuestionRepository questionRepository) {
+        this.activityService = activityService;
         this.deckService = deckService;
+        this.questionRepository = questionRepository;
     }
 
     public Question addQuestionToDeck(String deckFrn, QuestionRequest questionRequest, String userFrn) {
@@ -42,7 +47,9 @@ public class QuestionService {
         question.setUpdatedAt(LocalDateTime.now());
 
         Question savedQuestion = questionRepository.save(question);
+        activityService.logActivity(userFrn, question.getQuestion(), ActivityType.QUESTION_CREATED);
         logger.info("Added question with FRN: {} to deck with FRN: {}", savedQuestion.getQuestionFrn(), deckFrn);
+
         return savedQuestion;
     }
 
@@ -76,7 +83,9 @@ public class QuestionService {
         question.setUpdatedAt(LocalDateTime.now());
 
         Question updatedQuestion = questionRepository.save(question);
+        activityService.logActivity(userFrn, question.getQuestion(), ActivityType.QUESTION_UPDATED);
         logger.info("Successfully updated question FRN: {} in deck FRN: {}", questionFrn, deckFrn);
+
         return updatedQuestion;
     }
 
@@ -85,6 +94,7 @@ public class QuestionService {
 
         Question question = getQuestionByFrn(deckFrn, questionFrn, userFrn);
         questionRepository.delete(question);
+        activityService.logActivity(userFrn, question.getQuestion(), ActivityType.QUESTION_DELETED);
 
         logger.info("Successfully deleted question FRN: {} from deck FRN: {}", questionFrn, deckFrn);
     }

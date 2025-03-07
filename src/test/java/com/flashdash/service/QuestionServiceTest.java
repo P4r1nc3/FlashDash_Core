@@ -31,10 +31,13 @@ class QuestionServiceTest {
     private QuestionService questionService;
 
     @MockitoBean
-    private QuestionRepository questionRepository;
+    private ActivityService activityService;
 
     @MockitoBean
     private DeckService deckService;
+
+    @MockitoBean
+    private QuestionRepository questionRepository;
 
     private User user;
     private Deck deck;

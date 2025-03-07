@@ -2,6 +2,7 @@ package com.flashdash.service;
 
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
+import com.flashdash.model.ActivityType;
 import com.flashdash.model.User;
 import com.flashdash.repository.UserRepository;
 import com.p4r1nc3.flashdash.core.model.ChangePasswordRequest;
@@ -18,22 +19,25 @@ public class UserService implements UserDetailsService {
 
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
+    private final PasswordEncoder passwordEncoder;
+    private final ActivityService activityService;
     private final DeckService deckService;
     private final GameSessionService gameSessionService;
     private final FriendService friendService;
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
 
-    public UserService(DeckService deckService,
+    public UserService(PasswordEncoder passwordEncoder,
+                       ActivityService activityService,
+                       DeckService deckService,
                        GameSessionService gameSessionService,
                        FriendService friendService,
-                       UserRepository userRepository,
-                       PasswordEncoder passwordEncoder) {
+                       UserRepository userRepository) {
+        this.passwordEncoder = passwordEncoder;
+        this.activityService = activityService;
         this.deckService = deckService;
         this.gameSessionService = gameSessionService;
         this.friendService = friendService;
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
     }
 
     public User getCurrentUser(String email) {
@@ -74,6 +78,7 @@ public class UserService implements UserDetailsService {
 
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
+        activityService.logActivity(user.getUserFrn(), user.getUserFrn(), ActivityType.ACCOUNT_UPDATED);
         logger.info("Password successfully changed for user: {}", email);
     }
 
@@ -93,6 +98,7 @@ public class UserService implements UserDetailsService {
         deckService.deleteAllDecksForUser(user.getUserFrn());
         friendService.removeAllFriends(user.getUserFrn());
         userRepository.delete(user);
+        activityService.logActivity(user.getUserFrn(), user.getUserFrn(), ActivityType.ACCOUNT_DELETED);
         logger.info("User with email {} successfully deleted.", email);
     }
 

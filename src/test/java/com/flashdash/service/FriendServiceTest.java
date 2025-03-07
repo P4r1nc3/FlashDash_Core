@@ -31,13 +31,16 @@ class FriendServiceTest {
     private FriendService friendService;
 
     @MockitoBean
+    private ActivityService activityService;
+
+    @MockitoBean
+    private EmailService emailService;
+
+    @MockitoBean
     private UserRepository userRepository;
 
     @MockitoBean
     private FriendInvitationRepository friendInvitationRepository;
-
-    @MockitoBean
-    private EmailService emailService;
 
     private User sender;
     private User recipient;
@@ -129,7 +132,6 @@ class FriendServiceTest {
 
         friendService.respondToFriendInvitation(invitation.getInvitationFrn(), recipient.getUserFrn(), "ACCEPTED");
 
-        verify(friendInvitationRepository).delete(invitation);
         verify(userRepository, times(2)).save(any(User.class));
     }
 

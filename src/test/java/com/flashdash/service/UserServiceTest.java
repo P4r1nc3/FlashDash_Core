@@ -29,19 +29,22 @@ class UserServiceTest {
     private UserService userService;
 
     @MockitoBean
-    private GameSessionService gameSessionService;
+    private PasswordEncoder passwordEncoder;
+
+    @MockitoBean
+    private ActivityService activityService;
 
     @MockitoBean
     private DeckService deckService;
+
+    @MockitoBean
+    private GameSessionService gameSessionService;
 
     @MockitoBean
     private FriendService friendService;
 
     @MockitoBean
     private UserRepository userRepository;
-
-    @MockitoBean
-    private PasswordEncoder passwordEncoder;
 
     private User user;
 
