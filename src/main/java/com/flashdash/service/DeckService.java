@@ -1,5 +1,6 @@
 package com.flashdash.service;
 
+import com.flashdash.model.ActivityType;
 import com.flashdash.model.User;
 import com.flashdash.utils.FrnGenerator;
 import com.flashdash.utils.ResourceType;
@@ -23,10 +24,14 @@ public class DeckService {
 
     private final DeckRepository deckRepository;
     private final QuestionRepository questionRepository;
+    private final ActivityService activityService;
 
-    public DeckService(DeckRepository deckRepository, QuestionRepository questionRepository) {
+    public DeckService(DeckRepository deckRepository,
+                       QuestionRepository questionRepository,
+                       ActivityService activityService) {
         this.deckRepository = deckRepository;
         this.questionRepository = questionRepository;
+        this.activityService = activityService;
     }
 
     public Deck createDeck(DeckRequest deckRequest, String userFrn) {
@@ -40,6 +45,8 @@ public class DeckService {
         deck.setCreatedAt(LocalDateTime.now());
         deck.setUpdatedAt(LocalDateTime.now());
         Deck savedDeck = deckRepository.save(deck);
+
+        activityService.logActivity(userFrn, deck.getDeckFrn(), ActivityType.DECK_CREATED);
 
         logger.info("Created deck with FRN: {} for user FRN: {}", savedDeck.getDeckFrn(), userFrn);
         return savedDeck;
@@ -70,6 +77,9 @@ public class DeckService {
         deck.setUpdatedAt(LocalDateTime.now());
 
         Deck updatedDeck = deckRepository.save(deck);
+
+        activityService.logActivity(userFrn, deck.getDeckFrn(), ActivityType.DECK_UPDATED);
+
         logger.info("Successfully updated deck with FRN: {} for user FRN: {}", deckFrn, userFrn);
         return updatedDeck;
     }
@@ -81,6 +91,8 @@ public class DeckService {
         Deck deck = getDeckByFrn(deckFrn, userFrn);
         questionRepository.deleteAllByDeckFrn(deckFrn);
         deckRepository.delete(deck);
+
+        activityService.logActivity(userFrn, deck.getDeckFrn(), ActivityType.DECK_DELETED);
 
         logger.info("Deleted deck with FRN: {} for user FRN: {}", deckFrn, userFrn);
     }
