@@ -32,9 +32,6 @@ class GameSessionServiceTest {
     private ActivityService activityService;
 
     @MockitoBean
-    private DeckService deckService;
-
-    @MockitoBean
     private QuestionService questionService;
 
     @MockitoBean
@@ -56,7 +53,6 @@ class GameSessionServiceTest {
         // Arrange
         when(gameSessionRepository.findTopByDeckFrnAndUserFrnAndStatus(deck.getDeckFrn(), user.getUserFrn(), GameSessionStatus.PENDING.toString()))
                 .thenReturn(Optional.empty());
-        when(deckService.getDeckByFrn(deck.getDeckFrn(), user.getUserFrn())).thenReturn(deck);
         when(questionService.getAllQuestionsInDeck(deck.getDeckFrn(), user.getUserFrn()))
                 .thenReturn(List.of(TestUtils.createQuestion(deck, "Sample Question")));
 

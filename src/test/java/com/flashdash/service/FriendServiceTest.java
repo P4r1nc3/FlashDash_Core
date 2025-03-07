@@ -31,13 +31,16 @@ class FriendServiceTest {
     private FriendService friendService;
 
     @MockitoBean
+    private ActivityService activityService;
+
+    @MockitoBean
+    private EmailService emailService;
+
+    @MockitoBean
     private UserRepository userRepository;
 
     @MockitoBean
     private FriendInvitationRepository friendInvitationRepository;
-
-    @MockitoBean
-    private EmailService emailService;
 
     private User sender;
     private User recipient;

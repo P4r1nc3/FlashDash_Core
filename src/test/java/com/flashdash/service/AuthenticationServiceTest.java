@@ -2,6 +2,7 @@ package com.flashdash.service;
 
 import com.flashdash.FlashDashApplication;
 import com.flashdash.TestUtils;
+import com.flashdash.config.JwtManager;
 import com.flashdash.exception.FlashDashException;
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.model.User;
@@ -31,13 +32,19 @@ class AuthenticationServiceTest {
     private AuthenticationService authenticationService;
 
     @MockitoBean
-    private UserRepository userRepository;
-
-    @MockitoBean
     private PasswordEncoder passwordEncoder;
 
     @MockitoBean
+    private JwtManager jwtManager;
+
+    @MockitoBean
+    private ActivityService activityService;
+
+    @MockitoBean
     private EmailService emailService;
+
+    @MockitoBean
+    private UserRepository userRepository;
 
     private User user;
 
