@@ -132,8 +132,9 @@ public class FriendService {
         for (String friendFrn : friendsList) {
             deleteFriend(userFrn, friendFrn);
         }
-    }
 
+        userRepository.save(user);
+    }
 
     private void addFriendship(String userFrn, String friendFrn) {
         User user = userRepository.findById(userFrn)

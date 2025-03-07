@@ -51,6 +51,8 @@ class AuthenticationServiceTest {
     @BeforeEach
     void setUp() {
         user = TestUtils.createUser();
+
+        when(jwtManager.generateToken(user.getUsername())).thenReturn("mocked-jwt-token");
     }
 
     @Test
