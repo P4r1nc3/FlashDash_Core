@@ -2,6 +2,7 @@ package com.flashdash.service;
 
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
+import com.flashdash.model.ActivityType;
 import com.flashdash.model.GameSession;
 import com.flashdash.model.GameSessionStatus;
 import com.flashdash.model.Question;
@@ -17,14 +18,16 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-public class GameSessionService {
+public class  GameSessionService {
 
-    private final DeckService deckService;
+    private final ActivityService activityService;
     private final QuestionService questionService;
     private final GameSessionRepository gameSessionRepository;
 
-    public GameSessionService(DeckService deckService, QuestionService questionService, GameSessionRepository gameSessionRepository) {
-        this.deckService = deckService;
+    public GameSessionService(ActivityService activityService,
+                              QuestionService questionService,
+                              GameSessionRepository gameSessionRepository) {
+        this.activityService = activityService;
         this.questionService = questionService;
         this.gameSessionRepository = gameSessionRepository;
     }
@@ -36,10 +39,15 @@ public class GameSessionService {
                 GameSessionStatus.PENDING.toString()
         );
 
-        if (existingSessionOptional.isEmpty()) {
-            deckService.getDeckByFrn(deckFrn, userFrn);
+        GameSession gameSession;
 
-            GameSession gameSession = new GameSession();
+        if (existingSessionOptional.isPresent()) {
+            gameSession = existingSessionOptional.get();
+            gameSession.setCreatedAt(LocalDateTime.now());
+            gameSession.setUpdatedAt(LocalDateTime.now());
+            gameSessionRepository.save(gameSession);
+        } else {
+            gameSession = new GameSession();
             gameSession.setGameSessionFrn(FrnGenerator.generateFrn(ResourceType.GAME_SESSION));
             gameSession.setUserFrn(userFrn);
             gameSession.setDeckFrn(deckFrn);
@@ -49,6 +57,8 @@ public class GameSessionService {
 
             gameSessionRepository.save(gameSession);
         }
+
+        activityService.logActivity(userFrn, gameSession.getGameSessionFrn(), ActivityType.GAME_STARTED);
 
         return questionService.getAllQuestionsInDeck(deckFrn, userFrn);
     }
@@ -94,6 +104,8 @@ public class GameSessionService {
         gameSession.setQuestionCount(totalQuestions);
 
         gameSessionRepository.save(gameSession);
+        activityService.logActivity(userFrn, gameSession.getGameSessionFrn(), ActivityType.GAME_FINISHED);
+
         return gameSession;
     }
 

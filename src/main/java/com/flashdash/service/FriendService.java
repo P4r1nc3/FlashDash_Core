@@ -3,6 +3,7 @@ package com.flashdash.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flashdash.exception.ErrorCode;
 import com.flashdash.exception.FlashDashException;
+import com.flashdash.model.ActivityType;
 import com.flashdash.model.FriendInvitation;
 import com.flashdash.model.User;
 import com.flashdash.repository.FriendInvitationRepository;
@@ -18,17 +19,20 @@ import java.util.List;
 
 @Service
 public class FriendService {
-    private final FriendInvitationRepository friendInvitationRepository;
-    private final UserRepository userRepository;
-    private final EmailService emailService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public FriendService(FriendInvitationRepository friendInvitationRepository,
+    private final ActivityService activityService;
+    private final EmailService emailService;
+    private final UserRepository userRepository;
+    private final FriendInvitationRepository friendInvitationRepository;
+
+    public FriendService(ActivityService activityService,
+                         EmailService emailService,
                          UserRepository userRepository,
-                         EmailService emailService) {
-        this.friendInvitationRepository = friendInvitationRepository;
-        this.userRepository = userRepository;
+                         FriendInvitationRepository friendInvitationRepository) {
+        this.activityService = activityService;
         this.emailService = emailService;
+        this.userRepository = userRepository;
+        this.friendInvitationRepository = friendInvitationRepository;
     }
 
     public void sendFriendInvitation(String senderFrn, String recipientEmail) {
@@ -63,6 +67,8 @@ public class FriendService {
                 sender.getFirstName(),
                 sender.getLastName()
         );
+
+        activityService.logActivity(senderFrn, invitation.getInvitationFrn(), ActivityType.FRIEND_INVITE_SENT);
     }
 
     public List<FriendInvitation> getReceivedFriendInvitations(String recipientFrn) {
@@ -88,7 +94,7 @@ public class FriendService {
             addFriendship(invitation.getSentByFrn(), invitation.getSentToFrn());
         }
 
-        friendInvitationRepository.delete(invitation);
+        activityService.logActivity(userFrn, invitation.getInvitationFrn(), ActivityType.FRIEND_INVITE_RESPONDED);
     }
 
     public List<User> getFriends(String userFrn) {
@@ -112,13 +118,21 @@ public class FriendService {
         }
 
         removeFriendship(user, friend);
+
+        activityService.logActivity(userFrn, friendFrn, ActivityType.FRIEND_DELETED);
     }
 
     @Transactional
     public void removeAllFriends(String userFrn) {
         User user = userRepository.findById(userFrn)
                 .orElseThrow(() -> new FlashDashException(ErrorCode.E404002, "User not found"));
-        user.setFriendsFrnList(List.of());
+
+        List<String> friendsList = user.getFriendsFrnList();
+
+        for (String friendFrn : friendsList) {
+            deleteFriend(userFrn, friendFrn);
+        }
+
         userRepository.save(user);
     }
 

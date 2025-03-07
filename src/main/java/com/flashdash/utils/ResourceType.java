@@ -5,7 +5,8 @@ public enum ResourceType {
     USER("user"),
     GAME_SESSION("game-session"),
     QUESTION("question"),
-    INVITATION("invitation");
+    INVITATION("invitation"),
+    ACTIVITY("activity");
 
     private final String type;
 
