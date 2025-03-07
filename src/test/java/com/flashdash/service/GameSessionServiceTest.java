@@ -29,13 +29,16 @@ class GameSessionServiceTest {
     private GameSessionService gameSessionService;
 
     @MockitoBean
-    private GameSessionRepository gameSessionRepository;
+    private ActivityService activityService;
 
     @MockitoBean
     private DeckService deckService;
 
     @MockitoBean
     private QuestionService questionService;
+
+    @MockitoBean
+    private GameSessionRepository gameSessionRepository;
 
     private User user;
     private Deck deck;
@@ -78,8 +81,28 @@ class GameSessionServiceTest {
 
         // Assert
         assertThat(questions).isNotEmpty();
-        verify(gameSessionRepository, never()).save(any(GameSession.class));
+        verify(gameSessionRepository, times(1)).save(gameSession);
+        verify(activityService).logActivity(user.getUserFrn(), gameSession.getGameSessionFrn(), ActivityType.GAME_STARTED);
     }
+
+
+    @Test
+    void shouldCreateNewGameSessionWhenNoneExists() {
+        // Arrange
+        when(gameSessionRepository.findTopByDeckFrnAndUserFrnAndStatus(deck.getDeckFrn(), user.getUserFrn(), GameSessionStatus.PENDING.toString()))
+                .thenReturn(Optional.empty());
+        when(questionService.getAllQuestionsInDeck(deck.getDeckFrn(), user.getUserFrn()))
+                .thenReturn(List.of(TestUtils.createQuestion(deck, "New Game Question")));
+
+        // Act
+        List<Question> questions = gameSessionService.startGameSession(deck.getDeckFrn(), user.getUserFrn());
+
+        // Assert
+        assertThat(questions).isNotEmpty();
+        verify(gameSessionRepository).save(any(GameSession.class));
+        verify(activityService).logActivity(eq(user.getUserFrn()), anyString(), eq(ActivityType.GAME_STARTED));
+    }
+
 
     @Test
     void shouldEndGameSessionSuccessfully() {
