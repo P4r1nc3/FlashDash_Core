@@ -39,7 +39,7 @@ class ActivityRepositoryTest {
         User user = TestUtils.createUser();
         userRepository.save(user);
 
-        Activity activity1 = TestUtils.createActivity(user.getUserFrn(), user.getUserFrn(), ActivityType.LOGIN);
+        Activity activity1 = TestUtils.createActivity(user.getUserFrn(), user.getUserFrn(), ActivityType.ACCOUNT_LOGIN);
         activityRepository.save(activity1);
 
         Activity activity2 = TestUtils.createActivity(user.getUserFrn(), "frn:deck:123", ActivityType.GAME_STARTED);
@@ -51,7 +51,7 @@ class ActivityRepositoryTest {
         // Assert
         assertThat(activities).hasSize(2);
         assertThat(activities).extracting(Activity::getActivity)
-                .containsExactlyInAnyOrder(ActivityType.LOGIN, ActivityType.GAME_STARTED);
+                .containsExactlyInAnyOrder(ActivityType.ACCOUNT_LOGIN, ActivityType.GAME_STARTED);
     }
 
     @Test
@@ -76,17 +76,17 @@ class ActivityRepositoryTest {
         User user2 = TestUtils.createUser();
         userRepository.save(user2);
 
-        Activity activity1 = TestUtils.createActivity(user1.getUserFrn(), user1.getUserFrn(), ActivityType.LOGIN);
+        Activity activity1 = TestUtils.createActivity(user1.getUserFrn(), user1.getUserFrn(), ActivityType.ACCOUNT_LOGIN);
         activityRepository.save(activity1);
 
-        Activity activity2 = TestUtils.createActivity(user2.getUserFrn(), user2.getUserFrn(), ActivityType.LOGIN);
+        Activity activity2 = TestUtils.createActivity(user2.getUserFrn(), user2.getUserFrn(), ActivityType.ACCOUNT_LOGIN);
         activityRepository.save(activity2);
 
-        Activity activity3 = TestUtils.createActivity(user2.getUserFrn(), "frn:deck:456", ActivityType.REGISTRATION);
+        Activity activity3 = TestUtils.createActivity(user2.getUserFrn(), "frn:deck:456", ActivityType.ACCOUNT_REGISTRATION);
         activityRepository.save(activity3);
 
         // Act
-        List<Activity> loginActivities = activityRepository.findByActivity(ActivityType.LOGIN);
+        List<Activity> loginActivities = activityRepository.findByActivity(ActivityType.ACCOUNT_LOGIN);
 
         // Assert
         assertThat(loginActivities).hasSize(2);
