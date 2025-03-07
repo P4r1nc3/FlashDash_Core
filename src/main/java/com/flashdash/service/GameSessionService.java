@@ -21,16 +21,13 @@ import java.util.UUID;
 public class  GameSessionService {
 
     private final ActivityService activityService;
-    private final DeckService deckService;
     private final QuestionService questionService;
     private final GameSessionRepository gameSessionRepository;
 
     public GameSessionService(ActivityService activityService,
-                              DeckService deckService,
                               QuestionService questionService,
                               GameSessionRepository gameSessionRepository) {
         this.activityService = activityService;
-        this.deckService = deckService;
         this.questionService = questionService;
         this.gameSessionRepository = gameSessionRepository;
     }
@@ -108,7 +105,6 @@ public class  GameSessionService {
 
         gameSessionRepository.save(gameSession);
         activityService.logActivity(userFrn, gameSession.getGameSessionFrn(), ActivityType.GAME_FINISHED);
-
 
         return gameSession;
     }

@@ -10,12 +10,13 @@ import java.util.List;
 @Service
 public class NotificationScheduler {
 
-    private final UserRepository userRepository;
     private final EmailService emailService;
+    private final UserRepository userRepository;
 
-    public NotificationScheduler(UserRepository userRepository, EmailService emailService) {
-        this.userRepository = userRepository;
+    public NotificationScheduler(EmailService emailService,
+                                 UserRepository userRepository) {
         this.emailService = emailService;
+        this.userRepository = userRepository;
     }
 
     // Every day at 8 am

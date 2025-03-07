@@ -19,25 +19,25 @@ public class UserService implements UserDetailsService {
 
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
+    private final PasswordEncoder passwordEncoder;
     private final ActivityService activityService;
     private final DeckService deckService;
     private final GameSessionService gameSessionService;
     private final FriendService friendService;
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
 
-    public UserService(ActivityService activityService,
+    public UserService(PasswordEncoder passwordEncoder,
+                       ActivityService activityService,
                        DeckService deckService,
                        GameSessionService gameSessionService,
                        FriendService friendService,
-                       UserRepository userRepository,
-                       PasswordEncoder passwordEncoder) {
+                       UserRepository userRepository) {
+        this.passwordEncoder = passwordEncoder;
         this.activityService = activityService;
         this.deckService = deckService;
         this.gameSessionService = gameSessionService;
         this.friendService = friendService;
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
     }
 
     public User getCurrentUser(String email) {

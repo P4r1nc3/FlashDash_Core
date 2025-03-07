@@ -22,16 +22,16 @@ public class DeckService {
 
     private static final Logger logger = LoggerFactory.getLogger(DeckService.class);
 
+    private final ActivityService activityService;
     private final DeckRepository deckRepository;
     private final QuestionRepository questionRepository;
-    private final ActivityService activityService;
 
-    public DeckService(DeckRepository deckRepository,
-                       QuestionRepository questionRepository,
-                       ActivityService activityService) {
+    public DeckService(ActivityService activityService,
+                       DeckRepository deckRepository,
+                       QuestionRepository questionRepository) {
+        this.activityService = activityService;
         this.deckRepository = deckRepository;
         this.questionRepository = questionRepository;
-        this.activityService = activityService;
     }
 
     public Deck createDeck(DeckRequest deckRequest, String userFrn) {

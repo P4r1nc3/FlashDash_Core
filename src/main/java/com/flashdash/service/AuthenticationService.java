@@ -21,24 +21,26 @@ import java.util.UUID;
 
 @Service
 public class AuthenticationService {
+
     private static final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
 
-    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtManager jwtManager;
-    private final EmailService emailService;
     private final ActivityService activityService;
+    private final EmailService emailService;
+    private final UserRepository userRepository;
 
-    public AuthenticationService(UserRepository userRepository,
-                                 PasswordEncoder passwordEncoder,
+
+    public AuthenticationService(PasswordEncoder passwordEncoder,
                                  JwtManager jwtManager,
+                                 ActivityService activityService,
                                  EmailService emailService,
-                                 ActivityService activityService) {
-        this.userRepository = userRepository;
+                                 UserRepository userRepository) {
         this.passwordEncoder = passwordEncoder;
         this.jwtManager = jwtManager;
-        this.emailService = emailService;
         this.activityService = activityService;
+        this.emailService = emailService;
+        this.userRepository = userRepository;
     }
 
     public AuthenticationResponse login(LoginRequest request) {

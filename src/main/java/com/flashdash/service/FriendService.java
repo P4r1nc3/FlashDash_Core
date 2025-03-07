@@ -19,20 +19,20 @@ import java.util.List;
 
 @Service
 public class FriendService {
-    private final FriendInvitationRepository friendInvitationRepository;
-    private final UserRepository userRepository;
-    private final EmailService emailService;
-    private final ActivityService activityService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public FriendService(FriendInvitationRepository friendInvitationRepository,
-                         UserRepository userRepository,
+    private final ActivityService activityService;
+    private final EmailService emailService;
+    private final UserRepository userRepository;
+    private final FriendInvitationRepository friendInvitationRepository;
+
+    public FriendService(ActivityService activityService,
                          EmailService emailService,
-                         ActivityService activityService) {
-        this.friendInvitationRepository = friendInvitationRepository;
-        this.userRepository = userRepository;
-        this.emailService = emailService;
+                         UserRepository userRepository,
+                         FriendInvitationRepository friendInvitationRepository) {
         this.activityService = activityService;
+        this.emailService = emailService;
+        this.userRepository = userRepository;
+        this.friendInvitationRepository = friendInvitationRepository;
     }
 
     public void sendFriendInvitation(String senderFrn, String recipientEmail) {
