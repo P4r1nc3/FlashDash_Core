@@ -92,19 +92,19 @@ class ActivityServiceTest {
     void shouldGetActivitiesByTypeSuccessfully() {
         // Arrange
         List<Activity> mockActivities = List.of(
-                TestUtils.createActivity(userFrn, targetFrn, ActivityType.LOGIN),
-                TestUtils.createActivity("frn:user:456", "frn:user:456", ActivityType.LOGIN)
+                TestUtils.createActivity(userFrn, targetFrn, ActivityType.ACCOUNT_LOGIN),
+                TestUtils.createActivity("frn:user:456", "frn:user:456", ActivityType.ACCOUNT_LOGIN)
         );
 
-        when(activityRepository.findByActivity(ActivityType.LOGIN)).thenReturn(mockActivities);
+        when(activityRepository.findByActivity(ActivityType.ACCOUNT_LOGIN)).thenReturn(mockActivities);
 
         // Act
-        List<Activity> activities = activityService.getActivitiesByType(ActivityType.LOGIN);
+        List<Activity> activities = activityService.getActivitiesByType(ActivityType.ACCOUNT_LOGIN);
 
         // Assert
         assertThat(activities).hasSize(2);
-        assertThat(activities).allMatch(activity -> activity.getActivity() == ActivityType.LOGIN);
-        verify(activityRepository, times(1)).findByActivity(ActivityType.LOGIN);
+        assertThat(activities).allMatch(activity -> activity.getActivity() == ActivityType.ACCOUNT_LOGIN);
+        verify(activityRepository, times(1)).findByActivity(ActivityType.ACCOUNT_LOGIN);
     }
 
     @Test
