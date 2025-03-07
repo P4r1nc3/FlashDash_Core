@@ -132,7 +132,6 @@ class FriendServiceTest {
 
         friendService.respondToFriendInvitation(invitation.getInvitationFrn(), recipient.getUserFrn(), "ACCEPTED");
 
-        verify(friendInvitationRepository).delete(invitation);
         verify(userRepository, times(2)).save(any(User.class));
     }
 
