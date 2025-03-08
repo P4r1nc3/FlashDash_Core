@@ -55,6 +55,33 @@ class UserRepositoryTest {
     }
 
     @Test
+    void shouldFindUserByUserFrn() {
+        // Arrange
+        User user = TestUtils.createUser();
+        userRepository.save(user);
+
+        // Act
+        Optional<User> foundUser = userRepository.findByUserFrn(user.getUserFrn());
+
+        // Assert
+        assertThat(foundUser).isPresent();
+        assertThat(foundUser.get().getUserFrn()).isEqualTo(user.getUserFrn());
+        assertThat(foundUser.get().getEmail()).isEqualTo(user.getEmail());
+        assertThat(foundUser.get().getFirstName()).isEqualTo(user.getFirstName());
+        assertThat(foundUser.get().getLastName()).isEqualTo(user.getLastName());
+    }
+
+    @Test
+    void shouldReturnEmptyWhenUserFrnDoesNotExist() {
+        // Act
+        Optional<User> foundUser = userRepository.findByUserFrn("nonexistent-userFrn");
+
+        // Assert
+        assertThat(foundUser).isNotPresent();
+    }
+
+
+    @Test
     void shouldFindUserByActivationToken() {
         // Arrange
         User user = TestUtils.createUser();
