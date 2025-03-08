@@ -103,15 +103,15 @@ public class UserService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        logger.info("Loading user details for email: {}", email);
+    public UserDetails loadUserByUsername(String userFrn) throws UsernameNotFoundException {
+        logger.info("Loading user details for email: {}", userFrn);
 
-        return userRepository.findByEmail(email)
+        return userRepository.findByUserFrn(userFrn)
                 .orElseThrow(() -> {
-                    logger.warn("User with email {} not found during authentication", email);
+                    logger.warn("User with userFrn {} not found during authentication", userFrn);
                     return new FlashDashException(
                             ErrorCode.E404001,
-                            "User with email " + email + " not found. Please check the email and try again."
+                            "User with email " + userFrn + " not found. Please check the userFrn and try again."
                     );
                 });
     }
