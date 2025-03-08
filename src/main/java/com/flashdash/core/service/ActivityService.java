@@ -32,7 +32,6 @@ public class ActivityService {
         return new ActivitiesApi(apiClient);
     }
 
-
     public void logUserActivity(String userFrn, String targetFrn, LogActivityRequest.ActivityTypeEnum activityType) {
         LogActivityRequest logActivityRequest = new LogActivityRequest();
         logActivityRequest.setTargetFrn(targetFrn);
