@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.flashdash</groupId>
-	<artifactId>demo</artifactId>
+	<artifactId>flashdash-core</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>FlashDash</name>
+	<name>FlashDash Core</name>
 	<description>FlashDash learning web service</description>
 	<url/>
 	<licenses>
