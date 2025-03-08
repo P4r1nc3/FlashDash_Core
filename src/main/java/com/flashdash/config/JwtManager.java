@@ -21,7 +21,7 @@ public class JwtManager {
         this.secretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
     }
 
-    public String extractUsername(String token) {
+    public String extractUserFrn(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
@@ -38,22 +38,22 @@ public class JwtManager {
                 .getBody();
     }
 
-    public String generateToken(String username) {
-        return createToken(username);
+    public String generateToken(String userFrn) {
+        return createToken(userFrn);
     }
 
-    private String createToken(String subject) {
+    private String createToken(String userFrn) {
         return Jwts.builder()
-                .setSubject(subject)
+                .setSubject(userFrn)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
                 .signWith(secretKey, SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public boolean validateToken(String token, String username) {
-        final String extractedUsername = extractUsername(token);
-        return (extractedUsername.equals(username) && !isTokenExpired(token));
+    public boolean validateToken(String token, String userFrn) {
+        final String extractedUserFrn = extractUserFrn(token);
+        return (extractedUserFrn.equals(userFrn) && !isTokenExpired(token));
     }
 
     private boolean isTokenExpired(String token) {
