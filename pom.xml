@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.flashdash</groupId>
-	<artifactId>demo</artifactId>
+	<artifactId>flashdash-core</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>FlashDash</name>
+	<name>FlashDash Core</name>
 	<description>FlashDash learning web service</description>
 	<url/>
 	<licenses>
@@ -130,11 +130,16 @@
 			<version>1.18.34</version>
 			<scope>provided</scope>
 		</dependency>
-		<!-- FlashDash core client -->
+		<!-- FlashDash clients -->
 		<dependency>
 			<groupId>com.p4r1nc3.flashdash</groupId>
 			<artifactId>flashdash-core-api</artifactId>
 			<version>1.0.7</version>
+		</dependency>
+		<dependency>
+			<groupId>com.p4r1nc3.flashdash</groupId>
+			<artifactId>flashdash-activity-api</artifactId>
+			<version>1.0.0</version>
 		</dependency>
 	</dependencies>
 	<build>
