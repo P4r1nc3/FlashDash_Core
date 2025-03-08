@@ -30,9 +30,6 @@ class AuthContextTest {
     private Authentication authentication;
 
     @MockitoBean
-    private HttpServletRequest request;
-
-    @MockitoBean
     private User mockUser;
 
     @BeforeEach

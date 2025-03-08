@@ -10,11 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class AuthContext {
 
-    private final HttpServletRequest request;
-
-    public AuthContext(HttpServletRequest request) {
-        this.request = request;
-    }
+    public AuthContext() {}
 
     public String getUserFrn() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -25,10 +21,5 @@ public class AuthContext {
         }
 
         return null;
-    }
-
-    public String getBearerToken() {
-        String authHeader = request.getHeader("Authorization");
-        return authHeader.substring(7);
     }
 }
