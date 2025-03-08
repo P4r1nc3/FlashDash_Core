@@ -2,9 +2,9 @@ package com.flashdash.core.service;
 
 import com.flashdash.core.exception.ErrorCode;
 import com.flashdash.core.exception.FlashDashException;
-import com.flashdash.core.model.ActivityType;
 import com.flashdash.core.model.User;
 import com.flashdash.core.repository.UserRepository;
+import com.p4r1nc3.flashdash.activity.model.LogActivityRequest.ActivityTypeEnum;
 import com.p4r1nc3.flashdash.core.model.ChangePasswordRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +78,7 @@ public class UserService implements UserDetailsService {
 
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
-        activityService.logActivity(user.getUserFrn(), user.getUserFrn(), ActivityType.ACCOUNT_UPDATED);
+        activityService.logUserActivity(user.getUserFrn(), user.getUserFrn(), ActivityTypeEnum.ACCOUNT_UPDATED);
         logger.info("Password successfully changed for user: {}", email);
     }
 
@@ -98,7 +98,7 @@ public class UserService implements UserDetailsService {
         deckService.deleteAllDecksForUser(user.getUserFrn());
         friendService.removeAllFriends(user.getUserFrn());
         userRepository.delete(user);
-        activityService.logActivity(user.getUserFrn(), user.getUserFrn(), ActivityType.ACCOUNT_DELETED);
+        activityService.logUserActivity(user.getUserFrn(), user.getUserFrn(), ActivityTypeEnum.ACCOUNT_DELETED);
         logger.info("User with email {} successfully deleted.", email);
     }
 

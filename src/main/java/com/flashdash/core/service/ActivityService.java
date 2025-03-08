@@ -1,43 +1,61 @@
 package com.flashdash.core.service;
 
-import com.flashdash.core.model.Activity;
-import com.flashdash.core.model.ActivityType;
-import com.flashdash.core.repository.ActivityRepository;
-import com.flashdash.core.utils.FrnGenerator;
-import com.flashdash.core.utils.ResourceType;
+import com.flashdash.core.config.JwtManager;
+import com.p4r1nc3.flashdash.activity.ApiClient;
+import com.p4r1nc3.flashdash.activity.ApiException;
+import com.p4r1nc3.flashdash.activity.api.ActivitiesApi;
+import com.p4r1nc3.flashdash.activity.model.ActivityResponse;
+import com.p4r1nc3.flashdash.activity.model.LogActivityRequest;
+import com.flashdash.core.exception.FlashDashException;
+import com.flashdash.core.exception.ErrorCode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class ActivityService {
 
-    private final ActivityRepository activityRepository;
+    private static final Logger logger = LoggerFactory.getLogger(ActivityService.class);
 
-    public ActivityService(ActivityRepository activityRepository) {
-        this.activityRepository = activityRepository;
+    private final JwtManager jwtManager;
+
+    public ActivityService(JwtManager jwtManager) {
+        this.jwtManager = jwtManager;
     }
 
-    @Transactional
-    public void logActivity(String userFrn, String targetFrn, ActivityType activityType) {
-        Activity activity = new Activity();
-        activity.setActivityFrn(FrnGenerator.generateFrn(ResourceType.ACTIVITY));
-        activity.setUserFrn(userFrn);
-        activity.setTargetFrn(targetFrn);
-        activity.setActivity(activityType);
-        activity.setCreatedAt(LocalDateTime.now());
-        activity.setUpdatedAt(LocalDateTime.now());
-
-        activityRepository.save(activity);
+    private ActivitiesApi createActivitiesApi(String userFrn) {
+        ApiClient apiClient = new ApiClient();
+        String token = jwtManager.generateToken(userFrn);
+        apiClient.setBearerToken(token);
+        return new ActivitiesApi(apiClient);
     }
 
-    public List<Activity> getUserActivities(String userFrn) {
-        return activityRepository.findByUserFrn(userFrn);
+
+    public void logUserActivity(String userFrn, String targetFrn, LogActivityRequest.ActivityTypeEnum activityType) {
+        LogActivityRequest logActivityRequest = new LogActivityRequest();
+        logActivityRequest.setTargetFrn(targetFrn);
+        logActivityRequest.setActivityType(activityType);
+
+        ActivitiesApi activitiesApi = createActivitiesApi(userFrn);
+
+        try {
+            activitiesApi.logActivity(logActivityRequest);
+        } catch (ApiException e) {
+            logger.error("Error logging activity for user {}: {}", userFrn, e.getMessage());
+            throw new FlashDashException(ErrorCode.E500001, "An error occurred while logging the activity. Please try again later.");
+        }
     }
 
-    public List<Activity> getActivitiesByType(ActivityType activityType) {
-        return activityRepository.findByActivity(activityType);
+    public List<ActivityResponse> getUserActivities(String userFrn) {
+        ActivitiesApi activitiesApi = createActivitiesApi(userFrn);
+
+        try {
+            return activitiesApi.getUserActivities();
+        } catch (ApiException e) {
+            logger.error("Error retrieving activities for user {}: {}", userFrn, e.getMessage());
+            throw new FlashDashException(ErrorCode.E500001, "An error occurred while retrieving the user's activities. Please try again later.");
+        }
     }
 }

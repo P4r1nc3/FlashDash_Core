@@ -1,21 +1,26 @@
 package com.flashdash.core.service;
 
 import com.flashdash.core.FlashDashCoreApplication;
-import com.flashdash.core.TestUtils;
-import com.flashdash.core.model.Activity;
-import com.flashdash.core.model.ActivityType;
-import com.flashdash.core.repository.ActivityRepository;
+import com.flashdash.core.config.JwtManager;
+import com.p4r1nc3.flashdash.activity.ApiException;
+import com.p4r1nc3.flashdash.activity.api.ActivitiesApi;
+import com.p4r1nc3.flashdash.activity.model.ActivityResponse;
+import com.p4r1nc3.flashdash.activity.model.LogActivityRequest;
+import com.flashdash.core.exception.FlashDashException;
+import com.flashdash.core.exception.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest(classes = FlashDashCoreApplication.class)
@@ -26,97 +31,104 @@ class ActivityServiceTest {
     private ActivityService activityService;
 
     @MockitoBean
-    private ActivityRepository activityRepository;
+    private JwtManager jwtManager;
+
+    @MockitoBean
+    private ActivitiesApi activitiesApi;
 
     private String userFrn;
     private String targetFrn;
+    private String mockToken;
 
     @BeforeEach
     void setUp() {
         userFrn = "frn:user:123";
         targetFrn = "frn:deck:456";
+        mockToken = "mock-jwt-token";
+
+        when(jwtManager.generateToken(userFrn)).thenReturn(mockToken);
     }
 
     @Test
-    void shouldLogActivitySuccessfully() {
+    void shouldLogActivitySuccessfully() throws ApiException {
+        // Arrange
+        LogActivityRequest logActivityRequest = new LogActivityRequest();
+        logActivityRequest.setTargetFrn(targetFrn);
+        logActivityRequest.setActivityType(LogActivityRequest.ActivityTypeEnum.GAME_STARTED);
+
+        doNothing().when(activitiesApi).logActivity(any());
+
         // Act
-        activityService.logActivity(userFrn, targetFrn, ActivityType.GAME_STARTED);
+        activityService.logUserActivity(userFrn, targetFrn, LogActivityRequest.ActivityTypeEnum.GAME_STARTED);
 
         // Assert
-        ArgumentCaptor<Activity> captor = ArgumentCaptor.forClass(Activity.class);
-        verify(activityRepository).save(captor.capture());
+        ArgumentCaptor<LogActivityRequest> captor = ArgumentCaptor.forClass(LogActivityRequest.class);
+        verify(activitiesApi, times(1)).logActivity(captor.capture());
 
-        Activity savedActivity = captor.getValue();
-        assertThat(savedActivity).isNotNull();
-        assertThat(savedActivity.getUserFrn()).isEqualTo(userFrn);
-        assertThat(savedActivity.getTargetFrn()).isEqualTo(targetFrn);
-        assertThat(savedActivity.getActivity()).isEqualTo(ActivityType.GAME_STARTED);
-        assertThat(savedActivity.getCreatedAt()).isNotNull();
-        assertThat(savedActivity.getUpdatedAt()).isNotNull();
+        LogActivityRequest capturedRequest = captor.getValue();
+        assertThat(capturedRequest.getTargetFrn()).isEqualTo(targetFrn);
+        assertThat(capturedRequest.getActivityType()).isEqualTo(LogActivityRequest.ActivityTypeEnum.GAME_STARTED);
     }
 
     @Test
-    void shouldGetUserActivitiesSuccessfully() {
+    void shouldThrowExceptionWhenLoggingActivityFails() throws ApiException {
         // Arrange
-        List<Activity> mockActivities = List.of(
-                TestUtils.createActivity(userFrn, targetFrn, ActivityType.GAME_STARTED),
-                TestUtils.createActivity(userFrn, "frn:question:789", ActivityType.QUESTION_CREATED)
+        doThrow(new ApiException("API failure")).when(activitiesApi).logActivity(any());
+
+        // Act & Assert
+        assertThatThrownBy(() -> activityService.logUserActivity(userFrn, targetFrn, LogActivityRequest.ActivityTypeEnum.GAME_STARTED))
+                .isInstanceOf(FlashDashException.class)
+                .hasMessageContaining("An error occurred while logging the activity")
+                .extracting("errorCode").isEqualTo(ErrorCode.E500001);
+
+        verify(activitiesApi, times(1)).logActivity(any());
+    }
+
+    @Test
+    void shouldGetUserActivitiesSuccessfully() throws ApiException {
+        // Arrange
+        List<ActivityResponse> mockActivities = List.of(
+                new ActivityResponse().userFrn(userFrn).targetFrn(targetFrn).activityType("GAME_STARTED"),
+                new ActivityResponse().userFrn(userFrn).targetFrn("frn:question:789").activityType("QUESTION_CREATED")
         );
 
-        when(activityRepository.findByUserFrn(userFrn)).thenReturn(mockActivities);
+        when(activitiesApi.getUserActivities()).thenReturn(mockActivities);
 
         // Act
-        List<Activity> activities = activityService.getUserActivities(userFrn);
+        List<ActivityResponse> activities = activityService.getUserActivities(userFrn);
 
         // Assert
         assertThat(activities).hasSize(2);
-        assertThat(activities.get(0).getActivity()).isEqualTo(ActivityType.GAME_STARTED);
-        assertThat(activities.get(1).getActivity()).isEqualTo(ActivityType.QUESTION_CREATED);
-        verify(activityRepository, times(1)).findByUserFrn(userFrn);
+        assertThat(activities.get(0).getActivityType()).isEqualTo("GAME_STARTED");
+        assertThat(activities.get(1).getActivityType()).isEqualTo("QUESTION_CREATED");
+
+        verify(activitiesApi, times(1)).getUserActivities();
     }
 
     @Test
-    void shouldReturnEmptyListWhenNoUserActivitiesFound() {
+    void shouldReturnEmptyListWhenNoUserActivitiesFound() throws ApiException {
         // Arrange
-        when(activityRepository.findByUserFrn(userFrn)).thenReturn(List.of());
+        when(activitiesApi.getUserActivities()).thenReturn(List.of());
 
         // Act
-        List<Activity> activities = activityService.getUserActivities(userFrn);
+        List<ActivityResponse> activities = activityService.getUserActivities(userFrn);
 
         // Assert
         assertThat(activities).isEmpty();
-        verify(activityRepository, times(1)).findByUserFrn(userFrn);
+        verify(activitiesApi, times(1)).getUserActivities();
     }
 
     @Test
-    void shouldGetActivitiesByTypeSuccessfully() {
+    void shouldThrowExceptionWhenGettingUserActivitiesFails() throws ApiException {
         // Arrange
-        List<Activity> mockActivities = List.of(
-                TestUtils.createActivity(userFrn, targetFrn, ActivityType.ACCOUNT_LOGIN),
-                TestUtils.createActivity("frn:user:456", "frn:user:456", ActivityType.ACCOUNT_LOGIN)
-        );
+        doThrow(new ApiException("API failure")).when(activitiesApi).getUserActivities();
 
-        when(activityRepository.findByActivity(ActivityType.ACCOUNT_LOGIN)).thenReturn(mockActivities);
+        // Act & Assert
+        assertThatThrownBy(() -> activityService.getUserActivities(userFrn))
+                .isInstanceOf(FlashDashException.class)
+                .hasMessageContaining("An error occurred while retrieving the user's activities")
+                .extracting("errorCode").isEqualTo(ErrorCode.E500001);
 
-        // Act
-        List<Activity> activities = activityService.getActivitiesByType(ActivityType.ACCOUNT_LOGIN);
-
-        // Assert
-        assertThat(activities).hasSize(2);
-        assertThat(activities).allMatch(activity -> activity.getActivity() == ActivityType.ACCOUNT_LOGIN);
-        verify(activityRepository, times(1)).findByActivity(ActivityType.ACCOUNT_LOGIN);
-    }
-
-    @Test
-    void shouldReturnEmptyListWhenNoActivitiesOfTypeFound() {
-        // Arrange
-        when(activityRepository.findByActivity(ActivityType.ACCOUNT_CONFIRMATION)).thenReturn(List.of());
-
-        // Act
-        List<Activity> activities = activityService.getActivitiesByType(ActivityType.ACCOUNT_CONFIRMATION);
-
-        // Assert
-        assertThat(activities).isEmpty();
-        verify(activityRepository, times(1)).findByActivity(ActivityType.ACCOUNT_CONFIRMATION);
+        verify(activitiesApi, times(1)).getUserActivities();
     }
 }

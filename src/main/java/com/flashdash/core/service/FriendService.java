@@ -2,13 +2,13 @@ package com.flashdash.core.service;
 
 import com.flashdash.core.exception.ErrorCode;
 import com.flashdash.core.exception.FlashDashException;
-import com.flashdash.core.model.ActivityType;
 import com.flashdash.core.model.FriendInvitation;
 import com.flashdash.core.model.User;
 import com.flashdash.core.repository.FriendInvitationRepository;
 import com.flashdash.core.repository.UserRepository;
 import com.flashdash.core.utils.FrnGenerator;
 import com.flashdash.core.utils.ResourceType;
+import com.p4r1nc3.flashdash.activity.model.LogActivityRequest.ActivityTypeEnum;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -67,7 +67,7 @@ public class FriendService {
                 sender.getLastName()
         );
 
-        activityService.logActivity(senderFrn, invitation.getInvitationFrn(), ActivityType.FRIEND_INVITE_SENT);
+        activityService.logUserActivity(senderFrn, invitation.getInvitationFrn(), ActivityTypeEnum.FRIEND_INVITE_SENT);
     }
 
     public List<FriendInvitation> getReceivedFriendInvitations(String recipientFrn) {
@@ -93,7 +93,7 @@ public class FriendService {
             addFriendship(invitation.getSentByFrn(), invitation.getSentToFrn());
         }
 
-        activityService.logActivity(userFrn, invitation.getInvitationFrn(), ActivityType.FRIEND_INVITE_RESPONDED);
+        activityService.logUserActivity(userFrn, invitation.getInvitationFrn(), ActivityTypeEnum.FRIEND_INVITE_RESPONDED);
     }
 
     public List<User> getFriends(String userFrn) {
@@ -118,7 +118,7 @@ public class FriendService {
 
         removeFriendship(user, friend);
 
-        activityService.logActivity(userFrn, friendFrn, ActivityType.FRIEND_DELETED);
+        activityService.logUserActivity(userFrn, friendFrn, ActivityTypeEnum.FRIEND_DELETED);
     }
 
     @Transactional
