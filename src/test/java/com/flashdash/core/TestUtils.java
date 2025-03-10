@@ -52,17 +52,6 @@ public class TestUtils {
         return user;
     }
 
-    public static Activity createActivity(String userFrn, String targetFrn, ActivityType activityType) {
-        Activity activity = new Activity();
-        activity.setActivityFrn(FrnGenerator.generateFrn(ResourceType.ACTIVITY));
-        activity.setUserFrn(userFrn);
-        activity.setTargetFrn(targetFrn);
-        activity.setActivity(activityType);
-        activity.setCreatedAt(LocalDateTime.now());
-        activity.setUpdatedAt(LocalDateTime.now());
-        return activity;
-    }
-
     public static FriendInvitation createFriendInvitation(User sender, User recipient) {
         FriendInvitation invitation = new FriendInvitation();
         invitation.setInvitationFrn(FrnGenerator.generateFrn(ResourceType.INVITATION));

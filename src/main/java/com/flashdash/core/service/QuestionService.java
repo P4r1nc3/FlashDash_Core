@@ -2,11 +2,11 @@ package com.flashdash.core.service;
 
 import com.flashdash.core.exception.ErrorCode;
 import com.flashdash.core.exception.FlashDashException;
-import com.flashdash.core.model.ActivityType;
 import com.flashdash.core.model.Question;
 import com.flashdash.core.repository.QuestionRepository;
 import com.flashdash.core.utils.FrnGenerator;
 import com.flashdash.core.utils.ResourceType;
+import com.p4r1nc3.flashdash.activity.model.LogActivityRequest.ActivityTypeEnum;
 import com.p4r1nc3.flashdash.core.model.QuestionRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +47,7 @@ public class QuestionService {
         question.setUpdatedAt(LocalDateTime.now());
 
         Question savedQuestion = questionRepository.save(question);
-        activityService.logActivity(userFrn, question.getQuestion(), ActivityType.QUESTION_CREATED);
+        activityService.logUserActivity(userFrn, question.getQuestion(), ActivityTypeEnum.QUESTION_CREATED);
         logger.info("Added question with FRN: {} to deck with FRN: {}", savedQuestion.getQuestionFrn(), deckFrn);
 
         return savedQuestion;
@@ -83,7 +83,7 @@ public class QuestionService {
         question.setUpdatedAt(LocalDateTime.now());
 
         Question updatedQuestion = questionRepository.save(question);
-        activityService.logActivity(userFrn, question.getQuestion(), ActivityType.QUESTION_UPDATED);
+        activityService.logUserActivity(userFrn, question.getQuestion(), ActivityTypeEnum.QUESTION_UPDATED);
         logger.info("Successfully updated question FRN: {} in deck FRN: {}", questionFrn, deckFrn);
 
         return updatedQuestion;
@@ -94,7 +94,7 @@ public class QuestionService {
 
         Question question = getQuestionByFrn(deckFrn, questionFrn, userFrn);
         questionRepository.delete(question);
-        activityService.logActivity(userFrn, question.getQuestion(), ActivityType.QUESTION_DELETED);
+        activityService.logUserActivity(userFrn, question.getQuestion(), ActivityTypeEnum.QUESTION_DELETED);
 
         logger.info("Successfully deleted question FRN: {} from deck FRN: {}", questionFrn, deckFrn);
     }

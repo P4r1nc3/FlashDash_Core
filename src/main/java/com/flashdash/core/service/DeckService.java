@@ -1,8 +1,8 @@
 package com.flashdash.core.service;
 
-import com.flashdash.core.model.ActivityType;
 import com.flashdash.core.utils.FrnGenerator;
 import com.flashdash.core.utils.ResourceType;
+import com.p4r1nc3.flashdash.activity.model.LogActivityRequest.ActivityTypeEnum;
 import com.p4r1nc3.flashdash.core.model.DeckRequest;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
@@ -45,7 +45,7 @@ public class DeckService {
         deck.setUpdatedAt(LocalDateTime.now());
         Deck savedDeck = deckRepository.save(deck);
 
-        activityService.logActivity(userFrn, deck.getDeckFrn(), ActivityType.DECK_CREATED);
+        activityService.logUserActivity(userFrn, deck.getDeckFrn(), ActivityTypeEnum.DECK_CREATED);
 
         logger.info("Created deck with FRN: {} for user FRN: {}", savedDeck.getDeckFrn(), userFrn);
         return savedDeck;
@@ -77,7 +77,7 @@ public class DeckService {
 
         Deck updatedDeck = deckRepository.save(deck);
 
-        activityService.logActivity(userFrn, deck.getDeckFrn(), ActivityType.DECK_UPDATED);
+        activityService.logUserActivity(userFrn, deck.getDeckFrn(), ActivityTypeEnum.DECK_UPDATED);
 
         logger.info("Successfully updated deck with FRN: {} for user FRN: {}", deckFrn, userFrn);
         return updatedDeck;
@@ -91,7 +91,7 @@ public class DeckService {
         questionRepository.deleteAllByDeckFrn(deckFrn);
         deckRepository.delete(deck);
 
-        activityService.logActivity(userFrn, deck.getDeckFrn(), ActivityType.DECK_DELETED);
+        activityService.logUserActivity(userFrn, deck.getDeckFrn(), ActivityTypeEnum.DECK_DELETED);
 
         logger.info("Deleted deck with FRN: {} for user FRN: {}", deckFrn, userFrn);
     }

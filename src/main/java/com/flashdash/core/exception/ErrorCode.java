@@ -22,5 +22,7 @@ public enum ErrorCode {
     // 409 Conflict
     E409001,
     E409002,
-    E409003
+    E409003,
+    // 500 Internal Server Error
+    E500001
 }

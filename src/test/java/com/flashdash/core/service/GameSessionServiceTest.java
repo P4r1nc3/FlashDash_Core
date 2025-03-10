@@ -6,6 +6,7 @@ import com.flashdash.core.exception.ErrorCode;
 import com.flashdash.core.exception.FlashDashException;
 import com.flashdash.core.model.*;
 import com.flashdash.core.repository.GameSessionRepository;
+import com.p4r1nc3.flashdash.activity.model.LogActivityRequest.ActivityTypeEnum;
 import com.p4r1nc3.flashdash.core.model.QuestionRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -78,7 +79,7 @@ class GameSessionServiceTest {
         // Assert
         assertThat(questions).isNotEmpty();
         verify(gameSessionRepository, times(1)).save(gameSession);
-        verify(activityService).logActivity(user.getUserFrn(), gameSession.getGameSessionFrn(), ActivityType.GAME_STARTED);
+        verify(activityService).logUserActivity(user.getUserFrn(), gameSession.getGameSessionFrn(), ActivityTypeEnum.GAME_STARTED);
     }
 
 
@@ -96,7 +97,7 @@ class GameSessionServiceTest {
         // Assert
         assertThat(questions).isNotEmpty();
         verify(gameSessionRepository).save(any(GameSession.class));
-        verify(activityService).logActivity(eq(user.getUserFrn()), anyString(), eq(ActivityType.GAME_STARTED));
+        verify(activityService).logUserActivity(eq(user.getUserFrn()), anyString(), eq(ActivityTypeEnum.GAME_STARTED));
     }
 
 

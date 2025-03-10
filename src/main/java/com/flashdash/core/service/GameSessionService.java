@@ -2,13 +2,13 @@ package com.flashdash.core.service;
 
 import com.flashdash.core.exception.ErrorCode;
 import com.flashdash.core.exception.FlashDashException;
-import com.flashdash.core.model.ActivityType;
 import com.flashdash.core.model.GameSession;
 import com.flashdash.core.model.GameSessionStatus;
 import com.flashdash.core.model.Question;
 import com.flashdash.core.repository.GameSessionRepository;
 import com.flashdash.core.utils.FrnGenerator;
 import com.flashdash.core.utils.ResourceType;
+import com.p4r1nc3.flashdash.activity.model.LogActivityRequest.ActivityTypeEnum;
 import com.p4r1nc3.flashdash.core.model.QuestionRequest;
 import org.springframework.stereotype.Service;
 
@@ -57,7 +57,7 @@ public class  GameSessionService {
             gameSessionRepository.save(gameSession);
         }
 
-        activityService.logActivity(userFrn, gameSession.getGameSessionFrn(), ActivityType.GAME_STARTED);
+        activityService.logUserActivity(userFrn, gameSession.getGameSessionFrn(), ActivityTypeEnum.GAME_STARTED);
 
         return questionService.getAllQuestionsInDeck(deckFrn, userFrn);
     }
@@ -103,7 +103,7 @@ public class  GameSessionService {
         gameSession.setQuestionCount(totalQuestions);
 
         gameSessionRepository.save(gameSession);
-        activityService.logActivity(userFrn, gameSession.getGameSessionFrn(), ActivityType.GAME_FINISHED);
+        activityService.logUserActivity(userFrn, gameSession.getGameSessionFrn(), ActivityTypeEnum.GAME_FINISHED);
 
         return gameSession;
     }

@@ -3,11 +3,11 @@ package com.flashdash.core.service;
 import com.flashdash.core.config.JwtManager;
 import com.flashdash.core.exception.FlashDashException;
 import com.flashdash.core.exception.ErrorCode;
-import com.flashdash.core.model.ActivityType;
 import com.flashdash.core.model.User;
 import com.flashdash.core.repository.UserRepository;
 import com.flashdash.core.utils.FrnGenerator;
 import com.flashdash.core.utils.ResourceType;
+import com.p4r1nc3.flashdash.activity.model.LogActivityRequest.ActivityTypeEnum;
 import com.p4r1nc3.flashdash.core.model.AuthenticationResponse;
 import com.p4r1nc3.flashdash.core.model.LoginRequest;
 import com.p4r1nc3.flashdash.core.model.RegisterRequest;
@@ -65,7 +65,7 @@ public class AuthenticationService {
         String token = jwtManager.generateToken(user.getUserFrn());
         logger.info("Login successful for email: {}", request.getEmail());
 
-        activityService.logActivity(user.getUserFrn(), user.getUserFrn(), ActivityType.ACCOUNT_LOGIN);
+        activityService.logUserActivity(user.getUserFrn(), user.getUserFrn(), ActivityTypeEnum.ACCOUNT_LOGIN);
 
         AuthenticationResponse authenticationResponse = new AuthenticationResponse();
         authenticationResponse.setToken(token);
@@ -100,7 +100,7 @@ public class AuthenticationService {
         userRepository.save(user);
         emailService.sendActivationEmail(user.getUsername(), activationToken);
 
-        activityService.logActivity(user.getUserFrn(), user.getUserFrn(), ActivityType.ACCOUNT_REGISTRATION);
+        activityService.logUserActivity(user.getUserFrn(), user.getUserFrn(),ActivityTypeEnum.ACCOUNT_REGISTRATION);
 
         AuthenticationResponse authenticationResponse = new AuthenticationResponse();
         authenticationResponse.setToken("Account created. Please check your email to activate.");
@@ -121,7 +121,7 @@ public class AuthenticationService {
 
         user.setEnabled(true);
         userRepository.save(user);
-        activityService.logActivity(user.getUserFrn(), user.getUserFrn(), ActivityType.ACCOUNT_CONFIRMATION);
+        activityService.logUserActivity(user.getUserFrn(), user.getUserFrn(),ActivityTypeEnum.ACCOUNT_CONFIRMATION);
 
         logger.info("Account activated successfully for email: {}", user.getUsername());
     }
