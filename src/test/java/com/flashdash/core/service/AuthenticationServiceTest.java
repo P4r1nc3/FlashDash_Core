@@ -62,6 +62,8 @@ class AuthenticationServiceTest {
         when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
 
+        when(jwtManager.generateToken(user.getUserFrn())).thenReturn("mocked-jwt-token");
+
         LoginRequest loginRequest = TestUtils.createLoginRequest(user);
 
         // Act
@@ -73,7 +75,9 @@ class AuthenticationServiceTest {
 
         verify(userRepository).findByEmail(user.getUsername());
         verify(passwordEncoder).matches(loginRequest.getPassword(), user.getPassword());
+        verify(jwtManager).generateToken(user.getUserFrn());
     }
+
 
     @Test
     void shouldThrowExceptionWhenUserNotFoundDuringLogin() {

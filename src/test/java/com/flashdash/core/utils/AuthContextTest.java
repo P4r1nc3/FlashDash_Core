@@ -2,6 +2,7 @@ package com.flashdash.core.utils;
 
 import com.flashdash.core.FlashDashCoreApplication;
 import com.flashdash.core.model.User;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -17,10 +18,10 @@ import static org.mockito.Mockito.*;
 
 @SpringBootTest(classes = FlashDashCoreApplication.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class AuthenticatedUserProviderTest {
+class AuthContextTest {
 
     @Autowired
-    private AuthenticatedUserProvider authenticatedUserProvider;
+    private AuthContext authContext;
 
     @MockitoBean
     private SecurityContext securityContext;
@@ -45,7 +46,7 @@ class AuthenticatedUserProviderTest {
         when(mockUser.getUserFrn()).thenReturn(expectedUserFrn);
 
         // Act
-        String userFrn = authenticatedUserProvider.getUserFrn();
+        String userFrn = authContext.getUserFrn();
 
         // Assert
         assertThat(userFrn).isEqualTo(expectedUserFrn);
@@ -57,7 +58,7 @@ class AuthenticatedUserProviderTest {
         when(securityContext.getAuthentication()).thenReturn(null);
 
         // Act
-        String userFrn = authenticatedUserProvider.getUserFrn();
+        String userFrn = authContext.getUserFrn();
 
         // Assert
         assertThat(userFrn).isNull();
@@ -70,7 +71,7 @@ class AuthenticatedUserProviderTest {
         when(authentication.getPrincipal()).thenReturn("InvalidPrincipal");
 
         // Act
-        String userFrn = authenticatedUserProvider.getUserFrn();
+        String userFrn = authContext.getUserFrn();
 
         // Assert
         assertThat(userFrn).isNull();
