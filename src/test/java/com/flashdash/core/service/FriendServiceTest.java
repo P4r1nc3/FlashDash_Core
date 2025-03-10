@@ -145,6 +145,23 @@ class FriendServiceTest {
     }
 
     @Test
+    void shouldCancelFriendInvitationSuccessfully() {
+        // Arrange: Create sender, recipient, and an invitation
+        FriendInvitation invitation = TestUtils.createFriendInvitation(sender, recipient);
+        invitation.setStatus("PENDING");
+
+        when(friendInvitationRepository.findById(invitation.getInvitationFrn())).thenReturn(Optional.of(invitation));
+        when(friendInvitationRepository.save(any(FriendInvitation.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act: Sender cancels the invitation
+        friendService.respondToFriendInvitation(invitation.getInvitationFrn(), sender.getUserFrn(), "CANCELLED");
+
+        // Assert: The invitation status is updated to CANCELLED
+        assertThat(invitation.getStatus()).isEqualTo("CANCELLED");
+        verify(friendInvitationRepository, times(1)).save(invitation);
+    }
+
+    @Test
     void shouldRespondToFriendInvitationSuccessfully() {
         FriendInvitation invitation = TestUtils.createFriendInvitation(sender, recipient);
 

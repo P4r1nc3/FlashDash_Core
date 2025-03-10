@@ -84,19 +84,26 @@ public class FriendService {
                 .orElseThrow(() -> new FlashDashException(ErrorCode.E404004, "Invitation not found"));
 
         boolean isRecipient = invitation.getSentToFrn().equals(userFrn);
+        boolean isSender = invitation.getSentByFrn().equals(userFrn);
 
-        if (!isRecipient) {
+        if (!isRecipient && !isSender) {
             throw new FlashDashException(ErrorCode.E403001, "Unauthorized to respond to this invitation.");
         }
 
-        if (!"ACCEPTED".equals(status) && !"REJECTED".equals(status)) {
-            throw new FlashDashException(ErrorCode.E400001, "Invalid status. Must be ACCEPTED or REJECTED.");
+        if (isRecipient && !"ACCEPTED".equals(status) && !"REJECTED".equals(status)) {
+            throw new FlashDashException(ErrorCode.E400001, "Invalid status. Must be ACCEPTED or REJECTED for recipients.");
         }
 
+        if (isSender && !"CANCELLED".equals(status)) {
+            throw new FlashDashException(ErrorCode.E403001, "Unauthorized to respond to this invitation.");
+        }
+
+        // Update invitation status
         invitation.setStatus(status);
         invitation.setUpdatedAt(LocalDateTime.now());
         friendInvitationRepository.save(invitation);
 
+        // If accepted, add friendship
         if ("ACCEPTED".equals(status)) {
             addFriendship(invitation.getSentByFrn(), invitation.getSentToFrn());
         }
