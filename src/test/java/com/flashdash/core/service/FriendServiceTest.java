@@ -55,7 +55,7 @@ class FriendServiceTest {
     void shouldSendFriendInvitationSuccessfully() {
         when(userRepository.findById(sender.getUserFrn())).thenReturn(Optional.of(sender));
         when(userRepository.findByEmail(recipient.getEmail())).thenReturn(Optional.of(recipient));
-        when(friendInvitationRepository.findBySentByFrnAndSentToFrn(sender.getUserFrn(), recipient.getUserFrn()))
+        when(friendInvitationRepository.findBySentByFrnAndSentToFrnAndStatus(sender.getUserFrn(), recipient.getUserFrn(), "PENDING"))
                 .thenReturn(Optional.empty());
 
         friendService.sendFriendInvitation(sender.getUserFrn(), recipient.getEmail());
@@ -83,7 +83,7 @@ class FriendServiceTest {
         FriendInvitation existingInvitation = TestUtils.createFriendInvitation(sender, recipient);
 
         when(userRepository.findByEmail(recipient.getEmail())).thenReturn(Optional.of(recipient));
-        when(friendInvitationRepository.findBySentByFrnAndSentToFrn(sender.getUserFrn(), recipient.getUserFrn()))
+        when(friendInvitationRepository.findBySentByFrnAndSentToFrnAndStatus(sender.getUserFrn(), recipient.getUserFrn(), "PENDING"))
                 .thenReturn(Optional.of(existingInvitation));
 
         // Act & Assert

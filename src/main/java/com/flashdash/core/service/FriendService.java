@@ -44,7 +44,7 @@ public class FriendService {
             throw new FlashDashException(ErrorCode.E403003, "You cannot send an invitation to yourself.");
         }
 
-        if (friendInvitationRepository.findBySentByFrnAndSentToFrn(senderFrn, recipientFrn).isPresent()) {
+        if (friendInvitationRepository.findBySentByFrnAndSentToFrnAndStatus(senderFrn, recipientFrn, "PENDING").isPresent()) {
             throw new FlashDashException(ErrorCode.E409002, "Friend invitation already sent.");
         }
 

@@ -116,8 +116,8 @@ class FriendInvitationRepositoryTest {
         userRepository.save(recipient);
 
         // Act
-        Optional<FriendInvitation> foundInvitation = friendInvitationRepository.findBySentByFrnAndSentToFrn(
-                sender.getUserFrn(), recipient.getUserFrn());
+        Optional<FriendInvitation> foundInvitation = friendInvitationRepository.findBySentByFrnAndSentToFrnAndStatus(
+                sender.getUserFrn(), recipient.getUserFrn(), "PENDING");
 
         // Assert
         assertThat(foundInvitation).isNotPresent();
