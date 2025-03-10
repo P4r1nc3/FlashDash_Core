@@ -55,7 +55,7 @@ class FriendServiceTest {
     void shouldSendFriendInvitationSuccessfully() {
         when(userRepository.findById(sender.getUserFrn())).thenReturn(Optional.of(sender));
         when(userRepository.findByEmail(recipient.getEmail())).thenReturn(Optional.of(recipient));
-        when(friendInvitationRepository.findBySentByFrnAndSentToFrn(sender.getUserFrn(), recipient.getUserFrn()))
+        when(friendInvitationRepository.findBySentByFrnAndSentToFrnAndStatus(sender.getUserFrn(), recipient.getUserFrn(), "PENDING"))
                 .thenReturn(Optional.empty());
 
         friendService.sendFriendInvitation(sender.getUserFrn(), recipient.getEmail());
@@ -83,7 +83,7 @@ class FriendServiceTest {
         FriendInvitation existingInvitation = TestUtils.createFriendInvitation(sender, recipient);
 
         when(userRepository.findByEmail(recipient.getEmail())).thenReturn(Optional.of(recipient));
-        when(friendInvitationRepository.findBySentByFrnAndSentToFrn(sender.getUserFrn(), recipient.getUserFrn()))
+        when(friendInvitationRepository.findBySentByFrnAndSentToFrnAndStatus(sender.getUserFrn(), recipient.getUserFrn(), "PENDING"))
                 .thenReturn(Optional.of(existingInvitation));
 
         // Act & Assert
@@ -111,15 +111,54 @@ class FriendServiceTest {
     }
 
     @Test
-    void shouldGetReceivedFriendInvitationsSuccessfully() {
+    void shouldReturnOnlyPendingReceivedInvitations() {
         FriendInvitation invitation = TestUtils.createFriendInvitation(sender, recipient);
-        when(friendInvitationRepository.findAllBySentToFrn(recipient.getUserFrn())).thenReturn(List.of(invitation));
+        invitation.setStatus("PENDING");
+
+        FriendInvitation acceptedInvitation = TestUtils.createFriendInvitation(sender, recipient);
+        acceptedInvitation.setStatus("ACCEPTED");
+
+        when(friendInvitationRepository.findAllBySentToFrnAndStatus(recipient.getUserFrn(), "PENDING"))
+                .thenReturn(List.of(invitation));
 
         List<FriendInvitation> invitations = friendService.getReceivedFriendInvitations(recipient.getUserFrn());
 
         assertThat(invitations).hasSize(1);
-        assertThat(invitations.get(0).getSentByFrn()).isEqualTo(sender.getUserFrn());
-        verify(friendInvitationRepository).findAllBySentToFrn(recipient.getUserFrn());
+        assertThat(invitations.get(0).getStatus()).isEqualTo("PENDING");
+    }
+
+    @Test
+    void shouldReturnOnlyPendingSentInvitations() {
+        FriendInvitation invitation = TestUtils.createFriendInvitation(sender, recipient);
+        invitation.setStatus("PENDING");
+
+        FriendInvitation rejectedInvitation = TestUtils.createFriendInvitation(sender, recipient);
+        rejectedInvitation.setStatus("REJECTED");
+
+        when(friendInvitationRepository.findAllBySentByFrnAndStatus(sender.getUserFrn(), "PENDING"))
+                .thenReturn(List.of(invitation));
+
+        List<FriendInvitation> invitations = friendService.getSentFriendInvitations(sender.getUserFrn());
+
+        assertThat(invitations).hasSize(1);
+        assertThat(invitations.get(0).getStatus()).isEqualTo("PENDING");
+    }
+
+    @Test
+    void shouldCancelFriendInvitationSuccessfully() {
+        // Arrange: Create sender, recipient, and an invitation
+        FriendInvitation invitation = TestUtils.createFriendInvitation(sender, recipient);
+        invitation.setStatus("PENDING");
+
+        when(friendInvitationRepository.findById(invitation.getInvitationFrn())).thenReturn(Optional.of(invitation));
+        when(friendInvitationRepository.save(any(FriendInvitation.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act: Sender cancels the invitation
+        friendService.respondToFriendInvitation(invitation.getInvitationFrn(), sender.getUserFrn(), "CANCELLED");
+
+        // Assert: The invitation status is updated to CANCELLED
+        assertThat(invitation.getStatus()).isEqualTo("CANCELLED");
+        verify(friendInvitationRepository, times(1)).save(invitation);
     }
 
     @Test

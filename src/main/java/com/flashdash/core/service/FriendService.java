@@ -44,7 +44,7 @@ public class FriendService {
             throw new FlashDashException(ErrorCode.E403003, "You cannot send an invitation to yourself.");
         }
 
-        if (friendInvitationRepository.findBySentByFrnAndSentToFrn(senderFrn, recipientFrn).isPresent()) {
+        if (friendInvitationRepository.findBySentByFrnAndSentToFrnAndStatus(senderFrn, recipientFrn, "PENDING").isPresent()) {
             throw new FlashDashException(ErrorCode.E409002, "Friend invitation already sent.");
         }
 
@@ -71,11 +71,11 @@ public class FriendService {
     }
 
     public List<FriendInvitation> getReceivedFriendInvitations(String recipientFrn) {
-        return friendInvitationRepository.findAllBySentToFrn(recipientFrn);
+        return friendInvitationRepository.findAllBySentToFrnAndStatus(recipientFrn, "PENDING");
     }
 
     public List<FriendInvitation> getSentFriendInvitations(String senderFrn) {
-        return friendInvitationRepository.findAllBySentByFrn(senderFrn);
+        return friendInvitationRepository.findAllBySentByFrnAndStatus(senderFrn, "PENDING");
     }
 
     @Transactional
@@ -84,11 +84,26 @@ public class FriendService {
                 .orElseThrow(() -> new FlashDashException(ErrorCode.E404004, "Invitation not found"));
 
         boolean isRecipient = invitation.getSentToFrn().equals(userFrn);
+        boolean isSender = invitation.getSentByFrn().equals(userFrn);
 
-        if (!isRecipient) {
+        if (!isRecipient && !isSender) {
             throw new FlashDashException(ErrorCode.E403001, "Unauthorized to respond to this invitation.");
         }
 
+        if (isRecipient && !"ACCEPTED".equals(status) && !"REJECTED".equals(status)) {
+            throw new FlashDashException(ErrorCode.E400001, "Invalid status. Must be ACCEPTED or REJECTED for recipients.");
+        }
+
+        if (isSender && !"CANCELLED".equals(status)) {
+            throw new FlashDashException(ErrorCode.E403001, "Unauthorized to respond to this invitation.");
+        }
+
+        // Update invitation status
+        invitation.setStatus(status);
+        invitation.setUpdatedAt(LocalDateTime.now());
+        friendInvitationRepository.save(invitation);
+
+        // If accepted, add friendship
         if ("ACCEPTED".equals(status)) {
             addFriendship(invitation.getSentByFrn(), invitation.getSentToFrn());
         }
