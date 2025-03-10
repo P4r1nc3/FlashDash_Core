@@ -71,11 +71,11 @@ public class FriendService {
     }
 
     public List<FriendInvitation> getReceivedFriendInvitations(String recipientFrn) {
-        return friendInvitationRepository.findAllBySentToFrn(recipientFrn);
+        return friendInvitationRepository.findAllBySentToFrnAndStatus(recipientFrn, "PENDING");
     }
 
     public List<FriendInvitation> getSentFriendInvitations(String senderFrn) {
-        return friendInvitationRepository.findAllBySentByFrn(senderFrn);
+        return friendInvitationRepository.findAllBySentByFrnAndStatus(senderFrn, "PENDING");
     }
 
     @Transactional
@@ -88,6 +88,14 @@ public class FriendService {
         if (!isRecipient) {
             throw new FlashDashException(ErrorCode.E403001, "Unauthorized to respond to this invitation.");
         }
+
+        if (!"ACCEPTED".equals(status) && !"REJECTED".equals(status)) {
+            throw new FlashDashException(ErrorCode.E400001, "Invalid status. Must be ACCEPTED or REJECTED.");
+        }
+
+        invitation.setStatus(status);
+        invitation.setUpdatedAt(LocalDateTime.now());
+        friendInvitationRepository.save(invitation);
 
         if ("ACCEPTED".equals(status)) {
             addFriendship(invitation.getSentByFrn(), invitation.getSentToFrn());

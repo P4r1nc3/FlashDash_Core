@@ -34,7 +34,7 @@ class FriendInvitationRepositoryTest {
     }
 
     @Test
-    void shouldFindAllInvitationsBySentToFrn() {
+    void shouldFindAllPendingInvitationsBySentToFrn() {
         // Arrange
         User sender = TestUtils.createUser();
         userRepository.save(sender);
@@ -42,23 +42,25 @@ class FriendInvitationRepositoryTest {
         User recipient = TestUtils.createUser();
         userRepository.save(recipient);
 
-        FriendInvitation invitation1 = TestUtils.createFriendInvitation(sender, recipient);
-        friendInvitationRepository.save(invitation1);
+        FriendInvitation pendingInvitation = TestUtils.createFriendInvitation(sender, recipient);
+        pendingInvitation.setStatus("PENDING");
+        friendInvitationRepository.save(pendingInvitation);
 
-        FriendInvitation invitation2 = TestUtils.createFriendInvitation(sender, recipient);
-        friendInvitationRepository.save(invitation2);
+        FriendInvitation acceptedInvitation = TestUtils.createFriendInvitation(sender, recipient);
+        acceptedInvitation.setStatus("ACCEPTED");
+        friendInvitationRepository.save(acceptedInvitation);
 
         // Act
-        List<FriendInvitation> invitations = friendInvitationRepository.findAllBySentToFrn(recipient.getUserFrn());
+        List<FriendInvitation> invitations = friendInvitationRepository.findAllBySentToFrnAndStatus(
+                recipient.getUserFrn(), "PENDING");
 
         // Assert
-        assertThat(invitations).hasSize(2);
-        assertThat(invitations).extracting(FriendInvitation::getSentByFrn)
-                .containsExactly(sender.getUserFrn(), sender.getUserFrn());
+        assertThat(invitations).hasSize(1);
+        assertThat(invitations.get(0).getStatus()).isEqualTo("PENDING");
     }
 
     @Test
-    void shouldFindAllInvitationsBySentByFrn() {
+    void shouldFindAllPendingInvitationsBySentByFrn() {
         // Arrange
         User sender = TestUtils.createUser();
         userRepository.save(sender);
@@ -66,23 +68,25 @@ class FriendInvitationRepositoryTest {
         User recipient = TestUtils.createUser();
         userRepository.save(recipient);
 
-        FriendInvitation invitation1 = TestUtils.createFriendInvitation(sender, recipient);
-        friendInvitationRepository.save(invitation1);
+        FriendInvitation pendingInvitation = TestUtils.createFriendInvitation(sender, recipient);
+        pendingInvitation.setStatus("PENDING");
+        friendInvitationRepository.save(pendingInvitation);
 
-        FriendInvitation invitation2 = TestUtils.createFriendInvitation(sender, recipient);
-        friendInvitationRepository.save(invitation2);
+        FriendInvitation rejectedInvitation = TestUtils.createFriendInvitation(sender, recipient);
+        rejectedInvitation.setStatus("REJECTED");
+        friendInvitationRepository.save(rejectedInvitation);
 
         // Act
-        List<FriendInvitation> invitations = friendInvitationRepository.findAllBySentByFrn(sender.getUserFrn());
+        List<FriendInvitation> invitations = friendInvitationRepository.findAllBySentByFrnAndStatus(
+                sender.getUserFrn(), "PENDING");
 
         // Assert
-        assertThat(invitations).hasSize(2);
-        assertThat(invitations).extracting(FriendInvitation::getSentToFrn)
-                .containsExactly(recipient.getUserFrn(), recipient.getUserFrn());
+        assertThat(invitations).hasSize(1);
+        assertThat(invitations.get(0).getStatus()).isEqualTo("PENDING");
     }
 
     @Test
-    void shouldFindSpecificInvitationBySentByFrnAndSentToFrn() {
+    void shouldReturnEmptyListWhenNoPendingInvitations() {
         // Arrange
         User sender = TestUtils.createUser();
         userRepository.save(sender);
@@ -90,17 +94,16 @@ class FriendInvitationRepositoryTest {
         User recipient = TestUtils.createUser();
         userRepository.save(recipient);
 
-        FriendInvitation invitation = TestUtils.createFriendInvitation(sender, recipient);
-        friendInvitationRepository.save(invitation);
+        FriendInvitation acceptedInvitation = TestUtils.createFriendInvitation(sender, recipient);
+        acceptedInvitation.setStatus("ACCEPTED");
+        friendInvitationRepository.save(acceptedInvitation);
 
         // Act
-        Optional<FriendInvitation> foundInvitation = friendInvitationRepository.findBySentByFrnAndSentToFrn(
-                sender.getUserFrn(), recipient.getUserFrn());
+        List<FriendInvitation> invitations = friendInvitationRepository.findAllBySentByFrnAndStatus(
+                sender.getUserFrn(), "PENDING");
 
         // Assert
-        assertThat(foundInvitation).isPresent();
-        assertThat(foundInvitation.get().getSentByFrn()).isEqualTo(sender.getUserFrn());
-        assertThat(foundInvitation.get().getSentToFrn()).isEqualTo(recipient.getUserFrn());
+        assertThat(invitations).isEmpty();
     }
 
     @Test
@@ -118,5 +121,35 @@ class FriendInvitationRepositoryTest {
 
         // Assert
         assertThat(foundInvitation).isNotPresent();
+    }
+
+    @Test
+    void shouldNotIncludeNonPendingInvitations() {
+        // Arrange
+        User sender = TestUtils.createUser();
+        userRepository.save(sender);
+
+        User recipient = TestUtils.createUser();
+        userRepository.save(recipient);
+
+        FriendInvitation pendingInvitation = TestUtils.createFriendInvitation(sender, recipient);
+        pendingInvitation.setStatus("PENDING");
+        friendInvitationRepository.save(pendingInvitation);
+
+        FriendInvitation acceptedInvitation = TestUtils.createFriendInvitation(sender, recipient);
+        acceptedInvitation.setStatus("ACCEPTED");
+        friendInvitationRepository.save(acceptedInvitation);
+
+        FriendInvitation rejectedInvitation = TestUtils.createFriendInvitation(sender, recipient);
+        rejectedInvitation.setStatus("REJECTED");
+        friendInvitationRepository.save(rejectedInvitation);
+
+        // Act
+        List<FriendInvitation> invitations = friendInvitationRepository.findAllBySentToFrnAndStatus(
+                recipient.getUserFrn(), "PENDING");
+
+        // Assert
+        assertThat(invitations).hasSize(1);
+        assertThat(invitations.get(0).getStatus()).isEqualTo("PENDING");
     }
 }
