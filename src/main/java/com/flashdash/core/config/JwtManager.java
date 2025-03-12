@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
 @Component
@@ -38,16 +40,20 @@ public class JwtManager {
                 .getBody();
     }
 
-    public String generateToken(String userFrn) {
-        return createToken(userFrn);
+    public String generateToken(String userFrn, String email) {
+        return createToken(userFrn, email);
     }
 
-    private String createToken(String userFrn) {
+    private String createToken(String userFrn, String email) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("email", email);
+
         return Jwts.builder()
+                .setClaims(claims)
                 .setSubject(userFrn)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
-                .signWith(secretKey, SignatureAlgorithm.HS256)
+                .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
     }
 

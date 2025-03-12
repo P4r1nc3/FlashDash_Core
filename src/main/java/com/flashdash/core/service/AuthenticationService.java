@@ -62,7 +62,7 @@ public class AuthenticationService {
             throw new FlashDashException(ErrorCode.E401002, "Invalid password.");
         }
 
-        String token = jwtManager.generateToken(user.getUserFrn());
+        String token = jwtManager.generateToken(user.getUserFrn(), request.getEmail());
         logger.info("Login successful for email: {}", request.getEmail());
 
         activityService.logUserActivity(user.getUserFrn(), user.getUserFrn(), ActivityTypeEnum.ACCOUNT_LOGIN);

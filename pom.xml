@@ -139,7 +139,12 @@
 		<dependency>
 			<groupId>com.p4r1nc3.flashdash</groupId>
 			<artifactId>flashdash-activity-api</artifactId>
-			<version>1.0.2</version>
+			<version>1.0.5</version>
+		</dependency>
+		<dependency>
+			<groupId>com.p4r1nc3.flashdash</groupId>
+			<artifactId>flashdash-notification-api</artifactId>
+			<version>1.0.1</version>
 		</dependency>
 	</dependencies>
 	<build>

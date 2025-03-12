@@ -1,6 +1,8 @@
 package com.flashdash.core.service;
 
 import com.flashdash.core.config.JwtManager;
+import com.flashdash.core.model.User;
+import com.flashdash.core.repository.UserRepository;
 import com.p4r1nc3.flashdash.activity.ApiClient;
 import com.p4r1nc3.flashdash.activity.ApiException;
 import com.p4r1nc3.flashdash.activity.api.ActivitiesApi;
@@ -13,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ActivityService {
@@ -20,14 +23,24 @@ public class ActivityService {
     private static final Logger logger = LoggerFactory.getLogger(ActivityService.class);
 
     private final JwtManager jwtManager;
+    private final UserRepository userRepository;
 
-    public ActivityService(JwtManager jwtManager) {
+    public ActivityService(JwtManager jwtManager, UserRepository userRepository) {
         this.jwtManager = jwtManager;
+        this.userRepository = userRepository;
     }
 
     private ActivitiesApi createActivitiesApi(String userFrn) {
+        Optional<User> userOptional = userRepository.findByUserFrn(userFrn);
+
+        if (userOptional.isEmpty()) {
+            throw new FlashDashException(ErrorCode.E401001, "Invalid user reference.");
+        }
+
+        User user = userOptional.get();
+
         ApiClient apiClient = new ApiClient();
-        String token = jwtManager.generateToken(userFrn);
+        String token = jwtManager.generateToken(userFrn, user.getEmail());
         apiClient.setBearerToken(token);
         return new ActivitiesApi(apiClient);
     }
