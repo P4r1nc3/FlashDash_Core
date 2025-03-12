@@ -52,7 +52,7 @@ class AuthenticationServiceTest {
     void setUp() {
         user = TestUtils.createUser();
 
-        when(jwtManager.generateToken(user.getUsername())).thenReturn("mocked-jwt-token");
+        when(jwtManager.generateToken(user.getUsername(), user.getEmail())).thenReturn("mocked-jwt-token");
     }
 
     @Test
@@ -62,7 +62,7 @@ class AuthenticationServiceTest {
         when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
 
-        when(jwtManager.generateToken(user.getUserFrn())).thenReturn("mocked-jwt-token");
+        when(jwtManager.generateToken(user.getUserFrn(), user.getEmail())).thenReturn("mocked-jwt-token");
 
         LoginRequest loginRequest = TestUtils.createLoginRequest(user);
 
@@ -75,7 +75,7 @@ class AuthenticationServiceTest {
 
         verify(userRepository).findByEmail(user.getUsername());
         verify(passwordEncoder).matches(loginRequest.getPassword(), user.getPassword());
-        verify(jwtManager).generateToken(user.getUserFrn());
+        verify(jwtManager).generateToken(user.getUserFrn(), user.getEmail());
     }
 
 
