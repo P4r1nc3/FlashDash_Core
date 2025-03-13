@@ -1,5 +1,7 @@
 package com.flashdash.core.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flashdash.core.exception.ErrorCode;
 import com.flashdash.core.exception.FlashDashException;
 import com.flashdash.core.model.GameSession;
@@ -9,23 +11,28 @@ import com.flashdash.core.repository.GameSessionRepository;
 import com.flashdash.core.utils.FrnGenerator;
 import com.flashdash.core.utils.ResourceType;
 import com.p4r1nc3.flashdash.activity.model.LogActivityRequest.ActivityTypeEnum;
+import com.p4r1nc3.flashdash.core.model.GameSessionDetailsResponse;
 import com.p4r1nc3.flashdash.core.model.QuestionRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class  GameSessionService {
 
+    private final ObjectMapper objectMapper;
     private final ActivityService activityService;
     private final QuestionService questionService;
     private final GameSessionRepository gameSessionRepository;
 
-    public GameSessionService(ActivityService activityService,
+    public GameSessionService(ObjectMapper objectMapper,
+                              ActivityService activityService,
                               QuestionService questionService,
                               GameSessionRepository gameSessionRepository) {
+        this.objectMapper = objectMapper;
         this.activityService = activityService;
         this.questionService = questionService;
         this.gameSessionRepository = gameSessionRepository;
@@ -42,7 +49,7 @@ public class  GameSessionService {
 
         if (existingSessionOptional.isPresent()) {
             gameSession = existingSessionOptional.get();
-            gameSession.setCreatedAt(LocalDateTime.now());
+            gameSession.setStartTime(LocalDateTime.now());
             gameSession.setUpdatedAt(LocalDateTime.now());
             gameSessionRepository.save(gameSession);
         } else {
@@ -50,9 +57,16 @@ public class  GameSessionService {
             gameSession.setGameSessionFrn(FrnGenerator.generateFrn(ResourceType.GAME_SESSION));
             gameSession.setUserFrn(userFrn);
             gameSession.setDeckFrn(deckFrn);
+            gameSession.setStatus(GameSessionStatus.PENDING.toString());
+            gameSession.setTotalScore(0);
+            gameSession.setCorrectAnswersCount(0);
+            gameSession.setWrongAnswersCount(0);
+            gameSession.setQuestionCount(0);
+            gameSession.setStartTime(LocalDateTime.now());
+            gameSession.setEndTime(null);
             gameSession.setCreatedAt(LocalDateTime.now());
             gameSession.setUpdatedAt(LocalDateTime.now());
-            gameSession.setStatus(GameSessionStatus.PENDING.toString());
+            gameSession.setSessionDetails("");
 
             gameSessionRepository.save(gameSession);
         }
@@ -74,6 +88,7 @@ public class  GameSessionService {
         }
 
         List<Question> correctQuestions = questionService.getAllQuestionsInDeck(deckFrn, userFrn);
+        List<GameSessionDetailsResponse> sessionDetailsList = new ArrayList<>();
 
         int correctCount = 0;
         int wrongCount = 0;
@@ -84,11 +99,21 @@ public class  GameSessionService {
                     .findFirst()
                     .orElseThrow(() -> new FlashDashException(ErrorCode.E404002, "Matching question not found in the provided deck."));
 
-            if (correctQuestion.getCorrectAnswers().equals(userQuestion.getCorrectAnswers())) {
+            boolean wasCorrect = correctQuestion.getCorrectAnswers().equals(userQuestion.getCorrectAnswers());
+            if (wasCorrect) {
                 correctCount++;
             } else {
                 wrongCount++;
             }
+
+            GameSessionDetailsResponse sessionDetailsResponse = new GameSessionDetailsResponse();
+            sessionDetailsResponse.setQuestionText(correctQuestion.getQuestion());
+            sessionDetailsResponse.setCorrectAnswers(correctQuestion.getCorrectAnswers());
+            sessionDetailsResponse.setIncorrectAnswers(correctQuestion.getIncorrectAnswers());
+            sessionDetailsResponse.setUserAnswers(userQuestion.getCorrectAnswers());
+            sessionDetailsResponse.setWasCorrect(wasCorrect);
+
+            sessionDetailsList.add(sessionDetailsResponse);
         }
 
         int totalQuestions = userAnswers.size();
@@ -101,6 +126,12 @@ public class  GameSessionService {
         gameSession.setCorrectAnswersCount(correctCount);
         gameSession.setWrongAnswersCount(wrongCount);
         gameSession.setQuestionCount(totalQuestions);
+
+        try {
+            gameSession.setSessionDetails(objectMapper.writeValueAsString(sessionDetailsList));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error serializing session details", e);
+        }
 
         gameSessionRepository.save(gameSession);
         activityService.logUserActivity(userFrn, gameSession.getGameSessionFrn(), ActivityTypeEnum.GAME_FINISHED);
