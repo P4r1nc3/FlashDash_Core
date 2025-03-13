@@ -45,33 +45,26 @@ public class  GameSessionService {
                 GameSessionStatus.PENDING.toString()
         );
 
-        GameSession gameSession;
+        existingSessionOptional.ifPresent(gameSessionRepository::delete);
 
-        if (existingSessionOptional.isPresent()) {
-            gameSession = existingSessionOptional.get();
-            gameSession.setStartTime(LocalDateTime.now());
-            gameSession.setUpdatedAt(LocalDateTime.now());
-            gameSessionRepository.save(gameSession);
-        } else {
-            gameSession = new GameSession();
-            gameSession.setGameSessionFrn(FrnGenerator.generateFrn(ResourceType.GAME_SESSION));
-            gameSession.setUserFrn(userFrn);
-            gameSession.setDeckFrn(deckFrn);
-            gameSession.setStatus(GameSessionStatus.PENDING.toString());
-            gameSession.setTotalScore(0);
-            gameSession.setCorrectAnswersCount(0);
-            gameSession.setWrongAnswersCount(0);
-            gameSession.setQuestionCount(0);
-            gameSession.setStartTime(LocalDateTime.now());
-            gameSession.setEndTime(null);
-            gameSession.setCreatedAt(LocalDateTime.now());
-            gameSession.setUpdatedAt(LocalDateTime.now());
-            gameSession.setSessionDetails("");
+        GameSession newGameSession = new GameSession();
+        newGameSession.setGameSessionFrn(FrnGenerator.generateFrn(ResourceType.GAME_SESSION));
+        newGameSession.setUserFrn(userFrn);
+        newGameSession.setDeckFrn(deckFrn);
+        newGameSession.setStatus(GameSessionStatus.PENDING.toString());
+        newGameSession.setTotalScore(0);
+        newGameSession.setCorrectAnswersCount(0);
+        newGameSession.setWrongAnswersCount(0);
+        newGameSession.setQuestionCount(0);
+        newGameSession.setStartTime(LocalDateTime.now());
+        newGameSession.setEndTime(null);
+        newGameSession.setCreatedAt(LocalDateTime.now());
+        newGameSession.setUpdatedAt(LocalDateTime.now());
+        newGameSession.setSessionDetails("");
 
-            gameSessionRepository.save(gameSession);
-        }
+        gameSessionRepository.save(newGameSession);
 
-        activityService.logUserActivity(userFrn, gameSession.getGameSessionFrn(), ActivityTypeEnum.GAME_STARTED);
+        activityService.logUserActivity(userFrn, newGameSession.getGameSessionFrn(), ActivityTypeEnum.GAME_STARTED);
 
         return questionService.getAllQuestionsInDeck(deckFrn, userFrn);
     }
