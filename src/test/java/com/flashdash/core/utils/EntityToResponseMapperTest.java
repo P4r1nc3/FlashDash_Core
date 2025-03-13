@@ -121,12 +121,17 @@ class EntityToResponseMapperTest {
         // Arrange
         User user = TestUtils.createUser();
         Deck deck = TestUtils.createDeck(user);
+
+        LocalDateTime startTime = LocalDateTime.now().minusMinutes(30).minusSeconds(10);
+        LocalDateTime endTime = LocalDateTime.now();
+
         GameSession gameSession = TestUtils.createGameSession(user, deck, "FINISHED");
         gameSession.setCorrectAnswersCount(5);
         gameSession.setQuestionCount(10);
         gameSession.setTotalScore(50);
-        gameSession.setCreatedAt(LocalDateTime.now().minusMinutes(30));
-        gameSession.setEndTime(LocalDateTime.now());
+        gameSession.setStartTime(startTime);
+        gameSession.setEndTime(endTime);
+        gameSession.setCreatedAt(startTime);
 
         // Act
         GameSessionResponse response = mapper.mapToGameSessionResponse(gameSession);
@@ -139,20 +144,41 @@ class EntityToResponseMapperTest {
         assertThat(response.getCorrectAnswers()).isEqualTo(5);
         assertThat(response.getTotalQuestions()).isEqualTo(10);
         assertThat(response.getAccuracy()).isEqualTo(50.0f);
-        assertThat(response.getDuration()).isEqualTo("30 min");
-        assertThat(response.getStartTime()).isEqualTo(gameSession.getCreatedAt().atOffset(ZoneOffset.UTC));
-        assertThat(response.getEndTime()).isEqualTo(gameSession.getEndTime().atOffset(ZoneOffset.UTC));
+        assertThat(response.getDuration()).isEqualTo("30 min 10 sec");
+        assertThat(response.getStartTime()).isEqualTo(startTime.atOffset(ZoneOffset.UTC));
+        assertThat(response.getEndTime()).isEqualTo(endTime.atOffset(ZoneOffset.UTC));
     }
+
 
     @Test
     void shouldConvertGameSessionListToGameSessionResponseList() {
         // Arrange
         User user = TestUtils.createUser();
         Deck deck = TestUtils.createDeck(user);
-        List<GameSession> gameSessions = List.of(
-                TestUtils.createGameSession(user, deck, "FINISHED"),
-                TestUtils.createGameSession(user, deck, "FINISHED")
-        );
+
+        LocalDateTime startTime1 = LocalDateTime.now().minusMinutes(25).minusSeconds(15);
+        LocalDateTime endTime1 = LocalDateTime.now().minusMinutes(5);
+
+        LocalDateTime startTime2 = LocalDateTime.now().minusMinutes(40).minusSeconds(30);
+        LocalDateTime endTime2 = LocalDateTime.now().minusMinutes(10);
+
+        GameSession gameSession1 = TestUtils.createGameSession(user, deck, "FINISHED");
+        gameSession1.setStartTime(startTime1);
+        gameSession1.setEndTime(endTime1);
+        gameSession1.setCreatedAt(startTime1);
+        gameSession1.setCorrectAnswersCount(6);
+        gameSession1.setQuestionCount(12);
+        gameSession1.setTotalScore(60);
+
+        GameSession gameSession2 = TestUtils.createGameSession(user, deck, "FINISHED");
+        gameSession2.setStartTime(startTime2);
+        gameSession2.setEndTime(endTime2);
+        gameSession2.setCreatedAt(startTime2);
+        gameSession2.setCorrectAnswersCount(8);
+        gameSession2.setQuestionCount(16);
+        gameSession2.setTotalScore(80);
+
+        List<GameSession> gameSessions = List.of(gameSession1, gameSession2);
 
         // Act
         List<GameSessionResponse> responses = mapper.mapToGameSessionResponse(gameSessions);
@@ -160,23 +186,29 @@ class EntityToResponseMapperTest {
         // Assert
         assertThat(responses).isNotEmpty();
         assertThat(responses).hasSize(gameSessions.size());
-    }
 
-    @Test
-    void shouldHandleNullEndTimeInGameSessionResponse() {
-        // Arrange
-        User user = TestUtils.createUser();
-        Deck deck = TestUtils.createDeck(user);
-        GameSession gameSession = TestUtils.createGameSession(user, deck, "PENDING");
-        gameSession.setCreatedAt(LocalDateTime.now());
+        GameSessionResponse response1 = responses.get(0);
+        GameSessionResponse response2 = responses.get(1);
 
-        // Act
-        GameSessionResponse response = mapper.mapToGameSessionResponse(gameSession);
+        assertThat(response1.getGameSessionId()).isEqualTo(mapper.extractId(gameSession1.getGameSessionFrn()));
+        assertThat(response1.getGameSessionFrn()).isEqualTo(gameSession1.getGameSessionFrn());
+        assertThat(response1.getScore()).isEqualTo(60);
+        assertThat(response1.getCorrectAnswers()).isEqualTo(6);
+        assertThat(response1.getTotalQuestions()).isEqualTo(12);
+        assertThat(response1.getAccuracy()).isEqualTo(50.0f);
+        assertThat(response1.getDuration()).isEqualTo("20 min 15 sec");
+        assertThat(response1.getStartTime()).isEqualTo(startTime1.atOffset(ZoneOffset.UTC));
+        assertThat(response1.getEndTime()).isEqualTo(endTime1.atOffset(ZoneOffset.UTC));
 
-        // Assert
-        assertThat(response).isNotNull();
-        assertThat(response.getDuration()).isEqualTo("N/A");
-        assertThat(response.getEndTime()).isNull();
+        assertThat(response2.getGameSessionId()).isEqualTo(mapper.extractId(gameSession2.getGameSessionFrn()));
+        assertThat(response2.getGameSessionFrn()).isEqualTo(gameSession2.getGameSessionFrn());
+        assertThat(response2.getScore()).isEqualTo(80);
+        assertThat(response2.getCorrectAnswers()).isEqualTo(8);
+        assertThat(response2.getTotalQuestions()).isEqualTo(16);
+        assertThat(response2.getAccuracy()).isEqualTo(50.0f);
+        assertThat(response2.getDuration()).isEqualTo("30 min 30 sec");
+        assertThat(response2.getStartTime()).isEqualTo(startTime2.atOffset(ZoneOffset.UTC));
+        assertThat(response2.getEndTime()).isEqualTo(endTime2.atOffset(ZoneOffset.UTC));
     }
 
     @Test

@@ -1,20 +1,28 @@
 package com.flashdash.core.utils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flashdash.core.model.*;
 import com.flashdash.core.repository.UserRepository;
 import com.p4r1nc3.flashdash.core.model.*;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
 public class EntityToResponseMapper {
 
+    private final ObjectMapper objectMapper;
     private final UserRepository userRepository;
 
-    public EntityToResponseMapper(UserRepository userRepository) {
+    public EntityToResponseMapper(ObjectMapper objectMapper,
+                                  UserRepository userRepository) {
+        this.objectMapper = objectMapper;
         this.userRepository = userRepository;
     }
 
@@ -62,27 +70,20 @@ public class EntityToResponseMapper {
 
     public GameSessionResponse mapToGameSessionResponse(GameSession gameSession) {
         GameSessionResponse response = new GameSessionResponse();
+
         response.setGameSessionId(extractId(gameSession.getGameSessionFrn()));
         response.setGameSessionFrn(gameSession.getGameSessionFrn());
         response.setScore(gameSession.getTotalScore());
         response.setCorrectAnswers(gameSession.getCorrectAnswersCount());
         response.setTotalQuestions(gameSession.getQuestionCount());
 
-        if (gameSession.getEndTime() != null) {
-            long durationInMinutes = java.time.Duration.between(gameSession.getCreatedAt(), gameSession.getEndTime()).toMinutes();
-            response.setDuration(durationInMinutes + " min");
-        } else {
-            response.setDuration("N/A");
-        }
+        Duration duration = Duration.between(gameSession.getStartTime(), gameSession.getEndTime());
+        response.setDuration(duration.toMinutes() + " min " + duration.getSeconds() % 60 + " sec");
 
-        if (gameSession.getQuestionCount() > 0) {
-            response.setAccuracy(((float) gameSession.getCorrectAnswersCount() / gameSession.getQuestionCount()) * 100);
-        } else {
-            response.setAccuracy(0f);
-        }
-
-        response.setStartTime(gameSession.getCreatedAt().atOffset(ZoneOffset.UTC));
-        response.setEndTime(gameSession.getEndTime() != null ? gameSession.getEndTime().atOffset(ZoneOffset.UTC) : null);
+        response.setAccuracy(gameSession.getQuestionCount() > 0 ? ((float) gameSession.getCorrectAnswersCount() / gameSession.getQuestionCount()) * 100 : 0f);
+        response.setStartTime(gameSession.getStartTime().atOffset(ZoneOffset.UTC));
+        response.setEndTime(gameSession.getEndTime().atOffset(ZoneOffset.UTC));
+        response.setSessionDetails(deserializeSessionDetails(gameSession.getSessionDetails()));
 
         return response;
     }
@@ -197,5 +198,16 @@ public class EntityToResponseMapper {
             return parts[parts.length - 1];
         }
         return frn;
+    }
+
+    private List<GameSessionDetailsResponse> deserializeSessionDetails(String sessionDetailsJson) {
+        if (sessionDetailsJson == null || sessionDetailsJson.isBlank()) {
+            return new ArrayList<>();
+        }
+        try {
+            return objectMapper.readValue(sessionDetailsJson, new TypeReference<List<GameSessionDetailsResponse>>() {});
+        } catch (JsonProcessingException e) {
+            return new ArrayList<>();
+        }
     }
 }
