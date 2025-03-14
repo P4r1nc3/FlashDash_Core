@@ -113,11 +113,26 @@ public class TestUtils {
         session.setCorrectAnswersCount(0);
         session.setWrongAnswersCount(0);
         session.setQuestionCount(0);
-        session.setStartTime(LocalDateTime.now());
-        session.setEndTime(null);
         session.setCreatedAt(LocalDateTime.now());
         session.setUpdatedAt(LocalDateTime.now());
         return session;
+    }
+
+    public static List<GameSessionDetailsResponse> createGameSessionDetails() {
+        return List.of(
+                new GameSessionDetailsResponse()
+                        .questionText("What is the capital of France?")
+                        .correctAnswers(List.of("Paris"))
+                        .incorrectAnswers(List.of("London", "Berlin", "Madrid"))
+                        .userAnswers(List.of("Paris"))
+                        .wasCorrect(true),
+                new GameSessionDetailsResponse()
+                        .questionText("Which planet is known as the Red Planet?")
+                        .correctAnswers(List.of("Mars"))
+                        .incorrectAnswers(List.of("Venus", "Jupiter", "Saturn"))
+                        .userAnswers(List.of("Venus"))
+                        .wasCorrect(false)
+        );
     }
 
     public static SimpleMailMessage createSimpleMailMessageForAccountActivation(String to, String activationToken) {

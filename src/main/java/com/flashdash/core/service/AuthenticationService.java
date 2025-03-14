@@ -100,7 +100,7 @@ public class AuthenticationService {
         userRepository.save(user);
         emailService.sendActivationEmail(user.getUsername(), activationToken);
 
-        activityService.logUserActivity(user.getUserFrn(), user.getUserFrn(),ActivityTypeEnum.ACCOUNT_REGISTRATION);
+        activityService.logUserActivity(user.getUserFrn(), user.getUserFrn(), ActivityTypeEnum.ACCOUNT_REGISTRATION);
 
         AuthenticationResponse authenticationResponse = new AuthenticationResponse();
         authenticationResponse.setToken("Account created. Please check your email to activate.");
@@ -121,7 +121,7 @@ public class AuthenticationService {
 
         user.setEnabled(true);
         userRepository.save(user);
-        activityService.logUserActivity(user.getUserFrn(), user.getUserFrn(),ActivityTypeEnum.ACCOUNT_CONFIRMATION);
+        activityService.logUserActivity(user.getUserFrn(), user.getUserFrn(), ActivityTypeEnum.ACCOUNT_CONFIRMATION);
 
         logger.info("Account activated successfully for email: {}", user.getUsername());
     }

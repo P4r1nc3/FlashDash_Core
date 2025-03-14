@@ -25,29 +25,27 @@ public class GameSession {
     @Column(name = "status", nullable = false, length = 64)
     private String status;
 
-    @Column(name = "total_score", nullable = true)
+    @Column(name = "total_score", nullable = false)
     private int totalScore;
 
-    @Column(name = "correct_answers_count", nullable = true)
+    @Column(name = "correct_answers_count", nullable = false)
     private int correctAnswersCount;
 
-    @Column(name = "wrong_answers_count", nullable = true)
+    @Column(name = "wrong_answers_count", nullable = false)
     private int wrongAnswersCount;
 
-    @Column(name = "question_count", nullable = true)
+    @Column(name = "question_count", nullable = false)
     private int questionCount;
-
-    @Column(name = "start_time", nullable = true)
-    private LocalDateTime startTime;
-
-    @Column(name = "end_time", nullable = true)
-    private LocalDateTime endTime;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @Lob
+    @Column(name = "session_details", columnDefinition = "TEXT")
+    private String sessionDetails;
 
     public GameSession() {}
 }
