@@ -37,12 +37,6 @@ public class GameSession {
     @Column(name = "question_count", nullable = false)
     private int questionCount;
 
-    @Column(name = "start_time", nullable = false)
-    private LocalDateTime startTime;
-
-    @Column(name = "end_time", nullable = true)
-    private LocalDateTime endTime;
-
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

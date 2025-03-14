@@ -113,8 +113,6 @@ public class TestUtils {
         session.setCorrectAnswersCount(0);
         session.setWrongAnswersCount(0);
         session.setQuestionCount(0);
-        session.setStartTime(LocalDateTime.now());
-        session.setEndTime(null);
         session.setCreatedAt(LocalDateTime.now());
         session.setUpdatedAt(LocalDateTime.now());
         return session;

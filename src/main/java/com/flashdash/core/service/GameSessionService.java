@@ -56,8 +56,6 @@ public class  GameSessionService {
         newGameSession.setCorrectAnswersCount(0);
         newGameSession.setWrongAnswersCount(0);
         newGameSession.setQuestionCount(0);
-        newGameSession.setStartTime(LocalDateTime.now());
-        newGameSession.setEndTime(null);
         newGameSession.setCreatedAt(LocalDateTime.now());
         newGameSession.setUpdatedAt(LocalDateTime.now());
         newGameSession.setSessionDetails("");
@@ -114,7 +112,7 @@ public class  GameSessionService {
 
         GameSession gameSession = gameSessionOptional.get();
         gameSession.setStatus(GameSessionStatus.FINISHED.toString());
-        gameSession.setEndTime(LocalDateTime.now());
+        gameSession.setUpdatedAt(LocalDateTime.now());
         gameSession.setTotalScore(score);
         gameSession.setCorrectAnswersCount(correctCount);
         gameSession.setWrongAnswersCount(wrongCount);

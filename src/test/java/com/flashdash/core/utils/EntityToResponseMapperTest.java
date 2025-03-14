@@ -133,8 +133,8 @@ class EntityToResponseMapperTest {
         gameSession.setCorrectAnswersCount(5);
         gameSession.setQuestionCount(10);
         gameSession.setTotalScore(50);
-        gameSession.setStartTime(startTime);
-        gameSession.setEndTime(endTime);
+        gameSession.setCreatedAt(startTime);
+        gameSession.setUpdatedAt(endTime);
         gameSession.setCreatedAt(startTime);
 
         List<GameSessionDetailsResponse> sessionDetailsList = TestUtils.createGameSessionDetails();
@@ -173,8 +173,8 @@ class EntityToResponseMapperTest {
         LocalDateTime endTime2 = LocalDateTime.now().minusMinutes(10);
 
         GameSession gameSession1 = TestUtils.createGameSession(user, deck, "FINISHED");
-        gameSession1.setStartTime(startTime1);
-        gameSession1.setEndTime(endTime1);
+        gameSession1.setCreatedAt(startTime1);
+        gameSession1.setUpdatedAt(endTime1);
         gameSession1.setCreatedAt(startTime1);
         gameSession1.setCorrectAnswersCount(6);
         gameSession1.setQuestionCount(12);
@@ -182,8 +182,8 @@ class EntityToResponseMapperTest {
         gameSession1.setSessionDetails(objectMapper.writeValueAsString(TestUtils.createGameSessionDetails()));
 
         GameSession gameSession2 = TestUtils.createGameSession(user, deck, "FINISHED");
-        gameSession2.setStartTime(startTime2);
-        gameSession2.setEndTime(endTime2);
+        gameSession2.setCreatedAt(startTime2);
+        gameSession2.setUpdatedAt(endTime2);
         gameSession2.setCreatedAt(startTime2);
         gameSession2.setCorrectAnswersCount(8);
         gameSession2.setQuestionCount(16);

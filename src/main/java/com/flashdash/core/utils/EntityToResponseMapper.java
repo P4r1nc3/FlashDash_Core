@@ -77,12 +77,12 @@ public class EntityToResponseMapper {
         response.setCorrectAnswers(gameSession.getCorrectAnswersCount());
         response.setTotalQuestions(gameSession.getQuestionCount());
 
-        Duration duration = Duration.between(gameSession.getStartTime(), gameSession.getEndTime());
+        Duration duration = Duration.between(gameSession.getCreatedAt(), gameSession.getUpdatedAt());
         response.setDuration(duration.toMinutes() + " min " + duration.getSeconds() % 60 + " sec");
 
         response.setAccuracy(gameSession.getQuestionCount() > 0 ? ((float) gameSession.getCorrectAnswersCount() / gameSession.getQuestionCount()) * 100 : 0f);
-        response.setStartTime(gameSession.getStartTime().atOffset(ZoneOffset.UTC));
-        response.setEndTime(gameSession.getEndTime().atOffset(ZoneOffset.UTC));
+        response.setStartTime(gameSession.getCreatedAt().atOffset(ZoneOffset.UTC));
+        response.setEndTime(gameSession.getUpdatedAt().atOffset(ZoneOffset.UTC));
         response.setSessionDetails(deserializeSessionDetails(gameSession.getSessionDetails()));
 
         return response;
