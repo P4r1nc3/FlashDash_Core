@@ -1,5 +1,7 @@
 package com.flashdash.core.utils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flashdash.core.FlashDashCoreApplication;
 import com.flashdash.core.model.*;
 import com.flashdash.core.repository.UserRepository;
@@ -26,9 +28,11 @@ class EntityToResponseMapperTest {
 
     @Autowired
     private EntityToResponseMapper mapper;
+
     @MockitoBean
     private UserRepository userRepository;
 
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
     void shouldConvertDeckToDeckResponse() {
@@ -117,16 +121,25 @@ class EntityToResponseMapperTest {
     }
 
     @Test
-    void shouldConvertGameSessionToGameSessionResponse() {
+    void shouldConvertGameSessionToGameSessionResponse() throws JsonProcessingException {
         // Arrange
         User user = TestUtils.createUser();
         Deck deck = TestUtils.createDeck(user);
+
+        LocalDateTime startTime = LocalDateTime.now().minusMinutes(30).minusSeconds(10);
+        LocalDateTime endTime = LocalDateTime.now();
+
         GameSession gameSession = TestUtils.createGameSession(user, deck, "FINISHED");
         gameSession.setCorrectAnswersCount(5);
         gameSession.setQuestionCount(10);
         gameSession.setTotalScore(50);
-        gameSession.setCreatedAt(LocalDateTime.now().minusMinutes(30));
-        gameSession.setEndTime(LocalDateTime.now());
+        gameSession.setCreatedAt(startTime);
+        gameSession.setUpdatedAt(endTime);
+        gameSession.setCreatedAt(startTime);
+
+        List<GameSessionDetailsResponse> sessionDetailsList = TestUtils.createGameSessionDetails();
+        String sessionDetailsJson = objectMapper.writeValueAsString(sessionDetailsList);
+        gameSession.setSessionDetails(sessionDetailsJson);
 
         // Act
         GameSessionResponse response = mapper.mapToGameSessionResponse(gameSession);
@@ -139,20 +152,45 @@ class EntityToResponseMapperTest {
         assertThat(response.getCorrectAnswers()).isEqualTo(5);
         assertThat(response.getTotalQuestions()).isEqualTo(10);
         assertThat(response.getAccuracy()).isEqualTo(50.0f);
-        assertThat(response.getDuration()).isEqualTo("30 min");
-        assertThat(response.getStartTime()).isEqualTo(gameSession.getCreatedAt().atOffset(ZoneOffset.UTC));
-        assertThat(response.getEndTime()).isEqualTo(gameSession.getEndTime().atOffset(ZoneOffset.UTC));
+        assertThat(response.getDuration()).isEqualTo("30 min 10 sec");
+        assertThat(response.getStartTime()).isEqualTo(startTime.atOffset(ZoneOffset.UTC));
+        assertThat(response.getEndTime()).isEqualTo(endTime.atOffset(ZoneOffset.UTC));
+        assertThat(response.getSessionDetails()).isNotNull();
+        assertThat(response.getSessionDetails()).hasSize(sessionDetailsList.size());
+        assertThat(response.getSessionDetails().get(0).getQuestionText()).isEqualTo(sessionDetailsList.get(0).getQuestionText());
     }
 
     @Test
-    void shouldConvertGameSessionListToGameSessionResponseList() {
+    void shouldConvertGameSessionListToGameSessionResponseList() throws JsonProcessingException {
         // Arrange
         User user = TestUtils.createUser();
         Deck deck = TestUtils.createDeck(user);
-        List<GameSession> gameSessions = List.of(
-                TestUtils.createGameSession(user, deck, "FINISHED"),
-                TestUtils.createGameSession(user, deck, "FINISHED")
-        );
+
+        LocalDateTime startTime1 = LocalDateTime.now().minusMinutes(25).minusSeconds(15);
+        LocalDateTime endTime1 = LocalDateTime.now().minusMinutes(5);
+
+        LocalDateTime startTime2 = LocalDateTime.now().minusMinutes(40).minusSeconds(30);
+        LocalDateTime endTime2 = LocalDateTime.now().minusMinutes(10);
+
+        GameSession gameSession1 = TestUtils.createGameSession(user, deck, "FINISHED");
+        gameSession1.setCreatedAt(startTime1);
+        gameSession1.setUpdatedAt(endTime1);
+        gameSession1.setCreatedAt(startTime1);
+        gameSession1.setCorrectAnswersCount(6);
+        gameSession1.setQuestionCount(12);
+        gameSession1.setTotalScore(60);
+        gameSession1.setSessionDetails(objectMapper.writeValueAsString(TestUtils.createGameSessionDetails()));
+
+        GameSession gameSession2 = TestUtils.createGameSession(user, deck, "FINISHED");
+        gameSession2.setCreatedAt(startTime2);
+        gameSession2.setUpdatedAt(endTime2);
+        gameSession2.setCreatedAt(startTime2);
+        gameSession2.setCorrectAnswersCount(8);
+        gameSession2.setQuestionCount(16);
+        gameSession2.setTotalScore(80);
+        gameSession2.setSessionDetails(objectMapper.writeValueAsString(TestUtils.createGameSessionDetails()));
+
+        List<GameSession> gameSessions = List.of(gameSession1, gameSession2);
 
         // Act
         List<GameSessionResponse> responses = mapper.mapToGameSessionResponse(gameSessions);
@@ -160,24 +198,37 @@ class EntityToResponseMapperTest {
         // Assert
         assertThat(responses).isNotEmpty();
         assertThat(responses).hasSize(gameSessions.size());
+
+        GameSessionResponse response1 = responses.get(0);
+        GameSessionResponse response2 = responses.get(1);
+
+        assertThat(response1.getGameSessionId()).isEqualTo(mapper.extractId(gameSession1.getGameSessionFrn()));
+        assertThat(response1.getGameSessionFrn()).isEqualTo(gameSession1.getGameSessionFrn());
+        assertThat(response1.getScore()).isEqualTo(60);
+        assertThat(response1.getCorrectAnswers()).isEqualTo(6);
+        assertThat(response1.getTotalQuestions()).isEqualTo(12);
+        assertThat(response1.getAccuracy()).isEqualTo(50.0f);
+        assertThat(response1.getDuration()).isEqualTo("20 min 15 sec");
+        assertThat(response1.getStartTime()).isEqualTo(startTime1.atOffset(ZoneOffset.UTC));
+        assertThat(response1.getEndTime()).isEqualTo(endTime1.atOffset(ZoneOffset.UTC));
+        assertThat(response1.getSessionDetails()).isNotNull();
+        assertThat(response1.getSessionDetails()).hasSize(2);
+        assertThat(response1.getSessionDetails().get(0).getQuestionText()).isEqualTo("What is the capital of France?");
+
+        assertThat(response2.getGameSessionId()).isEqualTo(mapper.extractId(gameSession2.getGameSessionFrn()));
+        assertThat(response2.getGameSessionFrn()).isEqualTo(gameSession2.getGameSessionFrn());
+        assertThat(response2.getScore()).isEqualTo(80);
+        assertThat(response2.getCorrectAnswers()).isEqualTo(8);
+        assertThat(response2.getTotalQuestions()).isEqualTo(16);
+        assertThat(response2.getAccuracy()).isEqualTo(50.0f);
+        assertThat(response2.getDuration()).isEqualTo("30 min 30 sec");
+        assertThat(response2.getStartTime()).isEqualTo(startTime2.atOffset(ZoneOffset.UTC));
+        assertThat(response2.getEndTime()).isEqualTo(endTime2.atOffset(ZoneOffset.UTC));
+        assertThat(response2.getSessionDetails()).isNotNull();
+        assertThat(response2.getSessionDetails()).hasSize(2);
+        assertThat(response2.getSessionDetails().get(1).getQuestionText()).isEqualTo("Which planet is known as the Red Planet?");
     }
 
-    @Test
-    void shouldHandleNullEndTimeInGameSessionResponse() {
-        // Arrange
-        User user = TestUtils.createUser();
-        Deck deck = TestUtils.createDeck(user);
-        GameSession gameSession = TestUtils.createGameSession(user, deck, "PENDING");
-        gameSession.setCreatedAt(LocalDateTime.now());
-
-        // Act
-        GameSessionResponse response = mapper.mapToGameSessionResponse(gameSession);
-
-        // Assert
-        assertThat(response).isNotNull();
-        assertThat(response.getDuration()).isEqualTo("N/A");
-        assertThat(response.getEndTime()).isNull();
-    }
 
     @Test
     void shouldConvertFriendInvitationToReceivedResponse() {

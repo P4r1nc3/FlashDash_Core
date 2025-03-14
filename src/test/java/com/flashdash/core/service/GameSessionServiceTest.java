@@ -18,8 +18,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest(classes = FlashDashCoreApplication.class)
@@ -62,11 +61,11 @@ class GameSessionServiceTest {
 
         // Assert
         assertThat(questions).isNotEmpty();
-        verify(gameSessionRepository).save(any(GameSession.class));
+        verify(gameSessionRepository, times(1)).save(any(GameSession.class));
     }
 
     @Test
-    void shouldResumeExistingGameSession() {
+    void shouldDeleteExistingGameSessionAndStartNew() {
         // Arrange
         when(gameSessionRepository.findTopByDeckFrnAndUserFrnAndStatus(deck.getDeckFrn(), user.getUserFrn(), GameSessionStatus.PENDING.toString()))
                 .thenReturn(Optional.of(gameSession));
@@ -78,10 +77,9 @@ class GameSessionServiceTest {
 
         // Assert
         assertThat(questions).isNotEmpty();
-        verify(gameSessionRepository, times(1)).save(gameSession);
-        verify(activityService).logUserActivity(user.getUserFrn(), gameSession.getGameSessionFrn(), ActivityTypeEnum.GAME_STARTED);
+        verify(gameSessionRepository, times(1)).delete(gameSession);
+        verify(gameSessionRepository, times(1)).save(any(GameSession.class));
     }
-
 
     @Test
     void shouldCreateNewGameSessionWhenNoneExists() {
@@ -99,7 +97,6 @@ class GameSessionServiceTest {
         verify(gameSessionRepository).save(any(GameSession.class));
         verify(activityService).logUserActivity(eq(user.getUserFrn()), anyString(), eq(ActivityTypeEnum.GAME_STARTED));
     }
-
 
     @Test
     void shouldEndGameSessionSuccessfully() {
@@ -122,6 +119,7 @@ class GameSessionServiceTest {
         assertThat(result.getTotalScore()).isEqualTo(100);
         assertThat(result.getCorrectAnswersCount()).isEqualTo(1);
         assertThat(result.getQuestionCount()).isEqualTo(1);
+        assertThat(result.getSessionDetails()).isNotBlank();
         verify(gameSessionRepository).save(gameSession);
     }
 
@@ -135,10 +133,8 @@ class GameSessionServiceTest {
         Question correctQuestion = TestUtils.createQuestion(deck, "Sample Question");
         correctQuestion.setCorrectAnswers(List.of("Correct Answer"));
 
-        GameSession activeSession = TestUtils.createGameSession(user, deck, GameSessionStatus.PENDING.toString());
-
         when(gameSessionRepository.findTopByDeckFrnAndUserFrnAndStatus(deck.getDeckFrn(), user.getUserFrn(), GameSessionStatus.PENDING.toString()))
-                .thenReturn(Optional.of(activeSession));
+                .thenReturn(Optional.of(gameSession));
 
         when(questionService.getAllQuestionsInDeck(deck.getDeckFrn(), user.getUserFrn())).thenReturn(List.of(correctQuestion));
 
@@ -167,7 +163,7 @@ class GameSessionServiceTest {
     }
 
     @Test
-    void shouldGetExistingGameSession() {
+    void shouldRetrieveExistingGameSession() {
         // Arrange
         when(gameSessionRepository.findByDeckFrnAndGameSessionFrnAndUserFrn(deck.getDeckFrn(), gameSession.getGameSessionFrn(), user.getUserFrn()))
                 .thenReturn(Optional.of(gameSession));
@@ -201,7 +197,7 @@ class GameSessionServiceTest {
         gameSessionService.removeAllGameSessionsForUser(user.getUserFrn());
 
         // Assert
-        verify(gameSessionRepository).deleteAll(anyList());
+        verify(gameSessionRepository, times(1)).deleteAll(anyList());
     }
 
     @Test
@@ -213,7 +209,7 @@ class GameSessionServiceTest {
         gameSessionService.removeAllGameSessionsForUser(user.getUserFrn());
 
         // Assert
-        verify(gameSessionRepository).findAllByUserFrn(user.getUserFrn());
+        verify(gameSessionRepository, times(1)).findAllByUserFrn(user.getUserFrn());
         verify(gameSessionRepository, never()).deleteAll(anyList());
     }
 }
