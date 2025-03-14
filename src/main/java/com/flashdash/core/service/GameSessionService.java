@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -90,7 +91,9 @@ public class  GameSessionService {
                     .findFirst()
                     .orElseThrow(() -> new FlashDashException(ErrorCode.E404002, "Matching question not found in the provided deck."));
 
-            boolean wasCorrect = correctQuestion.getCorrectAnswers().equals(userQuestion.getCorrectAnswers());
+            boolean wasCorrect = new HashSet<>(correctQuestion.getCorrectAnswers())
+                    .equals(new HashSet<>(userQuestion.getCorrectAnswers()));
+
             if (wasCorrect) {
                 correctCount++;
             } else {
