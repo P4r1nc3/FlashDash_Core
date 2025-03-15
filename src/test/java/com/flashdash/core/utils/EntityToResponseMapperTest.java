@@ -2,7 +2,6 @@ package com.flashdash.core.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.flashdash.core.FlashDashCoreApplication;
 import com.flashdash.core.model.*;
 import com.flashdash.core.repository.UserRepository;
 import com.p4r1nc3.flashdash.core.model.*;
@@ -22,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest(classes = FlashDashCoreApplication.class)
+@SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class EntityToResponseMapperTest {
 

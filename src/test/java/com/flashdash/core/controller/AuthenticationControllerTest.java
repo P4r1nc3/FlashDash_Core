@@ -1,6 +1,5 @@
 package com.flashdash.core.controller;
 
-import com.flashdash.core.FlashDashCoreApplication;
 import com.flashdash.core.TestUtils;
 import com.flashdash.core.exception.ErrorCode;
 import com.flashdash.core.exception.FlashDashException;
@@ -24,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest(classes = FlashDashCoreApplication.class)
+@SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AuthenticationControllerTest {
 

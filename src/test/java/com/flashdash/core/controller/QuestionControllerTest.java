@@ -1,6 +1,5 @@
 package com.flashdash.core.controller;
 
-import com.flashdash.core.FlashDashCoreApplication;
 import com.flashdash.core.TestUtils;
 import com.flashdash.core.exception.ErrorCode;
 import com.flashdash.core.exception.FlashDashException;
@@ -27,7 +26,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest(classes = FlashDashCoreApplication.class)
+@SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class QuestionControllerTest {
 

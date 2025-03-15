@@ -1,6 +1,5 @@
 package com.flashdash.core.service;
 
-import com.flashdash.core.FlashDashCoreApplication;
 import com.flashdash.core.TestUtils;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
@@ -13,7 +12,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import static org.mockito.Mockito.*;
 
-@SpringBootTest(classes = FlashDashCoreApplication.class)
+@SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class EmailServiceTest {
 

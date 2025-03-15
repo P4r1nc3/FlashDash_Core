@@ -1,6 +1,5 @@
 package com.flashdash.core.service;
 
-import com.flashdash.core.FlashDashCoreApplication;
 import com.flashdash.core.TestUtils;
 import com.flashdash.core.model.User;
 import com.flashdash.core.repository.UserRepository;
@@ -15,7 +14,7 @@ import java.util.List;
 
 import static org.mockito.Mockito.*;
 
-@SpringBootTest(classes = FlashDashCoreApplication.class)
+@SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class NotificationSchedulerTest {
 
