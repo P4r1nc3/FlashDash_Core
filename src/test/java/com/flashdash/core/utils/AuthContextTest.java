@@ -1,8 +1,6 @@
 package com.flashdash.core.utils;
 
-import com.flashdash.core.FlashDashCoreApplication;
 import com.flashdash.core.model.User;
-import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -16,7 +14,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest(classes = FlashDashCoreApplication.class)
+@SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AuthContextTest {
 

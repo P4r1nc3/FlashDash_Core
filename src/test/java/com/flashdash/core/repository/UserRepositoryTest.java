@@ -1,6 +1,5 @@
 package com.flashdash.core.repository;
 
-import com.flashdash.core.FlashDashCoreApplication;
 import com.flashdash.core.TestUtils;
 import com.flashdash.core.model.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,7 +15,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Transactional
-@SpringBootTest(classes = FlashDashCoreApplication.class)
+@SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UserRepositoryTest {
 

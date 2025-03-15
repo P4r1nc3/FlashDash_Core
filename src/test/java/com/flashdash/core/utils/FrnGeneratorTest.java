@@ -1,6 +1,5 @@
 package com.flashdash.core.utils;
 
-import com.flashdash.core.FlashDashCoreApplication;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -11,7 +10,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
-@SpringBootTest(classes = FlashDashCoreApplication.class)
+
+@SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FrnGeneratorTest {
 
