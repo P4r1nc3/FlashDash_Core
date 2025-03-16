@@ -63,11 +63,10 @@ class UserControllerTest {
         userResponse.setFirstName(user.getFirstName());
         userResponse.setLastName(user.getLastName());
         userResponse.setEmail(user.getUsername());
-        userResponse.setDailyNotifications(user.isDailyNotifications());
         userResponse.setCreatedAt(user.getCreatedAt().atOffset(ZoneOffset.UTC));
         userResponse.setUpdatedAt(user.getUpdatedAt().atOffset(ZoneOffset.UTC));
 
-        when(userService.getCurrentUser(user.getUsername())).thenReturn(user);
+        when(userService.getCurrentUser(user.getUsername())).thenReturn(userResponse);
 
         // Act
         ResponseEntity<UserResponse> response = userController.getUser();

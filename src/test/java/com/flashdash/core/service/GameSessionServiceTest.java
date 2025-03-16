@@ -5,6 +5,7 @@ import com.flashdash.core.exception.ErrorCode;
 import com.flashdash.core.exception.FlashDashException;
 import com.flashdash.core.model.*;
 import com.flashdash.core.repository.GameSessionRepository;
+import com.flashdash.core.service.api.ActivityService;
 import com.p4r1nc3.flashdash.activity.model.LogActivityRequest.ActivityTypeEnum;
 import com.p4r1nc3.flashdash.core.model.QuestionRequest;
 import org.junit.jupiter.api.BeforeEach;

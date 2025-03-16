@@ -164,10 +164,6 @@ public class EntityToResponseMapper {
         response.setLastName(user.getLastName());
         response.setCreatedAt(user.getCreatedAt().atOffset(ZoneOffset.UTC));
         response.setUpdatedAt(user.getUpdatedAt().atOffset(ZoneOffset.UTC));
-        response.setDailyNotifications(user.isDailyNotifications());
-        response.setGamesPlayed(user.getGamesPlayed());
-        response.setPoints(user.getPoints());
-        response.setStreak(user.getStreak());
 
         return response;
     }
@@ -179,9 +175,6 @@ public class EntityToResponseMapper {
         response.setUsername(user.getUsername());
         response.setFirstName(user.getFirstName());
         response.setLastName(user.getLastName());
-        response.setGamesPlayed(user.getGamesPlayed());
-        response.setPoints(user.getPoints());
-        response.setStreak(user.getStreak());
 
         return response;
     }

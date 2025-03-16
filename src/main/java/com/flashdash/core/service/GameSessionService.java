@@ -8,6 +8,7 @@ import com.flashdash.core.model.GameSession;
 import com.flashdash.core.model.GameSessionStatus;
 import com.flashdash.core.model.Question;
 import com.flashdash.core.repository.GameSessionRepository;
+import com.flashdash.core.service.api.ActivityService;
 import com.flashdash.core.utils.FrnGenerator;
 import com.flashdash.core.utils.ResourceType;
 import com.p4r1nc3.flashdash.activity.model.LogActivityRequest.ActivityTypeEnum;
