@@ -66,7 +66,7 @@ class UserControllerTest {
         userResponse.setCreatedAt(user.getCreatedAt().atOffset(ZoneOffset.UTC));
         userResponse.setUpdatedAt(user.getUpdatedAt().atOffset(ZoneOffset.UTC));
 
-        when(userService.getCurrentUser(user.getUsername())).thenReturn(user);
+        when(userService.getCurrentUser(user.getUsername())).thenReturn(userResponse);
 
         // Act
         ResponseEntity<UserResponse> response = userController.getUser();

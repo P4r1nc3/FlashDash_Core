@@ -7,6 +7,7 @@ import com.p4r1nc3.flashdash.activity.ApiClient;
 import com.p4r1nc3.flashdash.activity.ApiException;
 import com.p4r1nc3.flashdash.activity.api.ActivitiesApi;
 import com.p4r1nc3.flashdash.activity.model.ActivityResponse;
+import com.p4r1nc3.flashdash.activity.model.ActivityStatisticsResponse;
 import com.p4r1nc3.flashdash.activity.model.LogActivityRequest;
 import com.flashdash.core.exception.FlashDashException;
 import com.flashdash.core.exception.ErrorCode;
@@ -71,6 +72,19 @@ public class ActivityService {
         } catch (ApiException e) {
             logger.error("Failed to retrieve activities for user {}. Error: {}", userFrn, e.getMessage());
             throw new FlashDashException(ErrorCode.E500001, "An error occurred while retrieving the user's activities. Please try again later.");
+        }
+    }
+
+    public ActivityStatisticsResponse getActivityStatistics(String userFrn) {
+        ActivitiesApi activitiesApi = getActivitiesApi(userFrn);
+
+        try {
+            ActivityStatisticsResponse activityStatisticsResponse = activitiesApi.getUserStatistics();
+            logger.info("Retrieved activity statistics for user {}", userFrn);
+            return activityStatisticsResponse;
+        } catch (ApiException e) {
+            logger.error("Failed to retrieve activity statistics for user {}. Error: {}", userFrn, e.getMessage());
+            throw new FlashDashException(ErrorCode.E500001, "An error occurred while retrieving the user's activity statistics. Please try again later.");
         }
     }
 }

@@ -6,8 +6,12 @@ import com.flashdash.core.model.User;
 import com.flashdash.core.repository.UserRepository;
 import com.flashdash.core.service.api.ActivityService;
 import com.flashdash.core.service.api.NotificationService;
+import com.flashdash.core.utils.EntityToResponseMapper;
+import com.p4r1nc3.flashdash.activity.model.ActivityStatisticsResponse;
 import com.p4r1nc3.flashdash.activity.model.LogActivityRequest.ActivityTypeEnum;
 import com.p4r1nc3.flashdash.core.model.ChangePasswordRequest;
+import com.p4r1nc3.flashdash.core.model.UserResponse;
+import com.p4r1nc3.flashdash.notification.model.NotificationSubscriber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,6 +26,7 @@ public class UserService implements UserDetailsService {
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     private final PasswordEncoder passwordEncoder;
+    private final EntityToResponseMapper mapper;
     private final ActivityService activityService;
     private final NotificationService notificationService;
     private final DeckService deckService;
@@ -30,6 +35,7 @@ public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
 
     public UserService(PasswordEncoder passwordEncoder,
+                       EntityToResponseMapper mapper,
                        ActivityService activityService,
                        NotificationService notificationService,
                        DeckService deckService,
@@ -37,6 +43,7 @@ public class UserService implements UserDetailsService {
                        FriendService friendService,
                        UserRepository userRepository) {
         this.passwordEncoder = passwordEncoder;
+        this.mapper = mapper;
         this.activityService = activityService;
         this.notificationService = notificationService;
         this.deckService = deckService;
@@ -45,7 +52,7 @@ public class UserService implements UserDetailsService {
         this.userRepository = userRepository;
     }
 
-    public User getCurrentUser(String email) {
+    public UserResponse getCurrentUser(String email) {
         logger.info("Attempting to retrieve user information for email: {}", email);
 
         User user = userRepository.findByEmail(email)
@@ -59,7 +66,14 @@ public class UserService implements UserDetailsService {
 
         logger.info("User found with email: {}.", email);
 
-        return user;
+        ActivityStatisticsResponse statisticsResponse = activityService.getActivityStatistics(user.getUserFrn());
+        NotificationSubscriber notificationSubscriber = notificationService.getSubscriber(user.getUserFrn());
+
+        UserResponse userResponse = mapper.mapToUserResponse(user);
+        userResponse.setStreak(statisticsResponse.getCurrentStreak());
+        userResponse.setDailyNotifications(notificationSubscriber.getDailyNotifications());
+
+        return userResponse;
     }
 
     public void changePassword(String email, ChangePasswordRequest request) {
