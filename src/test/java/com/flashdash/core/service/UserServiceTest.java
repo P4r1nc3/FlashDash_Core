@@ -6,6 +6,7 @@ import com.flashdash.core.exception.FlashDashException;
 import com.flashdash.core.model.User;
 import com.flashdash.core.repository.UserRepository;
 import com.flashdash.core.service.api.ActivityService;
+import com.flashdash.core.service.api.NotificationService;
 import com.p4r1nc3.flashdash.core.model.ChangePasswordRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,9 @@ class UserServiceTest {
 
     @MockitoBean
     private ActivityService activityService;
+
+    @MockitoBean
+    private NotificationService notificationService;
 
     @MockitoBean
     private DeckService deckService;
@@ -170,6 +174,7 @@ class UserServiceTest {
         verify(gameSessionService).removeAllGameSessionsForUser(user.getUserFrn());
         verify(friendService).removeAllFriends(user.getUserFrn());
         verify(userRepository).delete(user);
+        verify(notificationService).unregisterSubscriber(user.getUserFrn());
     }
 
     @Test
@@ -188,5 +193,6 @@ class UserServiceTest {
         verify(gameSessionService, never()).removeAllGameSessionsForUser(anyString());
         verify(friendService, never()).removeAllFriends(anyString());
         verify(userRepository, never()).delete(any(User.class));
+        verify(notificationService, never()).unregisterSubscriber(anyString());
     }
 }

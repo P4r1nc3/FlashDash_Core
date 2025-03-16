@@ -5,6 +5,7 @@ import com.flashdash.core.exception.FlashDashException;
 import com.flashdash.core.model.User;
 import com.flashdash.core.repository.UserRepository;
 import com.flashdash.core.service.api.ActivityService;
+import com.flashdash.core.service.api.NotificationService;
 import com.p4r1nc3.flashdash.activity.model.LogActivityRequest.ActivityTypeEnum;
 import com.p4r1nc3.flashdash.core.model.ChangePasswordRequest;
 import org.slf4j.Logger;
@@ -22,6 +23,7 @@ public class UserService implements UserDetailsService {
 
     private final PasswordEncoder passwordEncoder;
     private final ActivityService activityService;
+    private final NotificationService notificationService;
     private final DeckService deckService;
     private final GameSessionService gameSessionService;
     private final FriendService friendService;
@@ -29,12 +31,14 @@ public class UserService implements UserDetailsService {
 
     public UserService(PasswordEncoder passwordEncoder,
                        ActivityService activityService,
+                       NotificationService notificationService,
                        DeckService deckService,
                        GameSessionService gameSessionService,
                        FriendService friendService,
                        UserRepository userRepository) {
         this.passwordEncoder = passwordEncoder;
         this.activityService = activityService;
+        this.notificationService = notificationService;
         this.deckService = deckService;
         this.gameSessionService = gameSessionService;
         this.friendService = friendService;
@@ -100,6 +104,7 @@ public class UserService implements UserDetailsService {
         friendService.removeAllFriends(user.getUserFrn());
         userRepository.delete(user);
         activityService.logUserActivity(user.getUserFrn(), user.getUserFrn(), ActivityTypeEnum.ACCOUNT_DELETED);
+        notificationService.unregisterSubscriber(user.getUserFrn());
         logger.info("User with email {} successfully deleted.", email);
     }
 
