@@ -7,6 +7,7 @@ import com.flashdash.core.model.FriendInvitation;
 import com.flashdash.core.model.User;
 import com.flashdash.core.repository.FriendInvitationRepository;
 import com.flashdash.core.repository.UserRepository;
+import com.flashdash.core.service.api.ActivityService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;

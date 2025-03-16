@@ -5,6 +5,7 @@ import com.flashdash.core.exception.ErrorCode;
 import com.flashdash.core.exception.FlashDashException;
 import com.flashdash.core.model.User;
 import com.flashdash.core.repository.UserRepository;
+import com.flashdash.core.service.api.ActivityService;
 import com.p4r1nc3.flashdash.core.model.ChangePasswordRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -6,6 +6,7 @@ import com.flashdash.core.model.FriendInvitation;
 import com.flashdash.core.model.User;
 import com.flashdash.core.repository.FriendInvitationRepository;
 import com.flashdash.core.repository.UserRepository;
+import com.flashdash.core.service.api.ActivityService;
 import com.flashdash.core.utils.FrnGenerator;
 import com.flashdash.core.utils.ResourceType;
 import com.p4r1nc3.flashdash.activity.model.LogActivityRequest.ActivityTypeEnum;

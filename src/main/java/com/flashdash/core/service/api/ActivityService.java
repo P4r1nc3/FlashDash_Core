@@ -1,4 +1,4 @@
-package com.flashdash.core.service;
+package com.flashdash.core.service.api;
 
 import com.flashdash.core.config.JwtManager;
 import com.flashdash.core.model.User;
