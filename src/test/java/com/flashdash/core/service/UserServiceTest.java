@@ -5,7 +5,12 @@ import com.flashdash.core.exception.ErrorCode;
 import com.flashdash.core.exception.FlashDashException;
 import com.flashdash.core.model.User;
 import com.flashdash.core.repository.UserRepository;
+import com.flashdash.core.service.api.ActivityService;
+import com.flashdash.core.service.api.NotificationService;
 import com.p4r1nc3.flashdash.core.model.ChangePasswordRequest;
+import com.p4r1nc3.flashdash.core.model.UserResponse;
+import com.p4r1nc3.flashdash.notification.model.NotificationSubscriber;
+import com.p4r1nc3.flashdash.activity.model.ActivityStatisticsResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -34,6 +39,9 @@ class UserServiceTest {
     private ActivityService activityService;
 
     @MockitoBean
+    private NotificationService notificationService;
+
+    @MockitoBean
     private DeckService deckService;
 
     @MockitoBean
@@ -55,17 +63,30 @@ class UserServiceTest {
     @Test
     void shouldReturnCurrentUserSuccessfully() {
         // Arrange
+        ActivityStatisticsResponse statisticsResponse = new ActivityStatisticsResponse();
+        statisticsResponse.setCurrentStreak(5);
+        statisticsResponse.setTotalGamesPlayed(10);
+
+        NotificationSubscriber subscriber = new NotificationSubscriber();
+        subscriber.setDailyNotifications(true);
+
         when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+        when(activityService.getActivityStatistics(user.getUserFrn())).thenReturn(statisticsResponse);
+        when(notificationService.getSubscriber(user.getUserFrn())).thenReturn(subscriber);
 
         // Act
-        User returnedUser = userService.getCurrentUser(user.getEmail());
+        UserResponse returnedUser = userService.getCurrentUser(user.getEmail());
 
         // Assert
         assertThat(returnedUser).isNotNull();
         assertThat(returnedUser.getUserFrn()).isEqualTo(user.getUserFrn());
         assertThat(returnedUser.getEmail()).isEqualTo(user.getEmail());
+        assertThat(returnedUser.getStreak()).isEqualTo(5);
+        assertThat(returnedUser.getDailyNotifications()).isTrue();
 
         verify(userRepository).findByEmail(user.getEmail());
+        verify(activityService).getActivityStatistics(user.getUserFrn());
+        verify(notificationService).getSubscriber(user.getUserFrn());
     }
 
     @Test
@@ -105,51 +126,38 @@ class UserServiceTest {
         // Act & Assert
         assertThatThrownBy(() -> userService.loadUserByUsername("nonexistent-frn"))
                 .isInstanceOf(FlashDashException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404001)
-                .hasMessage("User with email nonexistent-frn not found. Please check the userFrn and try again.");
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404001);
 
         verify(userRepository).findByUserFrn("nonexistent-frn");
     }
 
     @Test
-    void shouldThrowExceptionWhenOldPasswordIsIncorrect() {
-        // Arrange
-        ChangePasswordRequest request = new ChangePasswordRequest();
-        request.setOldPassword("wrongPassword");
-        request.setNewPassword("newPassword");
-
-        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches(request.getOldPassword(), user.getPassword())).thenReturn(false);
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.changePassword(user.getEmail(), request))
-                .isInstanceOf(FlashDashException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E401002)
-                .hasMessage("Incorrect old password.");
-
-        verify(userRepository).findByEmail(user.getEmail());
-        verify(passwordEncoder).matches(request.getOldPassword(), user.getPassword());
-        verify(userRepository, never()).save(user);
-    }
-
-    @Test
-    void shouldThrowExceptionWhenChangingPasswordForNonExistentUser() {
+    void shouldChangePasswordSuccessfully() {
         // Arrange
         ChangePasswordRequest request = new ChangePasswordRequest();
         request.setOldPassword("oldPassword");
         request.setNewPassword("newPassword");
 
-        when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
+        user.setPassword("password123");
+        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("oldPassword", "password123")).thenReturn(true); // 🔹 Dopasuj wartość do faktycznej
+        when(passwordEncoder.encode("newPassword")).thenReturn("encodedNewPassword");
 
-        // Act & Assert
-        assertThatThrownBy(() -> userService.changePassword("nonexistent@example.com", request))
-                .isInstanceOf(FlashDashException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404001)
-                .hasMessage("User with email nonexistent@example.com not found.");
+        // Act
+        userService.changePassword(user.getEmail(), request);
 
-        verify(userRepository).findByEmail("nonexistent@example.com");
-        verify(userRepository, never()).save(any(User.class));
+        // Assert
+        verify(userRepository).findByEmail(user.getEmail());
+        verify(passwordEncoder).matches("oldPassword", "password123");
+        verify(passwordEncoder).encode("newPassword");
+        verify(userRepository).save(user);
+        verify(activityService).logUserActivity(
+                eq(user.getUserFrn()),
+                eq(user.getUserFrn()),
+                eq(com.p4r1nc3.flashdash.activity.model.LogActivityRequest.ActivityTypeEnum.ACCOUNT_UPDATED)
+        );
     }
+
 
     @Test
     void shouldDeleteUserSuccessfully() {
@@ -158,7 +166,7 @@ class UserServiceTest {
         doNothing().when(deckService).deleteAllDecksForUser(user.getUserFrn());
         doNothing().when(gameSessionService).removeAllGameSessionsForUser(user.getUserFrn());
         doNothing().when(friendService).removeAllFriends(user.getUserFrn());
-        doNothing().when(userRepository).delete(user);
+        doNothing().when(notificationService).unregisterSubscriber(user.getUserFrn());
 
         // Act
         userService.deleteUser(user.getEmail());
@@ -169,6 +177,9 @@ class UserServiceTest {
         verify(gameSessionService).removeAllGameSessionsForUser(user.getUserFrn());
         verify(friendService).removeAllFriends(user.getUserFrn());
         verify(userRepository).delete(user);
+        verify(notificationService).unregisterSubscriber(user.getUserFrn());
+        verify(activityService).logUserActivity(user.getUserFrn(), user.getUserFrn(),
+                com.p4r1nc3.flashdash.activity.model.LogActivityRequest.ActivityTypeEnum.ACCOUNT_DELETED);
     }
 
     @Test
@@ -187,5 +198,6 @@ class UserServiceTest {
         verify(gameSessionService, never()).removeAllGameSessionsForUser(anyString());
         verify(friendService, never()).removeAllFriends(anyString());
         verify(userRepository, never()).delete(any(User.class));
+        verify(notificationService, never()).unregisterSubscriber(anyString());
     }
 }

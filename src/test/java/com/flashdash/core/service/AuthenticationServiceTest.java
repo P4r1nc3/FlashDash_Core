@@ -6,6 +6,8 @@ import com.flashdash.core.exception.FlashDashException;
 import com.flashdash.core.exception.ErrorCode;
 import com.flashdash.core.model.User;
 import com.flashdash.core.repository.UserRepository;
+import com.flashdash.core.service.api.ActivityService;
+import com.flashdash.core.service.api.NotificationService;
 import com.p4r1nc3.flashdash.core.model.AuthenticationResponse;
 import com.p4r1nc3.flashdash.core.model.LoginRequest;
 import com.p4r1nc3.flashdash.core.model.RegisterRequest;
@@ -40,7 +42,7 @@ class AuthenticationServiceTest {
     private ActivityService activityService;
 
     @MockitoBean
-    private EmailService emailService;
+    private NotificationService notificationService;
 
     @MockitoBean
     private UserRepository userRepository;
@@ -127,8 +129,9 @@ class AuthenticationServiceTest {
 
         verify(userRepository).findByEmail(registerRequest.getEmail());
         verify(userRepository).save(any(User.class));
-        verify(emailService).sendActivationEmail(eq(registerRequest.getEmail()), anyString());
+        verify(notificationService).sendAccountConfirmationEmail(anyString(), anyString());
     }
+
     @Test
     void shouldNotSendActivationEmailWhenUserAlreadyExists() {
         // Arrange
@@ -143,7 +146,7 @@ class AuthenticationServiceTest {
 
         verify(userRepository).findByEmail(registerRequest.getEmail());
         verifyNoMoreInteractions(userRepository);
-        verifyNoInteractions(emailService);
+        verifyNoInteractions(notificationService);
     }
 
     @Test

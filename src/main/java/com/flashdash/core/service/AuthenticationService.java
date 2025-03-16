@@ -5,6 +5,8 @@ import com.flashdash.core.exception.FlashDashException;
 import com.flashdash.core.exception.ErrorCode;
 import com.flashdash.core.model.User;
 import com.flashdash.core.repository.UserRepository;
+import com.flashdash.core.service.api.ActivityService;
+import com.flashdash.core.service.api.NotificationService;
 import com.flashdash.core.utils.FrnGenerator;
 import com.flashdash.core.utils.ResourceType;
 import com.p4r1nc3.flashdash.activity.model.LogActivityRequest.ActivityTypeEnum;
@@ -27,19 +29,19 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final JwtManager jwtManager;
     private final ActivityService activityService;
-    private final EmailService emailService;
+    private final NotificationService notificationService;
     private final UserRepository userRepository;
 
 
     public AuthenticationService(PasswordEncoder passwordEncoder,
                                  JwtManager jwtManager,
                                  ActivityService activityService,
-                                 EmailService emailService,
+                                 NotificationService notificationService,
                                  UserRepository userRepository) {
         this.passwordEncoder = passwordEncoder;
         this.jwtManager = jwtManager;
         this.activityService = activityService;
-        this.emailService = emailService;
+        this.notificationService = notificationService;
         this.userRepository = userRepository;
     }
 
@@ -91,16 +93,12 @@ public class AuthenticationService {
         user.setActivationToken(activationToken);
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
-        user.setDailyNotifications(true);
-        user.setGamesPlayed(0);
-        user.setPoints(0);
-        user.setStreak(0);
         user.setEnabled(false);
-
         userRepository.save(user);
-        emailService.sendActivationEmail(user.getUsername(), activationToken);
 
         activityService.logUserActivity(user.getUserFrn(), user.getUserFrn(), ActivityTypeEnum.ACCOUNT_REGISTRATION);
+        notificationService.registerSubscriber(user.getUserFrn());
+        notificationService.sendAccountConfirmationEmail(user.getUserFrn(), activationToken);
 
         AuthenticationResponse authenticationResponse = new AuthenticationResponse();
         authenticationResponse.setToken("Account created. Please check your email to activate.");

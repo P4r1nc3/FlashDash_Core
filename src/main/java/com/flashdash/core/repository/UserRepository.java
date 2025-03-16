@@ -9,6 +9,5 @@ public interface UserRepository extends JpaRepository<User, String> {
     Optional<User> findByEmail(String email);
     Optional<User> findByUserFrn(String userFrn);
     Optional<User> findByActivationToken(String activationToken);
-    List<User> findByDailyNotificationsTrue();
     List<User> findByUserFrnIn(List<String> userFrns);
 }

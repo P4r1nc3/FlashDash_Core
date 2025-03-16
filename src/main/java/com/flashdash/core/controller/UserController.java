@@ -26,8 +26,8 @@ public class UserController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
 
-        User user = userService.getCurrentUser(email);
-        return ResponseEntity.ok(entityToResponseMapper.mapToUserResponse(user));
+        UserResponse userResponse = userService.getCurrentUser(email);
+        return ResponseEntity.ok(userResponse);
     }
 
     @DeleteMapping

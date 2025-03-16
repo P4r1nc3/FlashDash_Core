@@ -107,40 +107,6 @@ class UserRepositoryTest {
     }
 
     @Test
-    void shouldFindUsersWithDailyNotificationsTrue() {
-        // Arrange
-        User userWithNotifications = TestUtils.createUser();
-        userWithNotifications.setDailyNotifications(true);
-        userRepository.save(userWithNotifications);
-
-        User userWithoutNotifications = TestUtils.createUser();
-        userWithoutNotifications.setDailyNotifications(false);
-        userRepository.save(userWithoutNotifications);
-
-        // Act
-        List<User> usersWithNotifications = userRepository.findByDailyNotificationsTrue();
-
-        // Assert
-        assertThat(usersWithNotifications).hasSize(1);
-        assertThat(usersWithNotifications.get(0).getUserFrn()).isEqualTo(userWithNotifications.getUserFrn());
-        assertThat(usersWithNotifications.get(0).isDailyNotifications()).isTrue();
-    }
-
-    @Test
-    void shouldReturnEmptyListWhenNoUsersHaveDailyNotificationsTrue() {
-        // Arrange
-        User userWithoutNotifications = TestUtils.createUser();
-        userWithoutNotifications.setDailyNotifications(false);
-        userRepository.save(userWithoutNotifications);
-
-        // Act
-        List<User> usersWithNotifications = userRepository.findByDailyNotificationsTrue();
-
-        // Assert
-        assertThat(usersWithNotifications).isEmpty();
-    }
-
-    @Test
     void shouldFindUsersByUserFrnList() {
         // Arrange
         User user1 = TestUtils.createUser();
