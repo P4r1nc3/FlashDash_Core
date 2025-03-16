@@ -8,6 +8,7 @@ import com.flashdash.core.model.User;
 import com.flashdash.core.repository.FriendInvitationRepository;
 import com.flashdash.core.repository.UserRepository;
 import com.flashdash.core.service.api.ActivityService;
+import com.flashdash.core.service.api.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -34,7 +35,7 @@ class FriendServiceTest {
     private ActivityService activityService;
 
     @MockitoBean
-    private EmailService emailService;
+    private NotificationService notificationService;
 
     @MockitoBean
     private UserRepository userRepository;
@@ -61,7 +62,7 @@ class FriendServiceTest {
         friendService.sendFriendInvitation(sender.getUserFrn(), recipient.getEmail());
 
         verify(friendInvitationRepository).save(any(FriendInvitation.class));
-        verify(emailService, times(1)).sendFriendInvitationEmail(recipient.getEmail(), sender.getFirstName(), sender.getLastName());
+        verify(notificationService, times(1)).sendFriendInviteEmail(recipient.getUserFrn());
     }
 
     @Test

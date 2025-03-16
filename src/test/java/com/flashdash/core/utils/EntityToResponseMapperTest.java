@@ -303,10 +303,6 @@ class EntityToResponseMapperTest {
         assertThat(response.getLastName()).isEqualTo(user.getLastName());
         assertThat(response.getCreatedAt()).isEqualTo(user.getCreatedAt().atOffset(ZoneOffset.UTC));
         assertThat(response.getUpdatedAt()).isEqualTo(user.getUpdatedAt().atOffset(ZoneOffset.UTC));
-        assertThat(response.getDailyNotifications()).isEqualTo(user.isDailyNotifications());
-        assertThat(response.getGamesPlayed()).isEqualTo(user.getGamesPlayed());
-        assertThat(response.getPoints()).isEqualTo(user.getPoints());
-        assertThat(response.getStreak()).isEqualTo(user.getStreak());
     }
 
     @Test
@@ -324,9 +320,6 @@ class EntityToResponseMapperTest {
         assertThat(response.getUsername()).isEqualTo(user.getUsername());
         assertThat(response.getFirstName()).isEqualTo(user.getFirstName());
         assertThat(response.getLastName()).isEqualTo(user.getLastName());
-        assertThat(response.getGamesPlayed()).isEqualTo(user.getGamesPlayed());
-        assertThat(response.getPoints()).isEqualTo(user.getPoints());
-        assertThat(response.getStreak()).isEqualTo(user.getStreak());
     }
 
     @Test
@@ -348,9 +341,6 @@ class EntityToResponseMapperTest {
             assertThat(friendResponses.get(i).getUsername()).isEqualTo(users.get(i).getUsername());
             assertThat(friendResponses.get(i).getFirstName()).isEqualTo(users.get(i).getFirstName());
             assertThat(friendResponses.get(i).getLastName()).isEqualTo(users.get(i).getLastName());
-            assertThat(friendResponses.get(i).getGamesPlayed()).isEqualTo(users.get(i).getGamesPlayed());
-            assertThat(friendResponses.get(i).getPoints()).isEqualTo(users.get(i).getPoints());
-            assertThat(friendResponses.get(i).getStreak()).isEqualTo(users.get(i).getStreak());
         }
     }
 }

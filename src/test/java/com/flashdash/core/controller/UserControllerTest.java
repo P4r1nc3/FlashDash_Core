@@ -63,7 +63,6 @@ class UserControllerTest {
         userResponse.setFirstName(user.getFirstName());
         userResponse.setLastName(user.getLastName());
         userResponse.setEmail(user.getUsername());
-        userResponse.setDailyNotifications(user.isDailyNotifications());
         userResponse.setCreatedAt(user.getCreatedAt().atOffset(ZoneOffset.UTC));
         userResponse.setUpdatedAt(user.getUpdatedAt().atOffset(ZoneOffset.UTC));
 

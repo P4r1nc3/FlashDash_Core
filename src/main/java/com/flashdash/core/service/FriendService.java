@@ -7,6 +7,7 @@ import com.flashdash.core.model.User;
 import com.flashdash.core.repository.FriendInvitationRepository;
 import com.flashdash.core.repository.UserRepository;
 import com.flashdash.core.service.api.ActivityService;
+import com.flashdash.core.service.api.NotificationService;
 import com.flashdash.core.utils.FrnGenerator;
 import com.flashdash.core.utils.ResourceType;
 import com.p4r1nc3.flashdash.activity.model.LogActivityRequest.ActivityTypeEnum;
@@ -21,16 +22,16 @@ import java.util.List;
 public class FriendService {
 
     private final ActivityService activityService;
-    private final EmailService emailService;
+    private final NotificationService notificationService;
     private final UserRepository userRepository;
     private final FriendInvitationRepository friendInvitationRepository;
 
     public FriendService(ActivityService activityService,
-                         EmailService emailService,
+                         NotificationService notificationService,
                          UserRepository userRepository,
                          FriendInvitationRepository friendInvitationRepository) {
         this.activityService = activityService;
-        this.emailService = emailService;
+        this.notificationService = notificationService;
         this.userRepository = userRepository;
         this.friendInvitationRepository = friendInvitationRepository;
     }
@@ -56,19 +57,10 @@ public class FriendService {
         invitation.setStatus("PENDING");
         invitation.setCreatedAt(LocalDateTime.now());
         invitation.setUpdatedAt(LocalDateTime.now());
-
         friendInvitationRepository.save(invitation);
 
-        User sender = userRepository.findById(senderFrn)
-                .orElseThrow(() -> new FlashDashException(ErrorCode.E404002, "Sender not found"));
-
-        emailService.sendFriendInvitationEmail(
-                recipient.getEmail(),
-                sender.getFirstName(),
-                sender.getLastName()
-        );
-
         activityService.logUserActivity(senderFrn, invitation.getInvitationFrn(), ActivityTypeEnum.FRIEND_INVITE_SENT);
+        notificationService.sendFriendInviteEmail(recipientFrn);
     }
 
     public List<FriendInvitation> getReceivedFriendInvitations(String recipientFrn) {
