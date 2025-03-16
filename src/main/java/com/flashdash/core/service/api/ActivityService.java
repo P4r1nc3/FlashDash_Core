@@ -30,7 +30,7 @@ public class ActivityService {
         this.userRepository = userRepository;
     }
 
-    private ActivitiesApi createActivitiesApi(String userFrn) {
+    private ActivitiesApi getActivitiesApi(String userFrn) {
         Optional<User> userOptional = userRepository.findByUserFrn(userFrn);
 
         if (userOptional.isEmpty()) {
@@ -38,10 +38,10 @@ public class ActivityService {
         }
 
         User user = userOptional.get();
-
         ApiClient apiClient = new ApiClient();
         String token = jwtManager.generateToken(userFrn, user.getEmail());
         apiClient.setBearerToken(token);
+
         return new ActivitiesApi(apiClient);
     }
 
@@ -50,23 +50,26 @@ public class ActivityService {
         logActivityRequest.setTargetFrn(targetFrn);
         logActivityRequest.setActivityType(activityType);
 
-        ActivitiesApi activitiesApi = createActivitiesApi(userFrn);
+        ActivitiesApi activitiesApi = getActivitiesApi(userFrn);
 
         try {
             activitiesApi.logActivity(logActivityRequest);
+            logger.info("Activity logged: User {} performed {} on {}", userFrn, activityType, targetFrn);
         } catch (ApiException e) {
-            logger.error("Error logging activity for user {}: {}", userFrn, e.getMessage());
+            logger.error("Failed to log activity for user {} on target {}. Error: {}", userFrn, targetFrn, e.getMessage());
             throw new FlashDashException(ErrorCode.E500001, "An error occurred while logging the activity. Please try again later.");
         }
     }
 
     public List<ActivityResponse> getUserActivities(String userFrn) {
-        ActivitiesApi activitiesApi = createActivitiesApi(userFrn);
+        ActivitiesApi activitiesApi = getActivitiesApi(userFrn);
 
         try {
-            return activitiesApi.getUserActivities();
+            List<ActivityResponse> activities = activitiesApi.getUserActivities();
+            logger.info("Retrieved {} activities for user {}", activities.size(), userFrn);
+            return activities;
         } catch (ApiException e) {
-            logger.error("Error retrieving activities for user {}: {}", userFrn, e.getMessage());
+            logger.error("Failed to retrieve activities for user {}. Error: {}", userFrn, e.getMessage());
             throw new FlashDashException(ErrorCode.E500001, "An error occurred while retrieving the user's activities. Please try again later.");
         }
     }
