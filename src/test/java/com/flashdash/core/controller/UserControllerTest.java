@@ -5,6 +5,7 @@ import com.flashdash.core.exception.ErrorCode;
 import com.flashdash.core.exception.FlashDashException;
 import com.flashdash.core.model.User;
 import com.flashdash.core.service.UserService;
+import com.flashdash.core.service.api.NotificationService;
 import com.p4r1nc3.flashdash.core.model.ChangePasswordRequest;
 import com.p4r1nc3.flashdash.core.model.UserResponse;
 import org.junit.jupiter.api.*;
@@ -32,6 +33,9 @@ class UserControllerTest {
 
     @MockitoBean
     private UserService userService;
+
+    @MockitoBean
+    private NotificationService notificationService;
 
     private User user;
     private MockedStatic<SecurityContextHolder> mockedSecurityContextHolder;
@@ -186,5 +190,33 @@ class UserControllerTest {
         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.E404001);
         assertThat(exception.getMessage()).isEqualTo("User not found.");
         verify(userService, times(1)).deleteUser(user.getUsername());
+    }
+
+    @Test
+    void shouldEnableNotificationsSuccessfully() {
+        // Arrange
+        doNothing().when(notificationService).enableDailyNotifications(user.getUserFrn());
+
+        // Act
+        ResponseEntity<Void> response = userController.enableNotifications();
+
+        // Assert
+        assertThat(response).isNotNull();
+        assertThat(response.getStatusCodeValue()).isEqualTo(200);
+        verify(notificationService, times(1)).enableDailyNotifications(user.getUserFrn());
+    }
+
+    @Test
+    void shouldDisableNotificationsSuccessfully() {
+        // Arrange
+        doNothing().when(notificationService).disableDailyNotifications(user.getUserFrn());
+
+        // Act
+        ResponseEntity<Void> response = userController.disableNotifications();
+
+        // Assert
+        assertThat(response).isNotNull();
+        assertThat(response.getStatusCodeValue()).isEqualTo(200);
+        verify(notificationService, times(1)).disableDailyNotifications(user.getUserFrn());
     }
 }
