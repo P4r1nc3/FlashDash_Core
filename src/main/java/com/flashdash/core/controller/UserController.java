@@ -6,6 +6,7 @@ import com.flashdash.core.service.api.NotificationService;
 import com.flashdash.core.utils.EntityToResponseMapper;
 import com.p4r1nc3.flashdash.core.model.ChangePasswordRequest;
 import com.p4r1nc3.flashdash.core.model.UserResponse;
+import com.p4r1nc3.flashdash.notification.model.NotificationSubscriber;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -59,6 +60,13 @@ public class UserController {
         String userFrn = getAuthenticatedUser();
         notificationService.enableDailyNotifications(userFrn);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/notifications")
+    public ResponseEntity<NotificationSubscriber> getNotificationsDetails() {
+        String userFrn = getAuthenticatedUser();
+        NotificationSubscriber notificationSubscriber = notificationService.getSubscriber(userFrn);
+        return ResponseEntity.ok(notificationSubscriber);
     }
 
     @PutMapping("/notifications/disable")
