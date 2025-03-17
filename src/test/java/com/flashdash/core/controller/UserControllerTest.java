@@ -19,6 +19,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.time.LocalTime;
 import java.time.ZoneOffset;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -196,15 +197,15 @@ class UserControllerTest {
     @Test
     void shouldEnableNotificationsSuccessfully() {
         // Arrange
-        doNothing().when(notificationService).enableDailyNotifications(user.getUserFrn());
+        doNothing().when(notificationService).enableDailyNotifications(user.getUserFrn(), LocalTime.of(12, 30).toString());
 
         // Act
-        ResponseEntity<Void> response = userController.enableNotifications();
+        ResponseEntity<Void> response = userController.enableNotifications(LocalTime.of(12, 30));
 
         // Assert
         assertThat(response).isNotNull();
         assertThat(response.getStatusCodeValue()).isEqualTo(200);
-        verify(notificationService, times(1)).enableDailyNotifications(user.getUserFrn());
+        verify(notificationService, times(1)).enableDailyNotifications(user.getUserFrn(), LocalTime.of(12, 30).toString());
     }
 
     @Test

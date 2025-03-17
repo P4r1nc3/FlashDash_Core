@@ -12,6 +12,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalTime;
+
 @RestController
 @RequestMapping("/users")
 public class UserController {
@@ -56,9 +58,9 @@ public class UserController {
     }
 
     @PutMapping("/notifications/enable")
-    public ResponseEntity<Void> enableNotifications() {
+    public ResponseEntity<Void> enableNotifications(@RequestParam(required = false) LocalTime notificationTime) {
         String userFrn = getAuthenticatedUser();
-        notificationService.enableDailyNotifications(userFrn);
+        notificationService.enableDailyNotifications(userFrn, notificationTime);
         return ResponseEntity.ok().build();
     }
 
