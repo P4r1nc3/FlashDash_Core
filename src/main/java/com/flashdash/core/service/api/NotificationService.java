@@ -5,6 +5,7 @@ import com.flashdash.core.exception.ErrorCode;
 import com.flashdash.core.exception.FlashDashException;
 import com.flashdash.core.model.User;
 import com.flashdash.core.repository.UserRepository;
+import com.p4r1nc3.flashdash.activity.model.LogActivityRequest.ActivityTypeEnum;
 import com.p4r1nc3.flashdash.notification.ApiClient;
 import com.p4r1nc3.flashdash.notification.ApiException;
 import com.p4r1nc3.flashdash.notification.api.NotificationsApi;
@@ -22,10 +23,14 @@ public class NotificationService {
     private static final Logger logger = LoggerFactory.getLogger(NotificationService.class);
 
     private final JwtManager jwtManager;
+    private final ActivityService activityService;
     private final UserRepository userRepository;
 
-    public NotificationService(JwtManager jwtManager, UserRepository userRepository) {
+    public NotificationService(JwtManager jwtManager,
+                               ActivityService activityService,
+                               UserRepository userRepository) {
         this.jwtManager = jwtManager;
+        this.activityService = activityService;
         this.userRepository = userRepository;
     }
 
@@ -92,6 +97,7 @@ public class NotificationService {
         try {
             String notificationTimeString = (notificationTime != null) ? notificationTime.toString() : null;
             notificationsApi.enableDailyNotifications(notificationTimeString);
+            activityService.logUserActivity(userFrn, userFrn, ActivityTypeEnum.ENABLE_DAILY_NOTIFICATIONS);
             logger.info("Daily notifications enabled for user {}.", userFrn);
         } catch (ApiException e) {
             logger.error("Failed to enable daily notifications for user {}. Error: {}", userFrn, e.getMessage());
@@ -103,6 +109,7 @@ public class NotificationService {
         NotificationsApi notificationsApi = getNotificationsApi(userFrn);
         try {
             notificationsApi.disableDailyNotifications();
+            activityService.logUserActivity(userFrn, userFrn, ActivityTypeEnum.DISABLE_DAILY_NOTIFICATIONS);
             logger.info("Daily notifications disabled for user {}.", userFrn);
         } catch (ApiException e) {
             logger.error("Failed to disable daily notifications for user {}. Error: {}", userFrn, e.getMessage());
