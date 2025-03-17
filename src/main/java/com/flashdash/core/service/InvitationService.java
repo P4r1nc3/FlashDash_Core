@@ -34,6 +34,7 @@ public class InvitationService {
         this.userRepository = userRepository;
         this.friendInvitationRepository = friendInvitationRepository;
     }
+
     public void sendFriendInvitation(String senderFrn, String recipientEmail) {
         User recipient = userRepository.findByEmail(recipientEmail)
                 .orElseThrow(() -> new FlashDashException(ErrorCode.E404002, "Recipient not found"));

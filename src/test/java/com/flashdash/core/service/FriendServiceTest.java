@@ -3,7 +3,6 @@ package com.flashdash.core.service;
 import com.flashdash.core.TestUtils;
 import com.flashdash.core.exception.ErrorCode;
 import com.flashdash.core.exception.FlashDashException;
-import com.flashdash.core.model.FriendInvitation;
 import com.flashdash.core.model.User;
 import com.flashdash.core.repository.FriendInvitationRepository;
 import com.flashdash.core.repository.UserRepository;

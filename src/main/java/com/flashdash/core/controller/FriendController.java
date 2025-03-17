@@ -1,11 +1,8 @@
 package com.flashdash.core.controller;
 
-import com.flashdash.core.model.FriendInvitation;
 import com.flashdash.core.model.User;
 import com.flashdash.core.service.FriendService;
 import com.flashdash.core.utils.EntityToResponseMapper;
-import com.p4r1nc3.flashdash.core.model.FriendInvitationResponseReceived;
-import com.p4r1nc3.flashdash.core.model.FriendInvitationResponseSent;
 import com.p4r1nc3.flashdash.core.model.FriendResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
