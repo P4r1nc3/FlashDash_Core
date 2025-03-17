@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalTime;
 import java.util.Optional;
 
 @Service
@@ -86,10 +87,11 @@ public class NotificationService {
         }
     }
 
-    public void enableDailyNotifications(String userFrn) {
+    public void enableDailyNotifications(String userFrn, LocalTime notificationTime) {
         NotificationsApi notificationsApi = getNotificationsApi(userFrn);
         try {
-            notificationsApi.enableDailyNotifications();
+            String notificationTimeString = (notificationTime != null) ? notificationTime.toString() : null;
+            notificationsApi.enableDailyNotifications(notificationTimeString);
             logger.info("Daily notifications enabled for user {}.", userFrn);
         } catch (ApiException e) {
             logger.error("Failed to enable daily notifications for user {}. Error: {}", userFrn, e.getMessage());
