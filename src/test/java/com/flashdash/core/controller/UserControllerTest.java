@@ -8,6 +8,7 @@ import com.flashdash.core.service.UserService;
 import com.flashdash.core.service.api.NotificationService;
 import com.p4r1nc3.flashdash.core.model.ChangePasswordRequest;
 import com.p4r1nc3.flashdash.core.model.UserResponse;
+import com.p4r1nc3.flashdash.notification.model.NotificationSubscriber;
 import org.junit.jupiter.api.*;
 import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -205,6 +206,29 @@ class UserControllerTest {
         assertThat(response.getStatusCodeValue()).isEqualTo(200);
         verify(notificationService, times(1)).enableDailyNotifications(user.getUserFrn());
     }
+
+    @Test
+    void shouldReturnNotificationDetailsSuccessfully() {
+        // Arrange
+        NotificationSubscriber mockSubscriber = new NotificationSubscriber();
+        mockSubscriber.setUserFrn(user.getUserFrn());
+        mockSubscriber.setDailyNotifications(true);
+
+        when(notificationService.getSubscriber(user.getUserFrn())).thenReturn(mockSubscriber);
+
+        // Act
+        ResponseEntity<NotificationSubscriber> response = userController.getNotificationsDetails();
+
+        // Assert
+        assertThat(response).isNotNull();
+        assertThat(response.getStatusCodeValue()).isEqualTo(200);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getUserFrn()).isEqualTo(user.getUserFrn());
+        assertThat(response.getBody().getDailyNotifications()).isTrue();
+
+        verify(notificationService, times(1)).getSubscriber(user.getUserFrn());
+    }
+
 
     @Test
     void shouldDisableNotificationsSuccessfully() {
