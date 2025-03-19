@@ -17,7 +17,6 @@ import java.time.LocalTime;
 @RestController
 @RequestMapping("/users")
 public class UserController {
-
     private final UserService userService;
     private final NotificationService notificationService;
     private final EntityToResponseMapper entityToResponseMapper;
@@ -32,19 +31,15 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<UserResponse> getUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-
-        UserResponse userResponse = userService.getCurrentUser(email);
-        return ResponseEntity.ok(userResponse);
+        String userFrn = getAuthenticatedUser();
+        User user = userService.getCurrentUser(userFrn);
+        return ResponseEntity.ok(entityToResponseMapper.mapToUserResponse(user));
     }
 
     @DeleteMapping
     public ResponseEntity<Void> deleteUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-
-        userService.deleteUser(email);
+        String userFrn = getAuthenticatedUser();
+        userService.deleteUser(userFrn);
         return ResponseEntity.noContent().build();
     }
 

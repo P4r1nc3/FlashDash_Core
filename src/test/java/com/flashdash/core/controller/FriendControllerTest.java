@@ -6,7 +6,7 @@ import com.flashdash.core.exception.FlashDashException;
 import com.flashdash.core.model.User;
 import com.flashdash.core.service.FriendService;
 import com.flashdash.core.utils.EntityToResponseMapper;
-import com.p4r1nc3.flashdash.core.model.FriendResponse;
+import com.p4r1nc3.flashdash.core.model.UserResponse;
 import org.junit.jupiter.api.*;
 import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,12 +41,14 @@ class FriendControllerTest {
     private User testUser;
     private User friendUser;
     private String userFrn;
+    private String friendFrn;
 
     @BeforeEach
     void setUp() {
         testUser = TestUtils.createUser();
         friendUser = TestUtils.createUser();
         userFrn = testUser.getUserFrn();
+        friendFrn = friendUser.getUserFrn();
 
         Authentication authentication = mock(Authentication.class);
         when(authentication.getPrincipal()).thenReturn(testUser);
@@ -66,19 +68,19 @@ class FriendControllerTest {
     @Test
     void shouldGetFriendsSuccessfully() {
         // Arrange
-        FriendResponse friendResponse = new FriendResponse();
-        friendResponse.setUserFrn(friendUser.getUserFrn());
+        UserResponse friendResponse = new UserResponse();
+        friendResponse.setUserFrn(friendFrn);
         friendResponse.setFirstName(friendUser.getFirstName());
         friendResponse.setLastName(friendUser.getLastName());
 
         List<User> friends = List.of(friendUser);
-        List<FriendResponse> expectedResponses = List.of(friendResponse);
+        List<UserResponse> expectedResponses = List.of(friendResponse);
 
         when(friendService.getFriends(userFrn)).thenReturn(friends);
-        when(entityToResponseMapper.mapToFriendResponse(friends)).thenReturn(expectedResponses);
+        when(entityToResponseMapper.mapToUserResponse(friends)).thenReturn(expectedResponses);
 
         // Act
-        ResponseEntity<List<FriendResponse>> responseEntity = friendController.getFriends();
+        ResponseEntity<List<UserResponse>> responseEntity = friendController.getFriends();
 
         // Assert
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -86,9 +88,42 @@ class FriendControllerTest {
     }
 
     @Test
+    void shouldGetFriendSuccessfully() {
+        // Arrange
+        UserResponse friendResponse = new UserResponse();
+        friendResponse.setUserFrn(friendFrn);
+        friendResponse.setFirstName(friendUser.getFirstName());
+        friendResponse.setLastName(friendUser.getLastName());
+
+        when(friendService.getFriend(userFrn, friendFrn)).thenReturn(friendUser);
+        when(entityToResponseMapper.mapToUserResponse(friendUser)).thenReturn(friendResponse);
+
+        // Act
+        ResponseEntity<UserResponse> responseEntity = friendController.getFriend(friendFrn);
+
+        // Assert
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(friendResponse, responseEntity.getBody());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenFriendNotFound() {
+        // Arrange
+        doThrow(new FlashDashException(ErrorCode.E404005, "Friend not found: " + friendFrn))
+                .when(friendService).getFriend(userFrn, friendFrn);
+
+        // Act & Assert
+        FlashDashException exception = assertThrows(
+                FlashDashException.class,
+                () -> friendController.getFriend(friendFrn)
+        );
+        assertEquals(ErrorCode.E404005, exception.getErrorCode());
+        assertEquals("Friend not found: " + friendFrn, exception.getMessage());
+    }
+
+    @Test
     void shouldDeleteFriendSuccessfully() {
         // Arrange
-        String friendFrn = friendUser.getUserFrn();
         doNothing().when(friendService).deleteFriend(userFrn, friendFrn);
 
         // Act
@@ -102,8 +137,6 @@ class FriendControllerTest {
     @Test
     void shouldThrowExceptionWhenDeletingNonExistentFriend() {
         // Arrange
-        String friendFrn = friendUser.getUserFrn();
-
         doThrow(new FlashDashException(ErrorCode.E404005, "Friend not found: " + friendFrn))
                 .when(friendService).deleteFriend(userFrn, friendFrn);
 
@@ -116,4 +149,3 @@ class FriendControllerTest {
         assertEquals("Friend not found: " + friendFrn, exception.getMessage());
     }
 }
-

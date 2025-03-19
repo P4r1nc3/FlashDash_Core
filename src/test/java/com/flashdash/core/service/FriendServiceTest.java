@@ -60,8 +60,9 @@ class FriendServiceTest {
 
         user.setFriendsFrnList(List.of(friend1.getUserFrn(), friend2.getUserFrn()));
 
-        when(userRepository.findById(user.getUserFrn())).thenReturn(Optional.of(user));
-        when(userRepository.findByUserFrnIn(user.getFriendsFrnList())).thenReturn(List.of(friend1, friend2));
+        when(userRepository.findByUserFrn(user.getUserFrn())).thenReturn(Optional.of(user));
+        when(userRepository.findByUserFrn(friend1.getUserFrn())).thenReturn(Optional.of(friend1));
+        when(userRepository.findByUserFrn(friend2.getUserFrn())).thenReturn(Optional.of(friend2));
 
         // Act
         List<User> friends = friendService.getFriends(user.getUserFrn());
@@ -71,8 +72,9 @@ class FriendServiceTest {
         assertThat(friends).extracting(User::getUserFrn)
                 .containsExactlyInAnyOrder(friend1.getUserFrn(), friend2.getUserFrn());
 
-        verify(userRepository).findById(user.getUserFrn());
-        verify(userRepository).findByUserFrnIn(user.getFriendsFrnList());
+        verify(userRepository, times(3)).findByUserFrn(user.getUserFrn());
+        verify(userRepository).findByUserFrn(friend1.getUserFrn());
+        verify(userRepository).findByUserFrn(friend2.getUserFrn());
     }
 
     @Test
@@ -81,15 +83,74 @@ class FriendServiceTest {
         User user = TestUtils.createUser();
         user.setFriendsFrnList(Collections.emptyList());
 
-        when(userRepository.findById(user.getUserFrn())).thenReturn(Optional.of(user));
+        when(userRepository.findByUserFrn(user.getUserFrn())).thenReturn(Optional.of(user));
 
         // Act
         List<User> friends = friendService.getFriends(user.getUserFrn());
 
         // Assert
         assertThat(friends).isEmpty();
-        verify(userRepository).findById(user.getUserFrn());
-        verify(userRepository, never()).findByUserFrnIn(any());
+        verify(userRepository).findByUserFrn(user.getUserFrn());
+    }
+
+    @Test
+    void shouldGetFriendSuccessfully() {
+        // Arrange
+        User user = TestUtils.createUser();
+        User friend = TestUtils.createUser();
+
+        user.setFriendsFrnList(List.of(friend.getUserFrn()));
+
+        when(userRepository.findByUserFrn(user.getUserFrn())).thenReturn(Optional.of(user));
+        when(userRepository.findByUserFrn(friend.getUserFrn())).thenReturn(Optional.of(friend));
+
+        // Act
+        User retrievedFriend = friendService.getFriend(user.getUserFrn(), friend.getUserFrn());
+
+        // Assert
+        assertThat(retrievedFriend).isNotNull();
+        assertThat(retrievedFriend.getUserFrn()).isEqualTo(friend.getUserFrn());
+
+        verify(userRepository, times(1)).findByUserFrn(user.getUserFrn());
+        verify(userRepository, times(1)).findByUserFrn(friend.getUserFrn());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenFriendNotInList() {
+        // Arrange
+        User user = TestUtils.createUser();
+        User stranger = TestUtils.createUser();
+        when(userRepository.findByUserFrn(user.getUserFrn())).thenReturn(Optional.of(user));
+
+        // Act & Assert
+        assertThatThrownBy(() -> friendService.getFriend(user.getUserFrn(), stranger.getUserFrn()))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404003)
+                .hasMessage("Friend not found in user's friend list.");
+
+        verify(userRepository, times(1)).findByUserFrn(user.getUserFrn());
+        verify(userRepository, never()).findByUserFrn(stranger.getUserFrn());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenFriendNotFound() {
+        // Arrange
+        User user = TestUtils.createUser();
+        String nonExistentFriendFrn = "non-existent-frn";
+
+        user.setFriendsFrnList(List.of(nonExistentFriendFrn));
+
+        when(userRepository.findByUserFrn(user.getUserFrn())).thenReturn(Optional.of(user));
+        when(userRepository.findByUserFrn(nonExistentFriendFrn)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThatThrownBy(() -> friendService.getFriends(user.getUserFrn()))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404002)
+                .hasMessage("Friend not found");
+
+        verify(userRepository, times(2)).findByUserFrn(user.getUserFrn());
+        verify(userRepository).findByUserFrn(nonExistentFriendFrn);
     }
 
     @Test

@@ -13,6 +13,7 @@ import com.p4r1nc3.flashdash.notification.api.SubscribersApi;
 import com.p4r1nc3.flashdash.notification.model.NotificationSubscriber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;
@@ -60,6 +61,7 @@ public class NotificationService {
         return new SubscribersApi(apiClient);
     }
 
+    @Async
     public void registerSubscriber(String userFrn) {
         SubscribersApi subscribersApi = getSubscribersApi(userFrn);
         try {
@@ -81,6 +83,7 @@ public class NotificationService {
         }
     }
 
+    @Async
     public void unregisterSubscriber(String userFrn) {
         SubscribersApi subscribersApi = getSubscribersApi(userFrn);
         try {
@@ -92,6 +95,7 @@ public class NotificationService {
         }
     }
 
+    @Async
     public void enableDailyNotifications(String userFrn, LocalTime notificationTime) {
         NotificationsApi notificationsApi = getNotificationsApi(userFrn);
         try {
@@ -105,6 +109,7 @@ public class NotificationService {
         }
     }
 
+    @Async
     public void disableDailyNotifications(String userFrn) {
         NotificationsApi notificationsApi = getNotificationsApi(userFrn);
         try {
@@ -117,6 +122,7 @@ public class NotificationService {
         }
     }
 
+    @Async
     public void sendAccountConfirmationEmail(String userFrn, String token) {
         NotificationsApi notificationsApi = getNotificationsApi(userFrn);
         try {
@@ -128,6 +134,7 @@ public class NotificationService {
         }
     }
 
+    @Async
     public void sendFriendInviteEmail(String userFrn) {
         NotificationsApi notificationsApi = getNotificationsApi(userFrn);
         try {
