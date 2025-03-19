@@ -3,7 +3,7 @@ package com.flashdash.core.controller;
 import com.flashdash.core.model.User;
 import com.flashdash.core.service.FriendService;
 import com.flashdash.core.utils.EntityToResponseMapper;
-import com.p4r1nc3.flashdash.core.model.FriendResponse;
+import com.p4r1nc3.flashdash.core.model.UserResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,10 +23,17 @@ public class FriendController {
     }
 
     @GetMapping
-    public ResponseEntity<List<FriendResponse>> getFriends() {
+    public ResponseEntity<List<UserResponse>> getFriends() {
         String userFrn = getAuthenticatedUser();
         List<User> users = friendService.getFriends(userFrn);
-        return ResponseEntity.ok(entityToResponseMapper.mapToFriendResponse(users));
+        return ResponseEntity.ok(entityToResponseMapper.mapToUserResponse(users));
+    }
+
+    @GetMapping("/{friendFrn}")
+    public ResponseEntity<UserResponse> getFriend(@PathVariable String friendFrn) {
+        String userFrn = getAuthenticatedUser();
+        User user = friendService.getFriend(userFrn, friendFrn);
+        return ResponseEntity.ok(entityToResponseMapper.mapToUserResponse(user));
     }
 
     @DeleteMapping("/{friendFrn}")
