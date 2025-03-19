@@ -3,6 +3,7 @@ package com.flashdash.core.repository;
 import com.flashdash.core.TestUtils;
 import com.flashdash.core.model.Deck;
 import com.flashdash.core.model.GameSession;
+import com.flashdash.core.model.GameSessionStatus;
 import com.flashdash.core.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -92,8 +93,8 @@ class GameSessionRepositoryTest {
         gameSessionRepository.save(session);
 
         // Act
-        Optional<GameSession> foundSession = gameSessionRepository.findByDeckFrnAndGameSessionFrnAndUserFrn(
-                deck.getDeckFrn(), session.getGameSessionFrn(), user.getUserFrn()
+        Optional<GameSession> foundSession = gameSessionRepository.findByDeckFrnAndGameSessionFrnAndUserFrnAndStatus(
+                deck.getDeckFrn(), session.getGameSessionFrn(), user.getUserFrn(), GameSessionStatus.FINISHED.toString()
         );
 
         // Assert
@@ -113,8 +114,8 @@ class GameSessionRepositoryTest {
         deckRepository.save(deck);
 
         // Act
-        Optional<GameSession> foundSession = gameSessionRepository.findByDeckFrnAndGameSessionFrnAndUserFrn(
-                deck.getDeckFrn(), "frn:flashdash:game-session:nonexistent", user.getUserFrn()
+        Optional<GameSession> foundSession = gameSessionRepository.findByDeckFrnAndGameSessionFrnAndUserFrnAndStatus(
+                deck.getDeckFrn(), "frn:flashdash:game-session:nonexistent", user.getUserFrn(), GameSessionStatus.FINISHED.toString()
         );
 
         // Assert
@@ -179,10 +180,12 @@ class GameSessionRepositoryTest {
         gameSessionRepository.saveAll(List.of(session1, session2, session3));
 
         // Act
-        List<GameSession> deck1Sessions = gameSessionRepository.findAllByDeckFrnAndUserFrn(deck1.getDeckFrn(), user.getUserFrn());
+        List<GameSession> deck1Sessions = gameSessionRepository.findAllByDeckFrnAndUserFrnAndStatus(
+                deck1.getDeckFrn(), user.getUserFrn(), GameSessionStatus.FINISHED.toString()
+        );
 
         // Assert
-        assertThat(deck1Sessions).hasSize(2);
+        assertThat(deck1Sessions).hasSize(1);
         assertThat(deck1Sessions).extracting(GameSession::getDeckFrn).containsOnly(deck1.getDeckFrn());
         assertThat(deck1Sessions).extracting(GameSession::getUserFrn).containsOnly(user.getUserFrn());
     }
@@ -197,7 +200,9 @@ class GameSessionRepositoryTest {
         deckRepository.save(deck);
 
         // Act
-        List<GameSession> sessions = gameSessionRepository.findAllByDeckFrnAndUserFrn(deck.getDeckFrn(), user.getUserFrn());
+        List<GameSession> sessions = gameSessionRepository.findAllByDeckFrnAndUserFrnAndStatus(
+                deck.getDeckFrn(), user.getUserFrn(), GameSessionStatus.FINISHED.toString()
+        );
 
         // Assert
         assertThat(sessions).isEmpty();

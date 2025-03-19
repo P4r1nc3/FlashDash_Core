@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public interface GameSessionRepository extends JpaRepository<GameSession, String> {
     Optional<GameSession> findTopByDeckFrnAndUserFrnAndStatus(String deckFrn, String userFrn, String status);
-    Optional<GameSession> findByDeckFrnAndGameSessionFrnAndUserFrn(String deckFrn, String gameSessionFrn, String userFrn);
+    Optional<GameSession> findByDeckFrnAndGameSessionFrnAndUserFrnAndStatus(String deckFrn, String gameSessionFrn, String userFrn, String status);
     List<GameSession> findAllByUserFrn(String userFrn);
-    List<GameSession> findAllByDeckFrnAndUserFrn(String deckFrn, String userFrn);
+    List<GameSession> findAllByDeckFrnAndUserFrnAndStatus(String deckFrn, String userFrn, String status);
 }
