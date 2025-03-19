@@ -20,31 +20,24 @@ public class UserController {
 
     private final UserService userService;
     private final NotificationService notificationService;
-    private final EntityToResponseMapper entityToResponseMapper;
 
     public UserController(UserService userService,
-                          NotificationService notificationService,
-                          EntityToResponseMapper entityToResponseMapper) {
+                          NotificationService notificationService) {
         this.userService = userService;
         this.notificationService = notificationService;
-        this.entityToResponseMapper = entityToResponseMapper;
     }
 
     @GetMapping
     public ResponseEntity<UserResponse> getUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-
-        UserResponse userResponse = userService.getCurrentUser(email);
+        String userFrn = getAuthenticatedUser();
+        UserResponse userResponse = userService.getCurrentUser(userFrn);
         return ResponseEntity.ok(userResponse);
     }
 
     @DeleteMapping
     public ResponseEntity<Void> deleteUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-
-        userService.deleteUser(email);
+        String userFrn = getAuthenticatedUser();
+        userService.deleteUser(userFrn);
         return ResponseEntity.noContent().build();
     }
 

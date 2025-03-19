@@ -2,16 +2,15 @@ package com.flashdash.core.service;
 
 import com.flashdash.core.exception.ErrorCode;
 import com.flashdash.core.exception.FlashDashException;
+import com.flashdash.core.model.GameSession;
 import com.flashdash.core.model.User;
 import com.flashdash.core.repository.UserRepository;
 import com.flashdash.core.service.api.ActivityService;
 import com.flashdash.core.service.api.NotificationService;
 import com.flashdash.core.utils.EntityToResponseMapper;
-import com.p4r1nc3.flashdash.activity.model.ActivityStatisticsResponse;
 import com.p4r1nc3.flashdash.activity.model.LogActivityRequest.ActivityTypeEnum;
 import com.p4r1nc3.flashdash.core.model.ChangePasswordRequest;
 import com.p4r1nc3.flashdash.core.model.UserResponse;
-import com.p4r1nc3.flashdash.notification.model.NotificationSubscriber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,6 +18,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.time.Duration;
+import java.util.List;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -52,39 +54,44 @@ public class UserService implements UserDetailsService {
         this.userRepository = userRepository;
     }
 
-    public UserResponse getCurrentUser(String email) {
-        logger.info("Attempting to retrieve user information for email: {}", email);
+    public UserResponse getCurrentUser(String userFrn) {
+        logger.info("Attempting to retrieve user information for userFrn: {}", userFrn);
 
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByUserFrn(userFrn)
                 .orElseThrow(() -> {
-                    logger.warn("User with email {} not found", email);
+                    logger.warn("User with userFrn {} not found", userFrn);
                     return new FlashDashException(
                             ErrorCode.E404001,
-                            "User with email " + email + " not found."
+                            "User with userFrn " + userFrn + " not found."
                     );
                 });
 
-        logger.info("User found with email: {}.", email);
-
-        ActivityStatisticsResponse statisticsResponse = activityService.getActivityStatistics(user.getUserFrn());
-        NotificationSubscriber notificationSubscriber = notificationService.getSubscriber(user.getUserFrn());
+        logger.info("User found with userFrn: {}.", userFrn);
 
         UserResponse userResponse = mapper.mapToUserResponse(user);
-        userResponse.setStreak(statisticsResponse.getCurrentStreak());
-        userResponse.setDailyNotifications(notificationSubscriber.getDailyNotifications());
+
+        List<GameSession> gameSessions = gameSessionService.getAllGameSessions(user.getUserFrn());
+
+        int totalStudyTimeInMinutes = gameSessions.stream()
+                .mapToInt(session -> (int) Duration.between(session.getCreatedAt(), session.getUpdatedAt()).toMinutes())
+                .sum();
+
+        userResponse.setStudyTime(totalStudyTimeInMinutes);
+        userResponse.setGamesPlayed(gameSessions.size());
 
         return userResponse;
     }
 
-    public void changePassword(String email, ChangePasswordRequest request) {
-        logger.info("Attempting to change password for user: {}", email);
 
-        User user = userRepository.findByEmail(email)
+    public void changePassword(String userFrn, ChangePasswordRequest request) {
+        logger.info("Attempting to change password for userFrn: {}", userFrn);
+
+        User user = userRepository.findByUserFrn(userFrn)
                 .orElseThrow(() -> {
-                    logger.warn("User with email {} not found", email);
+                    logger.warn("User with userFrn {} not found", userFrn);
                     return new FlashDashException(
                             ErrorCode.E404001,
-                            "User with email " + email + " not found."
+                            "User with userFrn " + userFrn + " not found."
                     );
                 });
 
@@ -98,18 +105,18 @@ public class UserService implements UserDetailsService {
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
         activityService.logUserActivity(user.getUserFrn(), user.getUserFrn(), ActivityTypeEnum.ACCOUNT_UPDATED);
-        logger.info("Password successfully changed for user: {}", email);
+        logger.info("Password successfully changed for userFrn: {}",userFrn);
     }
 
-    public void deleteUser(String email) {
-        logger.info("Attempting to delete user with email: {}", email);
+    public void deleteUser(String userFrn) {
+        logger.info("Attempting to delete user with userFrn: {}", userFrn);
 
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByUserFrn(userFrn)
                 .orElseThrow(() -> {
-                    logger.warn("User with email {} not found", email);
+                    logger.warn("User with email {} not found", userFrn);
                     return new FlashDashException(
                             ErrorCode.E404001,
-                            "User with email " + email + " not found."
+                            "User with email " + userFrn + " not found."
                     );
                 });
 
@@ -119,7 +126,7 @@ public class UserService implements UserDetailsService {
         userRepository.delete(user);
         activityService.logUserActivity(user.getUserFrn(), user.getUserFrn(), ActivityTypeEnum.ACCOUNT_DELETED);
         notificationService.unregisterSubscriber(user.getUserFrn());
-        logger.info("User with email {} successfully deleted.", email);
+        logger.info("User with userFrn {} successfully deleted.", userFrn);
     }
 
     @Override
