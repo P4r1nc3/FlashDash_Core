@@ -1,5 +1,6 @@
 package com.flashdash.core.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flashdash.core.TestUtils;
 import com.flashdash.core.exception.ErrorCode;
 import com.flashdash.core.exception.FlashDashException;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,6 +30,9 @@ class GameSessionServiceTest {
     @Autowired
     private GameSessionService gameSessionService;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @MockitoBean
     private ActivityService activityService;
 
@@ -36,6 +41,9 @@ class GameSessionServiceTest {
 
     @MockitoBean
     private GameSessionRepository gameSessionRepository;
+
+    @MockitoBean
+    private UserService userService;
 
     private User user;
     private Deck deck;
@@ -62,6 +70,7 @@ class GameSessionServiceTest {
         // Assert
         assertThat(questions).isNotEmpty();
         verify(gameSessionRepository, times(1)).save(any(GameSession.class));
+        verify(activityService).logUserActivity(eq(user.getUserFrn()), anyString(), eq(ActivityTypeEnum.GAME_STARTED));
     }
 
     @Test
@@ -79,22 +88,6 @@ class GameSessionServiceTest {
         assertThat(questions).isNotEmpty();
         verify(gameSessionRepository, times(1)).delete(gameSession);
         verify(gameSessionRepository, times(1)).save(any(GameSession.class));
-    }
-
-    @Test
-    void shouldCreateNewGameSessionWhenNoneExists() {
-        // Arrange
-        when(gameSessionRepository.findTopByDeckFrnAndUserFrnAndStatus(deck.getDeckFrn(), user.getUserFrn(), GameSessionStatus.PENDING.toString()))
-                .thenReturn(Optional.empty());
-        when(questionService.getAllQuestionsInDeck(deck.getDeckFrn(), user.getUserFrn()))
-                .thenReturn(List.of(TestUtils.createQuestion(deck, "New Game Question")));
-
-        // Act
-        List<Question> questions = gameSessionService.startGameSession(deck.getDeckFrn(), user.getUserFrn());
-
-        // Assert
-        assertThat(questions).isNotEmpty();
-        verify(gameSessionRepository).save(any(GameSession.class));
         verify(activityService).logUserActivity(eq(user.getUserFrn()), anyString(), eq(ActivityTypeEnum.GAME_STARTED));
     }
 
@@ -112,15 +105,73 @@ class GameSessionServiceTest {
         when(gameSessionRepository.findTopByDeckFrnAndUserFrnAndStatus(deck.getDeckFrn(), user.getUserFrn(), GameSessionStatus.PENDING.toString()))
                 .thenReturn(Optional.of(gameSession));
 
+        // Mock UserService behavior
+        when(userService.getCurrentUser(user.getUserFrn())).thenReturn(user);
+        doNothing().when(userService).saveUser(user);
+
         // Act
         GameSession result = gameSessionService.endGameSession(deck.getDeckFrn(), user.getUserFrn(), List.of(userAnswer));
 
         // Assert
-        assertThat(result.getTotalScore()).isEqualTo(100);
+        assertThat(result.getStatus()).isEqualTo(GameSessionStatus.FINISHED.toString());
+        assertThat(result.getTotalScore()).isEqualTo(10);
         assertThat(result.getCorrectAnswersCount()).isEqualTo(1);
+        assertThat(result.getWrongAnswersCount()).isEqualTo(0);
         assertThat(result.getQuestionCount()).isEqualTo(1);
         assertThat(result.getSessionDetails()).isNotBlank();
+
         verify(gameSessionRepository).save(gameSession);
+        verify(userService).getCurrentUser(user.getUserFrn());
+        verify(userService).saveUser(user);
+        verify(activityService).logUserActivity(eq(user.getUserFrn()), eq(gameSession.getGameSessionFrn()), eq(ActivityTypeEnum.GAME_FINISHED));
+
+        // Verify user stats were updated
+        assertThat(user.getGamesPlayed()).isEqualTo(1);
+        assertThat(user.getPoints()).isEqualTo(10);
+        assertThat(user.getStudyTime()).isNotNull();
+    }
+
+    @Test
+    void shouldHandleIncorrectAnswers() {
+        // Arrange
+        QuestionRequest userAnswer = new QuestionRequest();
+        userAnswer.setQuestion("Sample Question");
+        userAnswer.setCorrectAnswers(List.of("Wrong Answer"));  // User provides wrong answer
+
+        Question correctQuestion = TestUtils.createQuestion(deck, "Sample Question");
+        correctQuestion.setCorrectAnswers(List.of("Correct Answer"));
+
+        when(questionService.getAllQuestionsInDeck(deck.getDeckFrn(), user.getUserFrn())).thenReturn(List.of(correctQuestion));
+        when(gameSessionRepository.findTopByDeckFrnAndUserFrnAndStatus(deck.getDeckFrn(), user.getUserFrn(), GameSessionStatus.PENDING.toString()))
+                .thenReturn(Optional.of(gameSession));
+
+        // Setup user with initial stats
+        user.setGamesPlayed(0);
+        user.setPoints(0);
+        user.setStudyTime(Duration.ZERO);
+
+        // Mock UserService behavior
+        when(userService.getCurrentUser(user.getUserFrn())).thenReturn(user);
+        doNothing().when(userService).saveUser(user);
+
+        // Act
+        GameSession result = gameSessionService.endGameSession(deck.getDeckFrn(), user.getUserFrn(), List.of(userAnswer));
+
+        // Assert
+        assertThat(result.getStatus()).isEqualTo(GameSessionStatus.FINISHED.toString());
+        assertThat(result.getTotalScore()).isEqualTo(-4);  // Score should be negative (wrong answer penalty)
+        assertThat(result.getCorrectAnswersCount()).isEqualTo(0);
+        assertThat(result.getWrongAnswersCount()).isEqualTo(1);
+        assertThat(result.getQuestionCount()).isEqualTo(1);
+
+        verify(gameSessionRepository).save(gameSession);
+        verify(userService).getCurrentUser(user.getUserFrn());
+        verify(userService).saveUser(user);
+
+        // Verify user stats were updated with negative points
+        assertThat(user.getGamesPlayed()).isEqualTo(1);
+        assertThat(user.getPoints()).isEqualTo(-4);
+        assertThat(user.getStudyTime()).isNotNull();
     }
 
     @Test
@@ -143,6 +194,9 @@ class GameSessionServiceTest {
                 .isInstanceOf(FlashDashException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404002)
                 .hasMessage("Matching question not found in the provided deck.");
+
+        verify(userService, never()).getCurrentUser(anyString());
+        verify(userService, never()).saveUser(any(User.class));
     }
 
     @Test
@@ -160,6 +214,9 @@ class GameSessionServiceTest {
                 .isInstanceOf(FlashDashException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E400003)
                 .hasMessage("No active game session for this deck.");
+
+        verify(userService, never()).getCurrentUser(anyString());
+        verify(userService, never()).saveUser(any(User.class));
     }
 
     @Test
@@ -194,10 +251,26 @@ class GameSessionServiceTest {
         when(gameSessionRepository.findAllByUserFrn(user.getUserFrn())).thenReturn(List.of(gameSession));
 
         // Act
-        gameSessionService.getAllGameSessions(user.getUserFrn());
+        List<GameSession> sessions = gameSessionService.getAllGameSessions(user.getUserFrn());
 
         // Assert
-        verify(gameSessionRepository, times(1)).findAllByUserFrn(user.getUserFrn());
+        assertThat(sessions).hasSize(1);
+        assertThat(sessions.get(0)).isEqualTo(gameSession);
+        verify(gameSessionRepository).findAllByUserFrn(user.getUserFrn());
+    }
+
+    @Test
+    void shouldGetGameSessionsForDeck() {
+        // Arrange
+        when(gameSessionRepository.findAllByDeckFrnAndUserFrn(deck.getDeckFrn(), user.getUserFrn())).thenReturn(List.of(gameSession));
+
+        // Act
+        List<GameSession> sessions = gameSessionService.getGameSessions(deck.getDeckFrn(), user.getUserFrn());
+
+        // Assert
+        assertThat(sessions).hasSize(1);
+        assertThat(sessions.get(0)).isEqualTo(gameSession);
+        verify(gameSessionRepository).findAllByDeckFrnAndUserFrn(deck.getDeckFrn(), user.getUserFrn());
     }
 
     @Test
@@ -209,7 +282,8 @@ class GameSessionServiceTest {
         gameSessionService.removeAllGameSessionsForUser(user.getUserFrn());
 
         // Assert
-        verify(gameSessionRepository, times(1)).deleteAll(anyList());
+        verify(gameSessionRepository).findAllByUserFrn(user.getUserFrn());
+        verify(gameSessionRepository).deleteAll(List.of(gameSession));
     }
 
     @Test
@@ -221,7 +295,7 @@ class GameSessionServiceTest {
         gameSessionService.removeAllGameSessionsForUser(user.getUserFrn());
 
         // Assert
-        verify(gameSessionRepository, times(1)).findAllByUserFrn(user.getUserFrn());
+        verify(gameSessionRepository).findAllByUserFrn(user.getUserFrn());
         verify(gameSessionRepository, never()).deleteAll(anyList());
     }
 }

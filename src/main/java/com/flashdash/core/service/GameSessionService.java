@@ -7,6 +7,7 @@ import com.flashdash.core.exception.FlashDashException;
 import com.flashdash.core.model.GameSession;
 import com.flashdash.core.model.GameSessionStatus;
 import com.flashdash.core.model.Question;
+import com.flashdash.core.model.User;
 import com.flashdash.core.repository.GameSessionRepository;
 import com.flashdash.core.service.api.ActivityService;
 import com.flashdash.core.utils.FrnGenerator;
@@ -16,6 +17,7 @@ import com.p4r1nc3.flashdash.core.model.GameSessionDetailsResponse;
 import com.p4r1nc3.flashdash.core.model.QuestionRequest;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -29,15 +31,18 @@ public class  GameSessionService {
     private final ActivityService activityService;
     private final QuestionService questionService;
     private final GameSessionRepository gameSessionRepository;
+    private final UserService userService;
 
     public GameSessionService(ObjectMapper objectMapper,
                               ActivityService activityService,
                               QuestionService questionService,
-                              GameSessionRepository gameSessionRepository) {
+                              GameSessionRepository gameSessionRepository,
+                              UserService userService) {
         this.objectMapper = objectMapper;
         this.activityService = activityService;
         this.questionService = questionService;
         this.gameSessionRepository = gameSessionRepository;
+        this.userService = userService;
     }
 
     public List<Question> startGameSession(String deckFrn, String userFrn) {
@@ -112,7 +117,7 @@ public class  GameSessionService {
         }
 
         int totalQuestions = userAnswers.size();
-        int score = (int) (((double) correctCount / totalQuestions) * 100);
+        int score = correctCount*10 - wrongCount*4;
 
         GameSession gameSession = gameSessionOptional.get();
         gameSession.setStatus(GameSessionStatus.FINISHED.toString());
@@ -128,7 +133,15 @@ public class  GameSessionService {
             throw new RuntimeException("Error serializing session details", e);
         }
 
+        Duration duration = Duration.between(gameSession.getCreatedAt(), gameSession.getUpdatedAt());
+
         gameSessionRepository.save(gameSession);
+        User user = userService.getCurrentUser(userFrn);
+        user.setGamesPlayed(user.getGamesPlayed() + 1);
+        user.setPoints(user.getPoints() + score);
+        user.setStudyTime(user.getStudyTime().plus(duration));
+        userService.saveUser(user);
+
         activityService.logUserActivity(userFrn, gameSession.getGameSessionFrn(), ActivityTypeEnum.GAME_FINISHED);
 
         return gameSession;
