@@ -306,41 +306,33 @@ class EntityToResponseMapperTest {
     }
 
     @Test
-    void shouldConvertUserToFriendResponse() {
-        // Arrange
-        User user = TestUtils.createUser();
-
-        // Act
-        FriendResponse response = mapper.mapToFriendResponse(user);
-
-        // Assert
-        assertThat(response).isNotNull();
-        assertThat(response.getUserId()).isEqualTo(mapper.extractId(user.getUserFrn()));
-        assertThat(response.getUserFrn()).isEqualTo(user.getUserFrn());
-        assertThat(response.getUsername()).isEqualTo(user.getUsername());
-        assertThat(response.getFirstName()).isEqualTo(user.getFirstName());
-        assertThat(response.getLastName()).isEqualTo(user.getLastName());
-    }
-
-    @Test
-    void shouldConvertUserListToFriendResponseList() {
+    void shouldConvertUserListToUserResponseList() {
         // Arrange
         User user1 = TestUtils.createUser();
         User user2 = TestUtils.createUser();
         List<User> users = List.of(user1, user2);
 
         // Act
-        List<FriendResponse> friendResponses = mapper.mapToFriendResponse(users);
+        List<UserResponse> responses = mapper.mapToUserResponse(users);
 
         // Assert
-        assertThat(friendResponses).isNotEmpty();
-        assertThat(friendResponses).hasSize(users.size());
+        assertThat(responses).isNotNull();
+        assertThat(responses).hasSize(users.size());
 
-        for (int i = 0; i < users.size(); i++) {
-            assertThat(friendResponses.get(i).getUserFrn()).isEqualTo(users.get(i).getUserFrn());
-            assertThat(friendResponses.get(i).getUsername()).isEqualTo(users.get(i).getUsername());
-            assertThat(friendResponses.get(i).getFirstName()).isEqualTo(users.get(i).getFirstName());
-            assertThat(friendResponses.get(i).getLastName()).isEqualTo(users.get(i).getLastName());
-        }
+        assertThat(responses.get(0).getUserFrn()).isEqualTo(user1.getUserFrn());
+        assertThat(responses.get(0).getEmail()).isEqualTo(user1.getEmail());
+        assertThat(responses.get(0).getUsername()).isEqualTo(user1.getUsername());
+        assertThat(responses.get(0).getFirstName()).isEqualTo(user1.getFirstName());
+        assertThat(responses.get(0).getLastName()).isEqualTo(user1.getLastName());
+        assertThat(responses.get(0).getCreatedAt()).isEqualTo(user1.getCreatedAt().atOffset(ZoneOffset.UTC));
+        assertThat(responses.get(0).getUpdatedAt()).isEqualTo(user1.getUpdatedAt().atOffset(ZoneOffset.UTC));
+
+        assertThat(responses.get(1).getUserFrn()).isEqualTo(user2.getUserFrn());
+        assertThat(responses.get(1).getEmail()).isEqualTo(user2.getEmail());
+        assertThat(responses.get(1).getUsername()).isEqualTo(user2.getUsername());
+        assertThat(responses.get(1).getFirstName()).isEqualTo(user2.getFirstName());
+        assertThat(responses.get(1).getLastName()).isEqualTo(user2.getLastName());
+        assertThat(responses.get(1).getCreatedAt()).isEqualTo(user2.getCreatedAt().atOffset(ZoneOffset.UTC));
+        assertThat(responses.get(1).getUpdatedAt()).isEqualTo(user2.getUpdatedAt().atOffset(ZoneOffset.UTC));
     }
 }

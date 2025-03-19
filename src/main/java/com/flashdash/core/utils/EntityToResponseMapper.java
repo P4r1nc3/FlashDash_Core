@@ -169,6 +169,12 @@ public class EntityToResponseMapper {
         return response;
     }
 
+    public List<UserResponse> mapToUserResponse(List<User> users) {
+        return users.stream()
+                .map(this::mapToUserResponse)
+                .collect(Collectors.toList());
+    }
+
     public String extractId(String frn) {
         if (frn != null && frn.contains(":")) {
             String[] parts = frn.split(":");
