@@ -17,21 +17,23 @@ import java.time.LocalTime;
 @RestController
 @RequestMapping("/users")
 public class UserController {
-
     private final UserService userService;
     private final NotificationService notificationService;
+    private final EntityToResponseMapper entityToResponseMapper;
 
     public UserController(UserService userService,
-                          NotificationService notificationService) {
+                          NotificationService notificationService,
+                          EntityToResponseMapper entityToResponseMapper) {
         this.userService = userService;
         this.notificationService = notificationService;
+        this.entityToResponseMapper = entityToResponseMapper;
     }
 
     @GetMapping
     public ResponseEntity<UserResponse> getUser() {
         String userFrn = getAuthenticatedUser();
-        UserResponse userResponse = userService.getCurrentUser(userFrn);
-        return ResponseEntity.ok(userResponse);
+        User user = userService.getCurrentUser(userFrn);
+        return ResponseEntity.ok(entityToResponseMapper.mapToUserResponse(user));
     }
 
     @DeleteMapping
