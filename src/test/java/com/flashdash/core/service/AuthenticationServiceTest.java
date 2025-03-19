@@ -8,6 +8,8 @@ import com.flashdash.core.model.User;
 import com.flashdash.core.repository.UserRepository;
 import com.flashdash.core.service.api.ActivityService;
 import com.flashdash.core.service.api.NotificationService;
+import com.p4r1nc3.flashdash.activity.model.ActivityStatisticsResponse;
+import com.p4r1nc3.flashdash.activity.model.LogActivityRequest.ActivityTypeEnum;
 import com.p4r1nc3.flashdash.core.model.AuthenticationResponse;
 import com.p4r1nc3.flashdash.core.model.LoginRequest;
 import com.p4r1nc3.flashdash.core.model.RegisterRequest;
@@ -60,10 +62,13 @@ class AuthenticationServiceTest {
     void shouldLoginSuccessfully() {
         // Arrange
         user.setEnabled(true);
-        when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-
         when(jwtManager.generateToken(user.getUserFrn(), user.getEmail())).thenReturn("mocked-jwt-token");
+
+        ActivityStatisticsResponse activityStats = new ActivityStatisticsResponse();
+        activityStats.setCurrentStreak(5);
+        when(activityService.getActivityStatistics(user.getUserFrn())).thenReturn(activityStats);
 
         LoginRequest loginRequest = TestUtils.createLoginRequest(user);
 
@@ -72,26 +77,26 @@ class AuthenticationServiceTest {
 
         // Assert
         assertThat(response).isNotNull();
-        assertThat(response.getToken()).isNotBlank();
+        assertThat(response.getToken()).isEqualTo("mocked-jwt-token");
 
-        verify(userRepository).findByEmail(user.getUsername());
+        verify(userRepository).findByEmail(user.getEmail());
         verify(passwordEncoder).matches(loginRequest.getPassword(), user.getPassword());
         verify(jwtManager).generateToken(user.getUserFrn(), user.getEmail());
+        verify(activityService).logUserActivity(user.getUserFrn(), user.getUserFrn(), ActivityTypeEnum.ACCOUNT_LOGIN);
+        verify(userRepository).save(user);
     }
-
 
     @Test
     void shouldThrowExceptionWhenUserNotFoundDuringLogin() {
         // Arrange
-        LoginRequest loginRequest = TestUtils.createLoginRequest(user);
-        when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.empty());
+        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThatThrownBy(() -> authenticationService.login(loginRequest))
+        assertThatThrownBy(() -> authenticationService.login(TestUtils.createLoginRequest(user)))
                 .isInstanceOf(FlashDashException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404001);
 
-        verify(userRepository).findByEmail(loginRequest.getEmail());
+        verify(userRepository).findByEmail(user.getEmail());
         verifyNoInteractions(passwordEncoder);
     }
 
@@ -99,18 +104,31 @@ class AuthenticationServiceTest {
     void shouldThrowExceptionWhenPasswordDoesNotMatch() {
         // Arrange
         user.setEnabled(true);
-        when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
 
-        LoginRequest loginRequest = TestUtils.createLoginRequest(user);
-
         // Act & Assert
-        assertThatThrownBy(() -> authenticationService.login(loginRequest))
+        assertThatThrownBy(() -> authenticationService.login(TestUtils.createLoginRequest(user)))
                 .isInstanceOf(FlashDashException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E401002);
 
-        verify(userRepository).findByEmail(loginRequest.getEmail());
-        verify(passwordEncoder).matches(loginRequest.getPassword(), user.getPassword());
+        verify(userRepository).findByEmail(user.getEmail());
+        verify(passwordEncoder).matches(anyString(), anyString());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenAccountNotActivated() {
+        // Arrange
+        user.setEnabled(false);
+        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+
+        // Act & Assert
+        assertThatThrownBy(() -> authenticationService.login(TestUtils.createLoginRequest(user)))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E403002);
+
+        verify(userRepository).findByEmail(user.getEmail());
+        verifyNoInteractions(passwordEncoder);
     }
 
     @Test
@@ -125,7 +143,7 @@ class AuthenticationServiceTest {
 
         // Assert
         assertThat(response).isNotNull();
-        assertThat(response.getToken()).isNotBlank();
+        assertThat(response.getToken()).contains("Account created");
 
         verify(userRepository).findByEmail(registerRequest.getEmail());
         verify(userRepository).save(any(User.class));
@@ -133,18 +151,16 @@ class AuthenticationServiceTest {
     }
 
     @Test
-    void shouldNotSendActivationEmailWhenUserAlreadyExists() {
+    void shouldThrowExceptionWhenUserAlreadyExistsDuringRegistration() {
         // Arrange
-        when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
-
-        RegisterRequest registerRequest = TestUtils.createRegisterRequest(user);
+        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
 
         // Act & Assert
-        assertThatThrownBy(() -> authenticationService.register(registerRequest))
+        assertThatThrownBy(() -> authenticationService.register(TestUtils.createRegisterRequest(user)))
                 .isInstanceOf(FlashDashException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E409001);
 
-        verify(userRepository).findByEmail(registerRequest.getEmail());
+        verify(userRepository).findByEmail(user.getEmail());
         verifyNoMoreInteractions(userRepository);
         verifyNoInteractions(notificationService);
     }
@@ -152,52 +168,48 @@ class AuthenticationServiceTest {
     @Test
     void shouldActivateAccountSuccessfully() {
         // Arrange
-        User user = TestUtils.createUser();
         user.setEnabled(false);
-        String activationToken = "validToken";
-        user.setActivationToken(activationToken);
-        when(userRepository.findByActivationToken(activationToken)).thenReturn(Optional.of(user));
+        user.setActivationToken("validToken");
+        when(userRepository.findByActivationToken("validToken")).thenReturn(Optional.of(user));
 
         // Act
-        authenticationService.activateAccount(activationToken);
+        authenticationService.activateAccount("validToken");
 
         // Assert
         assertThat(user.isEnabled()).isTrue();
 
-        verify(userRepository).findByActivationToken(activationToken);
+        verify(userRepository).findByActivationToken("validToken");
         verify(userRepository).save(user);
     }
 
     @Test
     void shouldThrowExceptionWhenActivationTokenIsInvalid() {
         // Arrange
-        String invalidToken = "invalidToken";
-        when(userRepository.findByActivationToken(invalidToken)).thenReturn(Optional.empty());
+        when(userRepository.findByActivationToken("invalidToken")).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThatThrownBy(() -> authenticationService.activateAccount(invalidToken))
+        assertThatThrownBy(() -> authenticationService.activateAccount("invalidToken"))
                 .isInstanceOf(FlashDashException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404001);
 
-        verify(userRepository).findByActivationToken(invalidToken);
+        verify(userRepository).findByActivationToken("invalidToken");
         verifyNoMoreInteractions(userRepository);
     }
 
     @Test
     void shouldNotAllowActivationIfUserIsAlreadyActivated() {
         // Arrange
-        User user = TestUtils.createUser();
-        user.setEnabled(true);  // User is already activated
-        user.setActivationToken("activated");
-        when(userRepository.findByActivationToken("alreadyActivatedToken")).thenReturn(Optional.of(user));
+        user.setEnabled(true);
+        user.setActivationToken("alreadyActivated");
+        when(userRepository.findByActivationToken("alreadyActivated")).thenReturn(Optional.of(user));
 
         // Act & Assert
-        assertThatThrownBy(() -> authenticationService.activateAccount("alreadyActivatedToken"))
+        assertThatThrownBy(() -> authenticationService.activateAccount("alreadyActivated"))
                 .isInstanceOf(FlashDashException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E400001)
                 .hasMessage("Account is already activated.");
 
-        verify(userRepository).findByActivationToken("alreadyActivatedToken");
+        verify(userRepository).findByActivationToken("alreadyActivated");
         verifyNoMoreInteractions(userRepository);
     }
 
