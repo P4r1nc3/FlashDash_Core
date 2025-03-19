@@ -151,7 +151,7 @@
 		<dependency>
 			<groupId>com.p4r1nc3.flashdash</groupId>
 			<artifactId>flashdash-notification-api</artifactId>
-			<version>1.0.7</version>
+			<version>1.0.8</version>
 		</dependency>
 	</dependencies>
 	<build>
