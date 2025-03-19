@@ -98,6 +98,7 @@ public class InvitationService {
         // If accepted, add friendship
         if ("ACCEPTED".equals(status)) {
             addFriendship(invitation.getSentByFrn(), invitation.getSentToFrn());
+            notificationService.sendFriendAcceptedEmail(invitation.getSentToFrn());
         }
 
         activityService.logUserActivity(userFrn, invitation.getInvitationFrn(), LogActivityRequest.ActivityTypeEnum.FRIEND_INVITE_RESPONDED);
