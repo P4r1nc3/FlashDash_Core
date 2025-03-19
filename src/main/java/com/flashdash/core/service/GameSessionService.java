@@ -164,11 +164,11 @@ public class  GameSessionService {
     }
 
     public List<GameSession> getGameSessions(String deckFrn, String userFrn) {
-        return gameSessionRepository.findAllByDeckFrnAndUserFrn(deckFrn, userFrn);
+        return gameSessionRepository.findAllByDeckFrnAndUserFrnAndStatus(deckFrn, userFrn, GameSessionStatus.FINISHED.toString());
     }
 
     public GameSession getGameSession(String deckFrn, String gameSessionFrn, String userFrn) {
-        return gameSessionRepository.findByDeckFrnAndGameSessionFrnAndUserFrn(deckFrn, gameSessionFrn, userFrn)
+        return gameSessionRepository.findByDeckFrnAndGameSessionFrnAndUserFrnAndStatus(deckFrn, gameSessionFrn, userFrn, GameSessionStatus.FINISHED.toString())
                 .orElseThrow(() -> new FlashDashException(ErrorCode.E404006, "Game session not found"));
     }
 

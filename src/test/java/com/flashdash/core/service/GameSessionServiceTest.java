@@ -223,8 +223,9 @@ class GameSessionServiceTest {
     @Test
     void shouldRetrieveExistingGameSession() {
         // Arrange
-        when(gameSessionRepository.findByDeckFrnAndGameSessionFrnAndUserFrn(deck.getDeckFrn(), gameSession.getGameSessionFrn(), user.getUserFrn()))
-                .thenReturn(Optional.of(gameSession));
+        when(gameSessionRepository.findByDeckFrnAndGameSessionFrnAndUserFrnAndStatus(
+                deck.getDeckFrn(), gameSession.getGameSessionFrn(), user.getUserFrn(), GameSessionStatus.FINISHED.toString()
+        )).thenReturn(Optional.of(gameSession));
 
         // Act
         GameSession retrievedSession = gameSessionService.getGameSession(deck.getDeckFrn(), gameSession.getGameSessionFrn(), user.getUserFrn());
@@ -236,7 +237,7 @@ class GameSessionServiceTest {
     @Test
     void shouldThrowExceptionWhenGameSessionNotFound() {
         // Arrange
-        when(gameSessionRepository.findByDeckFrnAndGameSessionFrnAndUserFrn(anyString(), anyString(), anyString()))
+        when(gameSessionRepository.findByDeckFrnAndGameSessionFrnAndUserFrnAndStatus(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(Optional.empty());
 
         // Act & Assert
@@ -263,7 +264,9 @@ class GameSessionServiceTest {
     @Test
     void shouldGetGameSessionsForDeck() {
         // Arrange
-        when(gameSessionRepository.findAllByDeckFrnAndUserFrn(deck.getDeckFrn(), user.getUserFrn())).thenReturn(List.of(gameSession));
+        when(gameSessionRepository.findAllByDeckFrnAndUserFrnAndStatus(
+                deck.getDeckFrn(), user.getUserFrn(), GameSessionStatus.FINISHED.toString()
+        )).thenReturn(List.of(gameSession));
 
         // Act
         List<GameSession> sessions = gameSessionService.getGameSessions(deck.getDeckFrn(), user.getUserFrn());
@@ -271,7 +274,9 @@ class GameSessionServiceTest {
         // Assert
         assertThat(sessions).hasSize(1);
         assertThat(sessions.get(0)).isEqualTo(gameSession);
-        verify(gameSessionRepository).findAllByDeckFrnAndUserFrn(deck.getDeckFrn(), user.getUserFrn());
+        verify(gameSessionRepository).findAllByDeckFrnAndUserFrnAndStatus(
+                deck.getDeckFrn(), user.getUserFrn(), GameSessionStatus.FINISHED.toString()
+        );
     }
 
     @Test
