@@ -145,4 +145,16 @@ public class NotificationService {
             throw new FlashDashException(ErrorCode.E500001, "An error occurred while sending friend invite email. Please try again later.");
         }
     }
+
+    @Async
+    public void sendFriendAcceptedEmail(String userFrn) {
+        NotificationsApi notificationsApi = getNotificationsApi(userFrn);
+        try {
+            notificationsApi.sendFriendAcceptedEmail();
+            logger.info("Friend accepted email sent to user {}.", userFrn);
+        } catch (ApiException e) {
+            logger.error("Failed to send friend accepted email to user {}. Error: {}", userFrn, e.getMessage());
+            throw new FlashDashException(ErrorCode.E500001, "An error occurred while sending friend invite email. Please try again later.");
+        }
+    }
 }
