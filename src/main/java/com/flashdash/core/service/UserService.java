@@ -2,15 +2,12 @@ package com.flashdash.core.service;
 
 import com.flashdash.core.exception.ErrorCode;
 import com.flashdash.core.exception.FlashDashException;
-import com.flashdash.core.model.GameSession;
 import com.flashdash.core.model.User;
 import com.flashdash.core.repository.UserRepository;
 import com.flashdash.core.service.api.ActivityService;
 import com.flashdash.core.service.api.NotificationService;
-import com.flashdash.core.utils.EntityToResponseMapper;
 import com.p4r1nc3.flashdash.activity.model.LogActivityRequest.ActivityTypeEnum;
 import com.p4r1nc3.flashdash.core.model.ChangePasswordRequest;
-import com.p4r1nc3.flashdash.core.model.UserResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,16 +16,12 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.util.List;
-
 @Service
 public class UserService implements UserDetailsService {
 
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     private final PasswordEncoder passwordEncoder;
-    private final EntityToResponseMapper mapper;
     private final ActivityService activityService;
     private final NotificationService notificationService;
     private final DeckService deckService;
@@ -37,7 +30,6 @@ public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
 
     public UserService(PasswordEncoder passwordEncoder,
-                       EntityToResponseMapper mapper,
                        ActivityService activityService,
                        NotificationService notificationService,
                        DeckService deckService,
@@ -45,7 +37,6 @@ public class UserService implements UserDetailsService {
                        FriendService friendService,
                        UserRepository userRepository) {
         this.passwordEncoder = passwordEncoder;
-        this.mapper = mapper;
         this.activityService = activityService;
         this.notificationService = notificationService;
         this.deckService = deckService;
@@ -54,7 +45,7 @@ public class UserService implements UserDetailsService {
         this.userRepository = userRepository;
     }
 
-    public UserResponse getCurrentUser(String userFrn) {
+    public User getCurrentUser(String userFrn) {
         logger.info("Attempting to retrieve user information for userFrn: {}", userFrn);
 
         User user = userRepository.findByUserFrn(userFrn)
@@ -68,20 +59,14 @@ public class UserService implements UserDetailsService {
 
         logger.info("User found with userFrn: {}.", userFrn);
 
-        UserResponse userResponse = mapper.mapToUserResponse(user);
-
-        List<GameSession> gameSessions = gameSessionService.getAllGameSessions(user.getUserFrn());
-
-        int totalStudyTimeInMinutes = gameSessions.stream()
-                .mapToInt(session -> (int) Duration.between(session.getCreatedAt(), session.getUpdatedAt()).toMinutes())
-                .sum();
-
-        userResponse.setStudyTime(totalStudyTimeInMinutes);
-        userResponse.setGamesPlayed(gameSessions.size());
-
-        return userResponse;
+        return user;
     }
 
+    public void saveUser(User user) {
+        logger.info("Saving user with userFrn: {}", user.getUserFrn());
+        userRepository.save(user);
+        logger.info("User with userFrn: {} successfully saved.", user.getUserFrn());
+    }
 
     public void changePassword(String userFrn, ChangePasswordRequest request) {
         logger.info("Attempting to change password for userFrn: {}", userFrn);
