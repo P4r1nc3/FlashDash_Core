@@ -89,14 +89,15 @@ class AuthenticationServiceTest {
     @Test
     void shouldThrowExceptionWhenUserNotFoundDuringLogin() {
         // Arrange
-        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.empty());
+        LoginRequest loginRequest = TestUtils.createLoginRequest(user);
+        when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThatThrownBy(() -> authenticationService.login(TestUtils.createLoginRequest(user)))
+        assertThatThrownBy(() -> authenticationService.login(loginRequest))
                 .isInstanceOf(FlashDashException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404001);
 
-        verify(userRepository).findByEmail(user.getEmail());
+        verify(userRepository).findByEmail(loginRequest.getEmail());
         verifyNoInteractions(passwordEncoder);
     }
 
@@ -104,30 +105,32 @@ class AuthenticationServiceTest {
     void shouldThrowExceptionWhenPasswordDoesNotMatch() {
         // Arrange
         user.setEnabled(true);
-        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
+        LoginRequest loginRequest = TestUtils.createLoginRequest(user);
+        when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())).thenReturn(false);
 
         // Act & Assert
-        assertThatThrownBy(() -> authenticationService.login(TestUtils.createLoginRequest(user)))
+        assertThatThrownBy(() -> authenticationService.login(loginRequest))
                 .isInstanceOf(FlashDashException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E401002);
 
-        verify(userRepository).findByEmail(user.getEmail());
-        verify(passwordEncoder).matches(anyString(), anyString());
+        verify(userRepository).findByEmail(loginRequest.getEmail());
+        verify(passwordEncoder).matches(loginRequest.getPassword(), user.getPassword());
     }
 
     @Test
     void shouldThrowExceptionWhenAccountNotActivated() {
         // Arrange
         user.setEnabled(false);
-        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+        LoginRequest loginRequest = TestUtils.createLoginRequest(user);
+        when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.of(user));
 
         // Act & Assert
-        assertThatThrownBy(() -> authenticationService.login(TestUtils.createLoginRequest(user)))
+        assertThatThrownBy(() -> authenticationService.login(loginRequest))
                 .isInstanceOf(FlashDashException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E403002);
 
-        verify(userRepository).findByEmail(user.getEmail());
+        verify(userRepository).findByEmail(loginRequest.getEmail());
         verifyNoInteractions(passwordEncoder);
     }
 
@@ -153,14 +156,15 @@ class AuthenticationServiceTest {
     @Test
     void shouldThrowExceptionWhenUserAlreadyExistsDuringRegistration() {
         // Arrange
-        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+        RegisterRequest registerRequest = TestUtils.createRegisterRequest(user);
+        when(userRepository.findByEmail(registerRequest.getEmail())).thenReturn(Optional.of(user));
 
         // Act & Assert
-        assertThatThrownBy(() -> authenticationService.register(TestUtils.createRegisterRequest(user)))
+        assertThatThrownBy(() -> authenticationService.register(registerRequest))
                 .isInstanceOf(FlashDashException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E409001);
 
-        verify(userRepository).findByEmail(user.getEmail());
+        verify(userRepository).findByEmail(registerRequest.getEmail());
         verifyNoMoreInteractions(userRepository);
         verifyNoInteractions(notificationService);
     }
@@ -217,9 +221,8 @@ class AuthenticationServiceTest {
     void shouldThrowExceptionWhenAccountIsNotActivated() {
         // Arrange
         user.setEnabled(false);
-        when(userRepository.findByEmail(user.getUsername())).thenReturn(Optional.of(user));
-
         LoginRequest loginRequest = TestUtils.createLoginRequest(user);
+        when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.of(user));
 
         // Act & Assert
         assertThatThrownBy(() -> authenticationService.login(loginRequest))
@@ -227,7 +230,7 @@ class AuthenticationServiceTest {
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E403002)
                 .hasMessage("Account not activated.");
 
-        verify(userRepository).findByEmail(user.getUsername());
+        verify(userRepository).findByEmail(loginRequest.getEmail());
         verifyNoInteractions(passwordEncoder);
     }
 }
