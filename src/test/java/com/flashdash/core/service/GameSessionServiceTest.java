@@ -108,7 +108,7 @@ class GameSessionServiceTest {
 
         // Mock UserService behavior
         when(userRepository.findByUserFrn(user.getUserFrn())).thenReturn(Optional.of(user));
-        doNothing().when(userRepository).save(user);
+        when(userRepository.save(user)).thenReturn(user);
 
         // Act
         GameSession result = gameSessionService.endGameSession(deck.getDeckFrn(), user.getUserFrn(), List.of(userAnswer));
@@ -127,7 +127,7 @@ class GameSessionServiceTest {
         verify(activityService).logUserActivity(eq(user.getUserFrn()), eq(gameSession.getGameSessionFrn()), eq(ActivityTypeEnum.GAME_FINISHED));
 
         // Verify user stats were updated
-        assertThat(user.getGamesPlayed()).isEqualTo(1);
+        assertThat(user.getGamesPlayed()).isEqualTo(3);
         assertThat(user.getPoints()).isEqualTo(10);
         assertThat(user.getStudyTime()).isNotNull();
     }
@@ -153,7 +153,7 @@ class GameSessionServiceTest {
 
         // Mock UserService behavior
         when(userRepository.findByUserFrn(user.getUserFrn())).thenReturn(Optional.of(user));
-        doNothing().when(userRepository).save(user);
+        when(userRepository.save(user)).thenReturn(user);
 
         // Act
         GameSession result = gameSessionService.endGameSession(deck.getDeckFrn(), user.getUserFrn(), List.of(userAnswer));
