@@ -62,12 +62,6 @@ public class UserService implements UserDetailsService {
         return user;
     }
 
-    public void saveUser(User user) {
-        logger.info("Saving user with userFrn: {}", user.getUserFrn());
-        userRepository.save(user);
-        logger.info("User with userFrn: {} successfully saved.", user.getUserFrn());
-    }
-
     public void changePassword(String userFrn, ChangePasswordRequest request) {
         logger.info("Attempting to change password for userFrn: {}", userFrn);
 

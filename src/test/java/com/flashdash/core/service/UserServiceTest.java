@@ -92,18 +92,6 @@ class UserServiceTest {
     }
 
     @Test
-    void shouldSaveUserSuccessfully() {
-        // Arrange
-        doNothing().when(userRepository).save(user);
-
-        // Act
-        userService.saveUser(user);
-
-        // Assert
-        verify(userRepository).save(user);
-    }
-
-    @Test
     void shouldLoadUserByUsernameSuccessfully() {
         // Arrange
         when(userRepository.findByUserFrn(user.getUserFrn())).thenReturn(Optional.of(user));
