@@ -165,6 +165,9 @@ public class EntityToResponseMapper {
         response.setCreatedAt(user.getCreatedAt().atOffset(ZoneOffset.UTC));
         response.setUpdatedAt(user.getUpdatedAt().atOffset(ZoneOffset.UTC));
         response.setStreak(user.getStrike());
+        response.setPoints(user.getPoints());
+        response.setGamesPlayed(user.getGamesPlayed());
+        response.setStudyTime((int) user.getStudyTime().toMinutes());
 
         return response;
     }
