@@ -143,6 +143,10 @@ public class  GameSessionService {
                 .orElseThrow(() -> new FlashDashException(ErrorCode.E404006, "Game session not found"));
     }
 
+    public List<GameSession> getAllGameSessions(String userFrn) {
+        return gameSessionRepository.findAllByUserFrn(userFrn);
+    }
+
     public void removeAllGameSessionsForUser(String userFrn) {
         List<GameSession> userSessions = gameSessionRepository.findAllByUserFrn(userFrn);
         if (!userSessions.isEmpty()) {

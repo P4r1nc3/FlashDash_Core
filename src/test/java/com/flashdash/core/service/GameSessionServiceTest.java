@@ -189,6 +189,18 @@ class GameSessionServiceTest {
     }
 
     @Test
+    void shouldGetAllGameSessionsForUser() {
+        // Arrange
+        when(gameSessionRepository.findAllByUserFrn(user.getUserFrn())).thenReturn(List.of(gameSession));
+
+        // Act
+        gameSessionService.getAllGameSessions(user.getUserFrn());
+
+        // Assert
+        verify(gameSessionRepository, times(1)).findAllByUserFrn(user.getUserFrn());
+    }
+
+    @Test
     void shouldRemoveAllGameSessionsForUser() {
         // Arrange
         when(gameSessionRepository.findAllByUserFrn(user.getUserFrn())).thenReturn(List.of(gameSession));
