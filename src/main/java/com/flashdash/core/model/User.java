@@ -9,6 +9,7 @@ import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -23,6 +24,9 @@ public class User implements UserDetails {
     @Id
     @Column(name = "user_frn", nullable = false, length = 256)
     private String userFrn;
+
+    @Column(name = "username", nullable = false, length = 256)
+    private String username;
 
     @Column(name = "first_name", nullable = false, length = 256)
     private String firstName;
@@ -48,6 +52,18 @@ public class User implements UserDetails {
     @Column(name = "activation_token", unique = true, length = 256)
     private String activationToken;
 
+    @Column(name = "study_time", nullable = true, length = 256)
+    private Duration studyTime;
+
+    @Column(name = "games_played", nullable = true, length = 256)
+    private int gamesPlayed;
+
+    @Column(name = "points", nullable = true, length = 256)
+    private int points;
+
+    @Column(name = "strike", nullable = false, length = 256)
+    private int strike;
+
     @Column(name = "friends_frn", columnDefinition = "JSON", nullable = false)
     private String friendsFrn = "[]";
 
@@ -72,11 +88,7 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return email;
-    }
-
-    public void setUsername(String email) {
-        this.email = email;
+        return username;
     }
 
     @Override

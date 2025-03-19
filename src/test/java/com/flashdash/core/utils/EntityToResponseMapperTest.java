@@ -303,44 +303,53 @@ class EntityToResponseMapperTest {
         assertThat(response.getLastName()).isEqualTo(user.getLastName());
         assertThat(response.getCreatedAt()).isEqualTo(user.getCreatedAt().atOffset(ZoneOffset.UTC));
         assertThat(response.getUpdatedAt()).isEqualTo(user.getUpdatedAt().atOffset(ZoneOffset.UTC));
+        assertThat(response.getStreak()).isEqualTo(user.getStrike());
+        assertThat(response.getPoints()).isEqualTo(user.getPoints());
+        assertThat(response.getGamesPlayed()).isEqualTo(user.getGamesPlayed());
+        assertThat(response.getStudyTime()).isEqualTo((int) user.getStudyTime().toMinutes());
     }
 
     @Test
-    void shouldConvertUserToFriendResponse() {
-        // Arrange
-        User user = TestUtils.createUser();
-
-        // Act
-        FriendResponse response = mapper.mapToFriendResponse(user);
-
-        // Assert
-        assertThat(response).isNotNull();
-        assertThat(response.getUserId()).isEqualTo(mapper.extractId(user.getUserFrn()));
-        assertThat(response.getUserFrn()).isEqualTo(user.getUserFrn());
-        assertThat(response.getUsername()).isEqualTo(user.getUsername());
-        assertThat(response.getFirstName()).isEqualTo(user.getFirstName());
-        assertThat(response.getLastName()).isEqualTo(user.getLastName());
-    }
-
-    @Test
-    void shouldConvertUserListToFriendResponseList() {
+    void shouldConvertUserListToUserResponseList() {
         // Arrange
         User user1 = TestUtils.createUser();
         User user2 = TestUtils.createUser();
+
         List<User> users = List.of(user1, user2);
 
         // Act
-        List<FriendResponse> friendResponses = mapper.mapToFriendResponse(users);
+        List<UserResponse> responses = mapper.mapToUserResponse(users);
 
         // Assert
-        assertThat(friendResponses).isNotEmpty();
-        assertThat(friendResponses).hasSize(users.size());
+        assertThat(responses).isNotNull();
+        assertThat(responses).hasSize(users.size());
 
-        for (int i = 0; i < users.size(); i++) {
-            assertThat(friendResponses.get(i).getUserFrn()).isEqualTo(users.get(i).getUserFrn());
-            assertThat(friendResponses.get(i).getUsername()).isEqualTo(users.get(i).getUsername());
-            assertThat(friendResponses.get(i).getFirstName()).isEqualTo(users.get(i).getFirstName());
-            assertThat(friendResponses.get(i).getLastName()).isEqualTo(users.get(i).getLastName());
-        }
+        UserResponse response1 = responses.get(0);
+        assertThat(response1.getUserId()).isEqualTo(mapper.extractId(user1.getUserFrn()));
+        assertThat(response1.getUserFrn()).isEqualTo(user1.getUserFrn());
+        assertThat(response1.getEmail()).isEqualTo(user1.getEmail());
+        assertThat(response1.getUsername()).isEqualTo(user1.getUsername());
+        assertThat(response1.getFirstName()).isEqualTo(user1.getFirstName());
+        assertThat(response1.getLastName()).isEqualTo(user1.getLastName());
+        assertThat(response1.getCreatedAt()).isEqualTo(user1.getCreatedAt().atOffset(ZoneOffset.UTC));
+        assertThat(response1.getUpdatedAt()).isEqualTo(user1.getUpdatedAt().atOffset(ZoneOffset.UTC));
+        assertThat(response1.getStreak()).isEqualTo(user1.getStrike());
+        assertThat(response1.getPoints()).isEqualTo(user1.getPoints());
+        assertThat(response1.getGamesPlayed()).isEqualTo(user1.getGamesPlayed());
+        assertThat(response1.getStudyTime()).isEqualTo((int) user1.getStudyTime().toMinutes());
+
+        UserResponse response2 = responses.get(1);
+        assertThat(response2.getUserId()).isEqualTo(mapper.extractId(user2.getUserFrn()));
+        assertThat(response2.getUserFrn()).isEqualTo(user2.getUserFrn());
+        assertThat(response2.getEmail()).isEqualTo(user2.getEmail());
+        assertThat(response2.getUsername()).isEqualTo(user2.getUsername());
+        assertThat(response2.getFirstName()).isEqualTo(user2.getFirstName());
+        assertThat(response2.getLastName()).isEqualTo(user2.getLastName());
+        assertThat(response2.getCreatedAt()).isEqualTo(user2.getCreatedAt().atOffset(ZoneOffset.UTC));
+        assertThat(response2.getUpdatedAt()).isEqualTo(user2.getUpdatedAt().atOffset(ZoneOffset.UTC));
+        assertThat(response2.getStreak()).isEqualTo(user2.getStrike());
+        assertThat(response2.getPoints()).isEqualTo(user2.getPoints());
+        assertThat(response2.getGamesPlayed()).isEqualTo(user2.getGamesPlayed());
+        assertThat(response2.getStudyTime()).isEqualTo((int) user2.getStudyTime().toMinutes());
     }
 }

@@ -6,6 +6,7 @@ import com.flashdash.core.utils.ResourceType;
 import com.p4r1nc3.flashdash.core.model.*;
 import org.springframework.mail.SimpleMailMessage;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -23,7 +24,7 @@ public class TestUtils {
 
     public static LoginRequest createLoginRequest(User user) {
         LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setEmail(user.getUsername());
+        loginRequest.setEmail(user.getEmail());
         loginRequest.setPassword(user.getPassword());
         return loginRequest;
     }
@@ -37,6 +38,7 @@ public class TestUtils {
     public static User createUser() {
         User user = new User();
         user.setUserFrn(FrnGenerator.generateFrn(ResourceType.USER));
+        user.setUsername(UUID.randomUUID().toString());
         user.setEmail("user" + UUID.randomUUID() + "@example.com");
         user.setPassword("password123");
         user.setFirstName("Test");
@@ -45,6 +47,9 @@ public class TestUtils {
         user.setUpdatedAt(LocalDateTime.now());
         user.setEnabled(true);
         user.setFriendsFrnList(List.of());
+        user.setGamesPlayed(2);
+        user.setStrike(1);
+        user.setStudyTime(Duration.ofHours(1));
         return user;
     }
 

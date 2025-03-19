@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class FriendService {
@@ -25,12 +26,32 @@ public class FriendService {
     }
 
     public List<User> getFriends(String userFrn) {
-        User user = userRepository.findById(userFrn)
+        User user = userRepository.findByUserFrn(userFrn)
                 .orElseThrow(() -> new FlashDashException(ErrorCode.E404002, "User not found"));
 
         List<String> friendsFrnList = user.getFriendsFrnList();
 
-        return friendsFrnList.isEmpty() ? Collections.emptyList() : userRepository.findByUserFrnIn(friendsFrnList);
+        if (friendsFrnList.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return friendsFrnList.stream()
+                .map(friendFrn -> getFriend(userFrn, friendFrn))
+                .collect(Collectors.toList());
+    }
+
+    public User getFriend(String userFrn, String friendFrn) {
+        User user = userRepository.findByUserFrn(userFrn)
+                .orElseThrow(() -> new FlashDashException(ErrorCode.E404002, "User not found"));
+
+        List<String> friendsFrnList = user.getFriendsFrnList();
+
+        if (!friendsFrnList.contains(friendFrn)) {
+            throw new FlashDashException(ErrorCode.E404003, "Friend not found in user's friend list.");
+        }
+
+        return userRepository.findByUserFrn(friendFrn)
+                .orElseThrow(() -> new FlashDashException(ErrorCode.E404002, "Friend not found"));
     }
 
     @Transactional

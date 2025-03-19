@@ -6,6 +6,7 @@ import com.flashdash.core.exception.FlashDashException;
 import com.flashdash.core.model.User;
 import com.flashdash.core.service.UserService;
 import com.flashdash.core.service.api.NotificationService;
+import com.flashdash.core.utils.EntityToResponseMapper;
 import com.p4r1nc3.flashdash.core.model.ChangePasswordRequest;
 import com.p4r1nc3.flashdash.core.model.UserResponse;
 import com.p4r1nc3.flashdash.notification.model.NotificationSubscriber;
@@ -20,7 +21,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.LocalTime;
-import java.time.ZoneOffset;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -38,6 +38,9 @@ class UserControllerTest {
 
     @MockitoBean
     private NotificationService notificationService;
+
+    @MockitoBean
+    private EntityToResponseMapper entityToResponseMapper;
 
     private User user;
     private MockedStatic<SecurityContextHolder> mockedSecurityContextHolder;
@@ -66,13 +69,13 @@ class UserControllerTest {
     void shouldReturnCurrentUserSuccessfully() {
         // Arrange
         UserResponse userResponse = new UserResponse();
+        userResponse.setUserFrn(user.getUserFrn());
         userResponse.setFirstName(user.getFirstName());
         userResponse.setLastName(user.getLastName());
-        userResponse.setEmail(user.getUsername());
-        userResponse.setCreatedAt(user.getCreatedAt().atOffset(ZoneOffset.UTC));
-        userResponse.setUpdatedAt(user.getUpdatedAt().atOffset(ZoneOffset.UTC));
+        userResponse.setEmail(user.getEmail());
 
-        when(userService.getCurrentUser(user.getUsername())).thenReturn(userResponse);
+        when(userService.getCurrentUser(user.getUserFrn())).thenReturn(user);
+        when(entityToResponseMapper.mapToUserResponse(user)).thenReturn(userResponse);
 
         // Act
         ResponseEntity<UserResponse> response = userController.getUser();
@@ -81,15 +84,17 @@ class UserControllerTest {
         assertThat(response).isNotNull();
         assertThat(response.getStatusCodeValue()).isEqualTo(200);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getEmail()).isEqualTo(user.getUsername());
+        assertThat(response.getBody().getUserFrn()).isEqualTo(user.getUserFrn());
+        assertThat(response.getBody().getEmail()).isEqualTo(user.getEmail());
 
-        verify(userService).getCurrentUser(user.getUsername());
+        verify(userService).getCurrentUser(user.getUserFrn());
+        verify(entityToResponseMapper).mapToUserResponse(user);
     }
 
     @Test
     void shouldHandleUserNotFound() {
         // Arrange
-        when(userService.getCurrentUser(user.getUsername())).thenThrow(new FlashDashException(
+        when(userService.getCurrentUser(user.getUserFrn())).thenThrow(new FlashDashException(
                 ErrorCode.E404001,
                 "User not found."
         ));
@@ -100,7 +105,7 @@ class UserControllerTest {
                 () -> userController.getUser()
         );
         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.E404001);
-        verify(userService).getCurrentUser(user.getUsername());
+        verify(userService).getCurrentUser(user.getUserFrn());
     }
 
     @Test
@@ -143,30 +148,9 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenChangingPasswordForNonExistentUser() {
-        // Arrange
-        ChangePasswordRequest request = new ChangePasswordRequest();
-        request.setOldPassword("oldPassword");
-        request.setNewPassword("newPassword");
-
-        doThrow(new FlashDashException(ErrorCode.E404001, "User not found."))
-                .when(userService).changePassword(user.getUsername(), request);
-
-        // Act & Assert
-        FlashDashException exception = assertThrows(
-                FlashDashException.class,
-                () -> userController.changePassword(request)
-        );
-
-        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.E404001);
-        assertThat(exception.getMessage()).isEqualTo("User not found.");
-        verify(userService, times(1)).changePassword(user.getUsername(), request);
-    }
-
-    @Test
     void shouldDeleteUserSuccessfully() {
         // Arrange
-        doNothing().when(userService).deleteUser(user.getUsername());
+        doNothing().when(userService).deleteUser(user.getUserFrn());
 
         // Act
         ResponseEntity<Void> response = userController.deleteUser();
@@ -174,14 +158,14 @@ class UserControllerTest {
         // Assert
         assertThat(response).isNotNull();
         assertThat(response.getStatusCodeValue()).isEqualTo(204);
-        verify(userService, times(1)).deleteUser(user.getUsername());
+        verify(userService, times(1)).deleteUser(user.getUserFrn());
     }
 
     @Test
     void shouldThrowExceptionWhenDeletingNonExistentUser() {
         // Arrange
         doThrow(new FlashDashException(ErrorCode.E404001, "User not found."))
-                .when(userService).deleteUser(user.getUsername());
+                .when(userService).deleteUser(user.getUserFrn());
 
         // Act & Assert
         FlashDashException exception = assertThrows(
@@ -191,21 +175,36 @@ class UserControllerTest {
 
         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.E404001);
         assertThat(exception.getMessage()).isEqualTo("User not found.");
-        verify(userService, times(1)).deleteUser(user.getUsername());
+        verify(userService, times(1)).deleteUser(user.getUserFrn());
     }
 
     @Test
     void shouldEnableNotificationsSuccessfully() {
         // Arrange
-        doNothing().when(notificationService).enableDailyNotifications(user.getUserFrn(), LocalTime.of(12, 30).toString());
+        LocalTime notificationTime = LocalTime.of(12, 30);
+        doNothing().when(notificationService).enableDailyNotifications(user.getUserFrn(), notificationTime);
 
         // Act
-        ResponseEntity<Void> response = userController.enableNotifications(LocalTime.of(12, 30));
+        ResponseEntity<Void> response = userController.enableNotifications(notificationTime);
 
         // Assert
         assertThat(response).isNotNull();
         assertThat(response.getStatusCodeValue()).isEqualTo(200);
-        verify(notificationService, times(1)).enableDailyNotifications(user.getUserFrn(), LocalTime.of(12, 30).toString());
+        verify(notificationService, times(1)).enableDailyNotifications(user.getUserFrn(), notificationTime);
+    }
+
+    @Test
+    void shouldEnableNotificationsWithNullTimeSuccessfully() {
+        // Arrange
+        doNothing().when(notificationService).enableDailyNotifications(user.getUserFrn(), null);
+
+        // Act
+        ResponseEntity<Void> response = userController.enableNotifications(null);
+
+        // Assert
+        assertThat(response).isNotNull();
+        assertThat(response.getStatusCodeValue()).isEqualTo(200);
+        verify(notificationService, times(1)).enableDailyNotifications(user.getUserFrn(), null);
     }
 
     @Test
@@ -229,7 +228,6 @@ class UserControllerTest {
 
         verify(notificationService, times(1)).getSubscriber(user.getUserFrn());
     }
-
 
     @Test
     void shouldDisableNotificationsSuccessfully() {

@@ -7,15 +7,20 @@ import com.flashdash.core.exception.FlashDashException;
 import com.flashdash.core.model.GameSession;
 import com.flashdash.core.model.GameSessionStatus;
 import com.flashdash.core.model.Question;
+import com.flashdash.core.model.User;
 import com.flashdash.core.repository.GameSessionRepository;
+import com.flashdash.core.repository.UserRepository;
 import com.flashdash.core.service.api.ActivityService;
 import com.flashdash.core.utils.FrnGenerator;
 import com.flashdash.core.utils.ResourceType;
 import com.p4r1nc3.flashdash.activity.model.LogActivityRequest.ActivityTypeEnum;
 import com.p4r1nc3.flashdash.core.model.GameSessionDetailsResponse;
 import com.p4r1nc3.flashdash.core.model.QuestionRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -25,19 +30,24 @@ import java.util.Optional;
 @Service
 public class  GameSessionService {
 
+    private static final Logger logger = LoggerFactory.getLogger(GameSessionService.class);
+
     private final ObjectMapper objectMapper;
     private final ActivityService activityService;
     private final QuestionService questionService;
     private final GameSessionRepository gameSessionRepository;
+    private final UserRepository userRepository;
 
     public GameSessionService(ObjectMapper objectMapper,
                               ActivityService activityService,
                               QuestionService questionService,
-                              GameSessionRepository gameSessionRepository) {
+                              GameSessionRepository gameSessionRepository,
+                              UserRepository userRepository) {
         this.objectMapper = objectMapper;
         this.activityService = activityService;
         this.questionService = questionService;
         this.gameSessionRepository = gameSessionRepository;
+        this.userRepository = userRepository;
     }
 
     public List<Question> startGameSession(String deckFrn, String userFrn) {
@@ -112,7 +122,7 @@ public class  GameSessionService {
         }
 
         int totalQuestions = userAnswers.size();
-        int score = (int) (((double) correctCount / totalQuestions) * 100);
+        int score = correctCount*10 - wrongCount*4;
 
         GameSession gameSession = gameSessionOptional.get();
         gameSession.setStatus(GameSessionStatus.FINISHED.toString());
@@ -128,7 +138,26 @@ public class  GameSessionService {
             throw new RuntimeException("Error serializing session details", e);
         }
 
+        Duration duration = Duration.between(gameSession.getCreatedAt(), gameSession.getUpdatedAt());
+
         gameSessionRepository.save(gameSession);
+
+        User user = userRepository.findByUserFrn(userFrn)
+                .orElseThrow(() -> {
+                    logger.warn("User with userFrn {} not found", userFrn);
+                    return new FlashDashException(
+                            ErrorCode.E404001,
+                            "User with userFrn " + userFrn + " not found."
+                    );
+                });
+
+        logger.info("User found with userFrn: {}.", userFrn);
+
+        user.setGamesPlayed(user.getGamesPlayed() + 1);
+        user.setPoints(user.getPoints() + score);
+        user.setStudyTime(user.getStudyTime().plus(duration));
+        userRepository.save(user);
+
         activityService.logUserActivity(userFrn, gameSession.getGameSessionFrn(), ActivityTypeEnum.GAME_FINISHED);
 
         return gameSession;
@@ -141,6 +170,10 @@ public class  GameSessionService {
     public GameSession getGameSession(String deckFrn, String gameSessionFrn, String userFrn) {
         return gameSessionRepository.findByDeckFrnAndGameSessionFrnAndUserFrn(deckFrn, gameSessionFrn, userFrn)
                 .orElseThrow(() -> new FlashDashException(ErrorCode.E404006, "Game session not found"));
+    }
+
+    public List<GameSession> getAllGameSessions(String userFrn) {
+        return gameSessionRepository.findAllByUserFrn(userFrn);
     }
 
     public void removeAllGameSessionsForUser(String userFrn) {

@@ -63,43 +63,32 @@ class UserServiceTest {
     @Test
     void shouldReturnCurrentUserSuccessfully() {
         // Arrange
-        ActivityStatisticsResponse statisticsResponse = new ActivityStatisticsResponse();
-        statisticsResponse.setCurrentStreak(5);
-        statisticsResponse.setTotalGamesPlayed(10);
-
-        NotificationSubscriber subscriber = new NotificationSubscriber();
-        subscriber.setDailyNotifications(true);
-
-        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
-        when(activityService.getActivityStatistics(user.getUserFrn())).thenReturn(statisticsResponse);
-        when(notificationService.getSubscriber(user.getUserFrn())).thenReturn(subscriber);
+        when(userRepository.findByUserFrn(user.getUserFrn())).thenReturn(Optional.of(user));
 
         // Act
-        UserResponse returnedUser = userService.getCurrentUser(user.getEmail());
+        User returnedUser = userService.getCurrentUser(user.getUserFrn());
 
         // Assert
         assertThat(returnedUser).isNotNull();
         assertThat(returnedUser.getUserFrn()).isEqualTo(user.getUserFrn());
         assertThat(returnedUser.getEmail()).isEqualTo(user.getEmail());
-        assertThat(returnedUser.getStreak()).isEqualTo(5);
-        assertThat(returnedUser.getDailyNotifications()).isTrue();
 
-        verify(userRepository).findByEmail(user.getEmail());
-        verify(activityService).getActivityStatistics(user.getUserFrn());
-        verify(notificationService).getSubscriber(user.getUserFrn());
+        verify(userRepository).findByUserFrn(user.getUserFrn());
     }
 
     @Test
     void shouldThrowExceptionWhenCurrentUserNotFound() {
         // Arrange
-        when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
+        String nonExistentUserFrn = "nonexistent-frn";
+        when(userRepository.findByUserFrn(nonExistentUserFrn)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThatThrownBy(() -> userService.getCurrentUser("nonexistent@example.com"))
+        assertThatThrownBy(() -> userService.getCurrentUser(nonExistentUserFrn))
                 .isInstanceOf(FlashDashException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404001);
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404001)
+                .hasMessage("User with userFrn " + nonExistentUserFrn + " not found.");
 
-        verify(userRepository).findByEmail("nonexistent@example.com");
+        verify(userRepository).findByUserFrn(nonExistentUserFrn);
     }
 
     @Test
@@ -121,14 +110,16 @@ class UserServiceTest {
     @Test
     void shouldThrowExceptionWhenUserNotFound() {
         // Arrange
-        when(userRepository.findByUserFrn("nonexistent-frn")).thenReturn(Optional.empty());
+        String nonExistentUserFrn = "nonexistent-frn";
+        when(userRepository.findByUserFrn(nonExistentUserFrn)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThatThrownBy(() -> userService.loadUserByUsername("nonexistent-frn"))
+        assertThatThrownBy(() -> userService.loadUserByUsername(nonExistentUserFrn))
                 .isInstanceOf(FlashDashException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404001);
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404001)
+                .hasMessage("User with email " + nonExistentUserFrn + " not found. Please check the userFrn and try again.");
 
-        verify(userRepository).findByUserFrn("nonexistent-frn");
+        verify(userRepository).findByUserFrn(nonExistentUserFrn);
     }
 
     @Test
@@ -138,17 +129,17 @@ class UserServiceTest {
         request.setOldPassword("oldPassword");
         request.setNewPassword("newPassword");
 
-        user.setPassword("password123");
-        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("oldPassword", "password123")).thenReturn(true); // 🔹 Dopasuj wartość do faktycznej
+        user.setPassword("encodedOldPassword");
+        when(userRepository.findByUserFrn(user.getUserFrn())).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("oldPassword", "encodedOldPassword")).thenReturn(true);
         when(passwordEncoder.encode("newPassword")).thenReturn("encodedNewPassword");
 
         // Act
-        userService.changePassword(user.getEmail(), request);
+        userService.changePassword(user.getUserFrn(), request);
 
         // Assert
-        verify(userRepository).findByEmail(user.getEmail());
-        verify(passwordEncoder).matches("oldPassword", "password123");
+        verify(userRepository).findByUserFrn(user.getUserFrn());
+        verify(passwordEncoder).matches("oldPassword", "encodedOldPassword");
         verify(passwordEncoder).encode("newPassword");
         verify(userRepository).save(user);
         verify(activityService).logUserActivity(
@@ -158,21 +149,43 @@ class UserServiceTest {
         );
     }
 
+    @Test
+    void shouldThrowExceptionWhenChangingPasswordWithIncorrectOldPassword() {
+        // Arrange
+        ChangePasswordRequest request = new ChangePasswordRequest();
+        request.setOldPassword("wrongOldPassword");
+        request.setNewPassword("newPassword");
+
+        user.setPassword("encodedOldPassword");
+        when(userRepository.findByUserFrn(user.getUserFrn())).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("wrongOldPassword", "encodedOldPassword")).thenReturn(false);
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.changePassword(user.getUserFrn(), request))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E401002)
+                .hasMessage("Incorrect old password.");
+
+        verify(userRepository).findByUserFrn(user.getUserFrn());
+        verify(passwordEncoder).matches("wrongOldPassword", "encodedOldPassword");
+        verify(passwordEncoder, never()).encode(anyString());
+        verify(userRepository, never()).save(any(User.class));
+    }
 
     @Test
     void shouldDeleteUserSuccessfully() {
         // Arrange
-        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+        when(userRepository.findByUserFrn(user.getUserFrn())).thenReturn(Optional.of(user));
         doNothing().when(deckService).deleteAllDecksForUser(user.getUserFrn());
         doNothing().when(gameSessionService).removeAllGameSessionsForUser(user.getUserFrn());
         doNothing().when(friendService).removeAllFriends(user.getUserFrn());
         doNothing().when(notificationService).unregisterSubscriber(user.getUserFrn());
 
         // Act
-        userService.deleteUser(user.getEmail());
+        userService.deleteUser(user.getUserFrn());
 
         // Assert
-        verify(userRepository).findByEmail(user.getEmail());
+        verify(userRepository).findByUserFrn(user.getUserFrn());
         verify(deckService).deleteAllDecksForUser(user.getUserFrn());
         verify(gameSessionService).removeAllGameSessionsForUser(user.getUserFrn());
         verify(friendService).removeAllFriends(user.getUserFrn());
@@ -185,15 +198,16 @@ class UserServiceTest {
     @Test
     void shouldThrowExceptionWhenDeletingNonExistentUser() {
         // Arrange
-        when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
+        String nonExistentUserFrn = "nonexistent-frn";
+        when(userRepository.findByUserFrn(nonExistentUserFrn)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThatThrownBy(() -> userService.deleteUser("nonexistent@example.com"))
+        assertThatThrownBy(() -> userService.deleteUser(nonExistentUserFrn))
                 .isInstanceOf(FlashDashException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404001)
-                .hasMessage("User with email nonexistent@example.com not found.");
+                .hasMessage("User with email " + nonExistentUserFrn + " not found.");
 
-        verify(userRepository).findByEmail("nonexistent@example.com");
+        verify(userRepository).findByUserFrn(nonExistentUserFrn);
         verify(deckService, never()).deleteAllDecksForUser(anyString());
         verify(gameSessionService, never()).removeAllGameSessionsForUser(anyString());
         verify(friendService, never()).removeAllFriends(anyString());

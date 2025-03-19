@@ -164,24 +164,17 @@ public class EntityToResponseMapper {
         response.setLastName(user.getLastName());
         response.setCreatedAt(user.getCreatedAt().atOffset(ZoneOffset.UTC));
         response.setUpdatedAt(user.getUpdatedAt().atOffset(ZoneOffset.UTC));
+        response.setStreak(user.getStrike());
+        response.setPoints(user.getPoints());
+        response.setGamesPlayed(user.getGamesPlayed());
+        response.setStudyTime((int) user.getStudyTime().toMinutes());
 
         return response;
     }
 
-    public FriendResponse mapToFriendResponse(User user) {
-        FriendResponse response = new FriendResponse();
-        response.setUserId(extractId(user.getUserFrn()));
-        response.setUserFrn(user.getUserFrn());
-        response.setUsername(user.getUsername());
-        response.setFirstName(user.getFirstName());
-        response.setLastName(user.getLastName());
-
-        return response;
-    }
-
-    public List<FriendResponse> mapToFriendResponse(List<User> users) {
+    public List<UserResponse> mapToUserResponse(List<User> users) {
         return users.stream()
-                .map(this::mapToFriendResponse)
+                .map(this::mapToUserResponse)
                 .collect(Collectors.toList());
     }
 
