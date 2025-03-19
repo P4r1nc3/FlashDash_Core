@@ -6,6 +6,7 @@ import com.flashdash.core.exception.ErrorCode;
 import com.flashdash.core.exception.FlashDashException;
 import com.flashdash.core.model.*;
 import com.flashdash.core.repository.GameSessionRepository;
+import com.flashdash.core.repository.UserRepository;
 import com.flashdash.core.service.api.ActivityService;
 import com.p4r1nc3.flashdash.activity.model.LogActivityRequest.ActivityTypeEnum;
 import com.p4r1nc3.flashdash.core.model.QuestionRequest;
@@ -43,7 +44,7 @@ class GameSessionServiceTest {
     private GameSessionRepository gameSessionRepository;
 
     @MockitoBean
-    private UserService userService;
+    private UserRepository userRepository;
 
     private User user;
     private Deck deck;
@@ -106,8 +107,8 @@ class GameSessionServiceTest {
                 .thenReturn(Optional.of(gameSession));
 
         // Mock UserService behavior
-        when(userService.getCurrentUser(user.getUserFrn())).thenReturn(user);
-        doNothing().when(userService).saveUser(user);
+        when(userRepository.findByUserFrn(user.getUserFrn())).thenReturn(Optional.of(user));
+        doNothing().when(userRepository).save(user);
 
         // Act
         GameSession result = gameSessionService.endGameSession(deck.getDeckFrn(), user.getUserFrn(), List.of(userAnswer));
@@ -121,8 +122,8 @@ class GameSessionServiceTest {
         assertThat(result.getSessionDetails()).isNotBlank();
 
         verify(gameSessionRepository).save(gameSession);
-        verify(userService).getCurrentUser(user.getUserFrn());
-        verify(userService).saveUser(user);
+        verify(userRepository).findByUserFrn(user.getUserFrn());
+        verify(userRepository).save(user);
         verify(activityService).logUserActivity(eq(user.getUserFrn()), eq(gameSession.getGameSessionFrn()), eq(ActivityTypeEnum.GAME_FINISHED));
 
         // Verify user stats were updated
@@ -151,8 +152,8 @@ class GameSessionServiceTest {
         user.setStudyTime(Duration.ZERO);
 
         // Mock UserService behavior
-        when(userService.getCurrentUser(user.getUserFrn())).thenReturn(user);
-        doNothing().when(userService).saveUser(user);
+        when(userRepository.findByUserFrn(user.getUserFrn())).thenReturn(Optional.of(user));
+        doNothing().when(userRepository).save(user);
 
         // Act
         GameSession result = gameSessionService.endGameSession(deck.getDeckFrn(), user.getUserFrn(), List.of(userAnswer));
@@ -165,8 +166,8 @@ class GameSessionServiceTest {
         assertThat(result.getQuestionCount()).isEqualTo(1);
 
         verify(gameSessionRepository).save(gameSession);
-        verify(userService).getCurrentUser(user.getUserFrn());
-        verify(userService).saveUser(user);
+        verify(userRepository).findByUserFrn(user.getUserFrn());
+        verify(userRepository).save(user);
 
         // Verify user stats were updated with negative points
         assertThat(user.getGamesPlayed()).isEqualTo(1);
@@ -195,8 +196,8 @@ class GameSessionServiceTest {
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404002)
                 .hasMessage("Matching question not found in the provided deck.");
 
-        verify(userService, never()).getCurrentUser(anyString());
-        verify(userService, never()).saveUser(any(User.class));
+        verify(userRepository, never()).findByUserFrn(anyString());
+        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
@@ -215,8 +216,8 @@ class GameSessionServiceTest {
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E400003)
                 .hasMessage("No active game session for this deck.");
 
-        verify(userService, never()).getCurrentUser(anyString());
-        verify(userService, never()).saveUser(any(User.class));
+        verify(userRepository, never()).findByUserFrn(anyString());
+        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
