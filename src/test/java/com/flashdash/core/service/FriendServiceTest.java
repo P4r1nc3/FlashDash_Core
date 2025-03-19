@@ -93,6 +93,64 @@ class FriendServiceTest {
     }
 
     @Test
+    void shouldGetFriendSuccessfully() {
+        // Arrange
+        User user = TestUtils.createUser();
+        User friend = TestUtils.createUser();
+
+        user.setFriendsFrnList(List.of(friend.getUserFrn()));
+
+        when(userRepository.findByUserFrn(user.getUserFrn())).thenReturn(Optional.of(user));
+        when(userRepository.findByUserFrn(friend.getUserFrn())).thenReturn(Optional.of(friend));
+
+        // Act
+        User retrievedFriend = friendService.getFriend(user.getUserFrn(), friend.getUserFrn());
+
+        // Assert
+        assertThat(retrievedFriend).isNotNull();
+        assertThat(retrievedFriend.getUserFrn()).isEqualTo(friend.getUserFrn());
+
+        verify(userRepository, times(1)).findByUserFrn(user.getUserFrn());
+        verify(userRepository, times(1)).findByUserFrn(friend.getUserFrn());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenFriendNotInList() {
+        // Arrange
+        User user = TestUtils.createUser();
+        User stranger = TestUtils.createUser();
+        when(userRepository.findByUserFrn(user.getUserFrn())).thenReturn(Optional.of(user));
+
+        // Act & Assert
+        assertThatThrownBy(() -> friendService.getFriend(user.getUserFrn(), stranger.getUserFrn()))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404003)
+                .hasMessage("Friend not found in user's friend list.");
+
+        verify(userRepository, times(1)).findByUserFrn(user.getUserFrn());
+        verify(userRepository, never()).findByUserFrn(stranger.getUserFrn());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenFriendNotFound() {
+        // Arrange
+        User user = TestUtils.createUser();
+        User friend = TestUtils.createUser();
+
+        when(userRepository.findByUserFrn(user.getUserFrn())).thenReturn(Optional.of(user));
+        when(userRepository.findByUserFrn(friend.getUserFrn())).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThatThrownBy(() -> friendService.getFriend(user.getUserFrn(), friend.getUserFrn()))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E404002)
+                .hasMessage("Friend not found");
+
+        verify(userRepository, times(1)).findByUserFrn(user.getUserFrn());
+        verify(userRepository, times(1)).findByUserFrn(friend.getUserFrn());
+    }
+
+    @Test
     void shouldRemoveAllFriendsSuccessfully() {
         sender.getFriendsFrnList().add(recipient.getUserFrn());
         recipient.getFriendsFrnList().add(sender.getUserFrn());
