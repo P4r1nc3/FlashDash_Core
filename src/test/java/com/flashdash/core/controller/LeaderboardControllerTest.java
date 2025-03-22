@@ -4,6 +4,7 @@ import com.flashdash.core.TestUtils;
 import com.flashdash.core.model.User;
 import com.flashdash.core.service.LeaderboardService;
 import com.p4r1nc3.flashdash.core.model.LeaderboardEntry;
+import com.p4r1nc3.flashdash.core.model.UserSummary;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -155,30 +156,25 @@ class LeaderboardControllerTest {
     private List<LeaderboardEntry> createSampleLeaderboard() {
         List<LeaderboardEntry> leaderboard = new ArrayList<>();
 
-        leaderboard.add(new LeaderboardEntry()
-                .rank(1)
-                .userFrn("frn:flashdash:user:user1")
-                .score(1000));
+        for (int i = 1; i <= 5; i++) {
+            String userId = "user" + i;
+            String userFrn = "frn:flashdash:user:" + userId;
 
-        leaderboard.add(new LeaderboardEntry()
-                .rank(2)
-                .userFrn("frn:flashdash:user:user2")
-                .score(900));
+            UserSummary userSummary = new UserSummary()
+                    .userId(userId)
+                    .userFrn(userFrn)
+                    .username("testuser" + i)
+                    .firstName("User")
+                    .lastName("Number " + i)
+                    .email("user" + i + "@example.com");
 
-        leaderboard.add(new LeaderboardEntry()
-                .rank(3)
-                .userFrn("frn:flashdash:user:user3")
-                .score(800));
+            LeaderboardEntry entry = new LeaderboardEntry()
+                    .rank(i)
+                    .score(1000 - (i-1) * 100)
+                    .user(userSummary);
 
-        leaderboard.add(new LeaderboardEntry()
-                .rank(4)
-                .userFrn("frn:flashdash:user:user4")
-                .score(700));
-
-        leaderboard.add(new LeaderboardEntry()
-                .rank(5)
-                .userFrn("frn:flashdash:user:user5")
-                .score(600));
+            leaderboard.add(entry);
+        }
 
         return leaderboard;
     }

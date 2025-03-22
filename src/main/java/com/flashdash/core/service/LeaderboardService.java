@@ -2,7 +2,9 @@ package com.flashdash.core.service;
 
 import com.flashdash.core.model.User;
 import com.flashdash.core.repository.UserRepository;
+import com.flashdash.core.utils.EntityToResponseMapper;
 import com.p4r1nc3.flashdash.core.model.LeaderboardEntry;
+import com.p4r1nc3.flashdash.core.model.UserSummary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -17,12 +19,17 @@ public class LeaderboardService {
 
     private static final Logger logger = LoggerFactory.getLogger(LeaderboardService.class);
 
-    private final UserRepository userRepository;
+    private final EntityToResponseMapper entityToResponseMapper;
     private final UserService userService;
+    private final UserRepository userRepository;
 
-    public LeaderboardService(UserRepository userRepository, UserService userService) {
-        this.userRepository = userRepository;
+
+    public LeaderboardService(EntityToResponseMapper entityToResponseMapper,
+                              UserService userService,
+                              UserRepository userRepository) {
+        this.entityToResponseMapper = entityToResponseMapper;
         this.userService = userService;
+        this.userRepository = userRepository;
     }
 
     public List<LeaderboardEntry> getLeaderboard(String userFrn, String criteria, boolean friendsOnly, int limit) {
@@ -84,10 +91,22 @@ public class LeaderboardService {
 
         for (int i = 0; i < sortedUsers.size(); i++) {
             User user = sortedUsers.get(i);
+
+            // Create UserSummary from User
+            UserSummary userSummary = new UserSummary()
+                    .userId(entityToResponseMapper.extractId(user.getUserFrn()))
+                    .userFrn(user.getUserFrn())
+                    .username(user.getUsername())
+                    .firstName(user.getFirstName())
+                    .lastName(user.getLastName())
+                    .email(user.getEmail());
+
+            // Create LeaderboardEntry with UserSummary
             LeaderboardEntry entry = new LeaderboardEntry()
                     .rank(i + 1)
-                    .userFrn(user.getUserFrn());
+                    .user(userSummary);
 
+            // Set score based on criteria
             switch (criteria.toLowerCase()) {
                 case "studytime":
                     entry.score(user.getStudyTime() != null ? (int) user.getStudyTime().toMinutes() : 0);
