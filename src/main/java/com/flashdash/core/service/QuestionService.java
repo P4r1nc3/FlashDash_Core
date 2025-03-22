@@ -13,7 +13,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class QuestionService {
@@ -37,10 +39,36 @@ public class QuestionService {
 
         deckService.getDeckByFrn(deckFrn, userFrn);
 
+        List<Question> existingQuestions = questionRepository.findAllByDeckFrn(deckFrn);
+        for (Question existingQuestion : existingQuestions) {
+            if (existingQuestion.getQuestion().equalsIgnoreCase(questionRequest.getQuestion().trim())) {
+                logger.warn("Question with the same text already exists in deck FRN: {}", deckFrn);
+                throw new FlashDashException(ErrorCode.E400004, "Question with the same text already exists in this deck.");
+            }
+        }
+
+        Set<String> allAnswers = new HashSet<>();
+
+        for (String correctAnswer : questionRequest.getCorrectAnswers()) {
+            String trimmedAnswer = correctAnswer.trim();
+            if (!allAnswers.add(trimmedAnswer)) {
+                logger.warn("Duplicate answer found in question request: {}", trimmedAnswer);
+                throw new FlashDashException(ErrorCode.E400005, "Duplicate answer found. Each answer must be unique.");
+            }
+        }
+
+        for (String incorrectAnswer : questionRequest.getIncorrectAnswers()) {
+            String trimmedAnswer = incorrectAnswer.trim();
+            if (!allAnswers.add(trimmedAnswer)) {
+                logger.warn("Duplicate answer found in question request: {}", trimmedAnswer);
+                throw new FlashDashException(ErrorCode.E400005, "Duplicate answer found. Each answer must be unique.");
+            }
+        }
+
         Question question = new Question();
         question.setQuestionFrn(FrnGenerator.generateFrn(ResourceType.QUESTION));
         question.setDeckFrn(deckFrn);
-        question.setQuestion(questionRequest.getQuestion());
+        question.setQuestion(questionRequest.getQuestion().trim());
         question.setCorrectAnswers(questionRequest.getCorrectAnswers());
         question.setIncorrectAnswers(questionRequest.getIncorrectAnswers());
         question.setDifficulty(questionRequest.getDifficulty().name());
@@ -77,7 +105,38 @@ public class QuestionService {
         logger.info("Updating question FRN: {} in deck FRN: {} for user FRN: {}", questionFrn, deckFrn, userFrn);
 
         Question question = getQuestionByFrn(deckFrn, questionFrn, userFrn);
-        question.setQuestion(questionRequest.getQuestion());
+
+        String newQuestionText = questionRequest.getQuestion().trim();
+        if (!newQuestionText.equalsIgnoreCase(question.getQuestion())) {
+            List<Question> existingQuestions = questionRepository.findAllByDeckFrn(deckFrn);
+            for (Question existingQuestion : existingQuestions) {
+                if (!existingQuestion.getQuestionFrn().equals(questionFrn) &&
+                        existingQuestion.getQuestion().equalsIgnoreCase(newQuestionText)) {
+                    logger.warn("Cannot update question. A question with the same text already exists in deck FRN: {}", deckFrn);
+                    throw new FlashDashException(ErrorCode.E400004, "Question with the same text already exists in this deck.");
+                }
+            }
+        }
+
+        Set<String> allAnswers = new HashSet<>();
+
+        for (String correctAnswer : questionRequest.getCorrectAnswers()) {
+            String trimmedAnswer = correctAnswer.trim();
+            if (!allAnswers.add(trimmedAnswer)) {
+                logger.warn("Duplicate answer found in question update: {}", trimmedAnswer);
+                throw new FlashDashException(ErrorCode.E400005, "Duplicate answer found. Each answer must be unique.");
+            }
+        }
+
+        for (String incorrectAnswer : questionRequest.getIncorrectAnswers()) {
+            String trimmedAnswer = incorrectAnswer.trim();
+            if (!allAnswers.add(trimmedAnswer)) {
+                logger.warn("Duplicate answer found in question update: {}", trimmedAnswer);
+                throw new FlashDashException(ErrorCode.E400005, "Duplicate answer found. Each answer must be unique.");
+            }
+        }
+
+        question.setQuestion(newQuestionText);
         question.setCorrectAnswers(questionRequest.getCorrectAnswers());
         question.setIncorrectAnswers(questionRequest.getIncorrectAnswers());
         question.setDifficulty(questionRequest.getDifficulty().name());

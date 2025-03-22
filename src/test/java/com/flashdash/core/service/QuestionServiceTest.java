@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -56,6 +57,7 @@ class QuestionServiceTest {
     void shouldAddQuestionToDeckSuccessfully() {
         // Arrange
         when(deckService.getDeckByFrn(deck.getDeckFrn(), user.getUserFrn())).thenReturn(deck);
+        when(questionRepository.findAllByDeckFrn(deck.getDeckFrn())).thenReturn(List.of());
         when(questionRepository.save(any(Question.class))).thenReturn(question);
 
         // Act
@@ -66,6 +68,87 @@ class QuestionServiceTest {
         assertThat(createdQuestion.getQuestion()).isEqualTo(questionRequest.getQuestion());
         verify(deckService).getDeckByFrn(deck.getDeckFrn(), user.getUserFrn());
         verify(questionRepository).save(any(Question.class));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenAddingDuplicateQuestion() {
+        // Arrange
+        Question existingQuestion = TestUtils.createQuestion(deck, questionRequest.getQuestion());
+
+        when(deckService.getDeckByFrn(deck.getDeckFrn(), user.getUserFrn())).thenReturn(deck);
+        when(questionRepository.findAllByDeckFrn(deck.getDeckFrn())).thenReturn(List.of(existingQuestion));
+
+        // Act & Assert
+        assertThatThrownBy(() -> questionService.addQuestionToDeck(deck.getDeckFrn(), questionRequest, user.getUserFrn()))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E400004);
+
+        verify(deckService).getDeckByFrn(deck.getDeckFrn(), user.getUserFrn());
+        verify(questionRepository).findAllByDeckFrn(deck.getDeckFrn());
+        verify(questionRepository, never()).save(any(Question.class));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenAddingQuestionWithDuplicateCorrectAnswers() {
+        // Arrange
+        QuestionRequest requestWithDuplicates = new QuestionRequest();
+        requestWithDuplicates.setQuestion("What is Java?");
+        requestWithDuplicates.setCorrectAnswers(Arrays.asList("A programming language", "A programming language"));
+        requestWithDuplicates.setIncorrectAnswers(Arrays.asList("A type of coffee", "An island"));
+        requestWithDuplicates.setDifficulty(QuestionRequest.DifficultyEnum.MEDIUM);
+
+        when(deckService.getDeckByFrn(deck.getDeckFrn(), user.getUserFrn())).thenReturn(deck);
+        when(questionRepository.findAllByDeckFrn(deck.getDeckFrn())).thenReturn(List.of());
+
+        // Act & Assert
+        assertThatThrownBy(() -> questionService.addQuestionToDeck(deck.getDeckFrn(), requestWithDuplicates, user.getUserFrn()))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E400005);
+
+        verify(deckService).getDeckByFrn(deck.getDeckFrn(), user.getUserFrn());
+        verify(questionRepository, never()).save(any(Question.class));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenAddingQuestionWithDuplicateIncorrectAnswers() {
+        // Arrange
+        QuestionRequest requestWithDuplicates = new QuestionRequest();
+        requestWithDuplicates.setQuestion("What is Java?");
+        requestWithDuplicates.setCorrectAnswers(Arrays.asList("A programming language"));
+        requestWithDuplicates.setIncorrectAnswers(Arrays.asList("A type of coffee", "A type of coffee"));
+        requestWithDuplicates.setDifficulty(QuestionRequest.DifficultyEnum.MEDIUM);
+
+        when(deckService.getDeckByFrn(deck.getDeckFrn(), user.getUserFrn())).thenReturn(deck);
+        when(questionRepository.findAllByDeckFrn(deck.getDeckFrn())).thenReturn(List.of());
+
+        // Act & Assert
+        assertThatThrownBy(() -> questionService.addQuestionToDeck(deck.getDeckFrn(), requestWithDuplicates, user.getUserFrn()))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E400005);
+
+        verify(deckService).getDeckByFrn(deck.getDeckFrn(), user.getUserFrn());
+        verify(questionRepository, never()).save(any(Question.class));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenAddingQuestionWithOverlappingAnswers() {
+        // Arrange
+        QuestionRequest requestWithDuplicates = new QuestionRequest();
+        requestWithDuplicates.setQuestion("What is Java?");
+        requestWithDuplicates.setCorrectAnswers(Arrays.asList("A programming language"));
+        requestWithDuplicates.setIncorrectAnswers(Arrays.asList("A type of coffee", "A programming language"));
+        requestWithDuplicates.setDifficulty(QuestionRequest.DifficultyEnum.MEDIUM);
+
+        when(deckService.getDeckByFrn(deck.getDeckFrn(), user.getUserFrn())).thenReturn(deck);
+        when(questionRepository.findAllByDeckFrn(deck.getDeckFrn())).thenReturn(List.of());
+
+        // Act & Assert
+        assertThatThrownBy(() -> questionService.addQuestionToDeck(deck.getDeckFrn(), requestWithDuplicates, user.getUserFrn()))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E400005);
+
+        verify(deckService).getDeckByFrn(deck.getDeckFrn(), user.getUserFrn());
+        verify(questionRepository, never()).save(any(Question.class));
     }
 
     @Test
@@ -126,6 +209,7 @@ class QuestionServiceTest {
         when(deckService.getDeckByFrn(deck.getDeckFrn(), user.getUserFrn())).thenReturn(deck);
         when(questionRepository.findByDeckFrnAndQuestionFrn(deck.getDeckFrn(), question.getQuestionFrn()))
                 .thenReturn(Optional.of(question));
+        when(questionRepository.findAllByDeckFrn(deck.getDeckFrn())).thenReturn(List.of(question));
         when(questionRepository.save(question)).thenReturn(question);
 
         // Act
@@ -136,6 +220,57 @@ class QuestionServiceTest {
         verify(deckService).getDeckByFrn(deck.getDeckFrn(), user.getUserFrn());
         verify(questionRepository).findByDeckFrnAndQuestionFrn(deck.getDeckFrn(), question.getQuestionFrn());
         verify(questionRepository).save(question);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUpdatingToDuplicateQuestion() {
+        // Arrange
+        Question existingQuestion = TestUtils.createQuestion(deck, "What is Spring?");
+        Question questionToUpdate = TestUtils.createQuestion(deck, "What is Java?");
+
+        QuestionRequest updateRequest = new QuestionRequest();
+        updateRequest.setQuestion("What is Spring?"); // Trying to update to a question that already exists
+        updateRequest.setCorrectAnswers(Arrays.asList("A framework"));
+        updateRequest.setIncorrectAnswers(Arrays.asList("A season"));
+        updateRequest.setDifficulty(QuestionRequest.DifficultyEnum.MEDIUM);
+
+        when(deckService.getDeckByFrn(deck.getDeckFrn(), user.getUserFrn())).thenReturn(deck);
+        when(questionRepository.findByDeckFrnAndQuestionFrn(deck.getDeckFrn(), questionToUpdate.getQuestionFrn()))
+                .thenReturn(Optional.of(questionToUpdate));
+        when(questionRepository.findAllByDeckFrn(deck.getDeckFrn())).thenReturn(List.of(existingQuestion, questionToUpdate));
+
+        // Act & Assert
+        assertThatThrownBy(() -> questionService.updateQuestion(deck.getDeckFrn(), questionToUpdate.getQuestionFrn(), updateRequest, user.getUserFrn()))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E400004);
+
+        verify(deckService).getDeckByFrn(deck.getDeckFrn(), user.getUserFrn());
+        verify(questionRepository).findByDeckFrnAndQuestionFrn(deck.getDeckFrn(), questionToUpdate.getQuestionFrn());
+        verify(questionRepository, never()).save(any(Question.class));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUpdatingWithDuplicateAnswers() {
+        // Arrange
+        QuestionRequest updateRequest = new QuestionRequest();
+        updateRequest.setQuestion("Updated question");
+        updateRequest.setCorrectAnswers(Arrays.asList("Answer 1", "Answer 1")); // Duplicate answers
+        updateRequest.setIncorrectAnswers(Arrays.asList("Wrong 1", "Wrong 2"));
+        updateRequest.setDifficulty(QuestionRequest.DifficultyEnum.MEDIUM);
+
+        when(deckService.getDeckByFrn(deck.getDeckFrn(), user.getUserFrn())).thenReturn(deck);
+        when(questionRepository.findByDeckFrnAndQuestionFrn(deck.getDeckFrn(), question.getQuestionFrn()))
+                .thenReturn(Optional.of(question));
+        when(questionRepository.findAllByDeckFrn(deck.getDeckFrn())).thenReturn(List.of(question));
+
+        // Act & Assert
+        assertThatThrownBy(() -> questionService.updateQuestion(deck.getDeckFrn(), question.getQuestionFrn(), updateRequest, user.getUserFrn()))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E400005);
+
+        verify(deckService).getDeckByFrn(deck.getDeckFrn(), user.getUserFrn());
+        verify(questionRepository).findByDeckFrnAndQuestionFrn(deck.getDeckFrn(), question.getQuestionFrn());
+        verify(questionRepository, never()).save(any(Question.class));
     }
 
     @Test

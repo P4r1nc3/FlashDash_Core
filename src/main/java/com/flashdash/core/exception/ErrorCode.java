@@ -5,6 +5,8 @@ public enum ErrorCode {
     E400001,
     E400002,
     E400003,
+    E400004,
+    E400005,
     // 401 Unauthorized
     E401001,
     E401002,
