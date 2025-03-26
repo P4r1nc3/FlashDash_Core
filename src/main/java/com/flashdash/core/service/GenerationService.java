@@ -7,6 +7,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class GenerationService {
@@ -17,8 +18,18 @@ public class GenerationService {
         this.chatClient = chatClientBuilder.build();
     }
 
-    public List<Question> generateQuestions(int count, String topic) {
-        PromptTemplate promptTemplate = new PromptTemplate("Return a list of " + count + " questions, associated with the following topic: " + topic);
+    public List<Question> generateQuestions(String topic, String language, int count) {
+        String promptText = """
+                Generate a list of {count} questions about the topic: {topic}.
+                Both questions and answers should be in {language} language.
+                """;
+
+        PromptTemplate promptTemplate = new PromptTemplate(promptText,
+                Map.of(
+                        "count", String.valueOf(count),
+                        "topic", topic,
+                        "language", language
+                ));
 
         return chatClient.prompt(promptTemplate.create())
                 .call()
