@@ -31,6 +31,16 @@ public class QuestionController {
         return ResponseEntity.ok(entityToResponseMapper.mapToQuestionResponse(newQuestion));
     }
 
+    @PostMapping("/generate")
+    public ResponseEntity<List<QuestionResponse>> generateQuestions(
+            @PathVariable String deckFrn,
+            @RequestParam String prompt,
+            @RequestParam(defaultValue = "english") String language,
+            @RequestParam(defaultValue = "5") int count) {
+        List<Question> questions = questionService.generateQuestions(deckFrn, prompt, language, count);
+        return ResponseEntity.ok(entityToResponseMapper.mapToQuestionResponse(questions));
+    }
+
     @GetMapping
     public ResponseEntity<List<QuestionResponse>> getAllQuestionsInDeck(@PathVariable String deckFrn) {
         String userFrn = getAuthenticatedUser();

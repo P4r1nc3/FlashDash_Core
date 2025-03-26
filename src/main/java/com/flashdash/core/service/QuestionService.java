@@ -23,13 +23,16 @@ public class QuestionService {
     private static final Logger logger = LoggerFactory.getLogger(QuestionService.class);
 
     private final ActivityService activityService;
+    private final GenerationService generationService;
     private final DeckService deckService;
     private final QuestionRepository questionRepository;
 
     public QuestionService(ActivityService activityService,
+                           GenerationService generationService,
                            DeckService deckService,
                            QuestionRepository questionRepository) {
         this.activityService = activityService;
+        this.generationService = generationService;
         this.deckService = deckService;
         this.questionRepository = questionRepository;
     }
@@ -80,6 +83,23 @@ public class QuestionService {
         logger.info("Added question with FRN: {} to deck with FRN: {}", savedQuestion.getQuestionFrn(), deckFrn);
 
         return savedQuestion;
+    }
+
+    public List<Question> generateQuestions(String deckFrn, String prompt, String language, int count) {
+        if (count < 0 || count > 10) {
+            throw new FlashDashException(ErrorCode.E400006, "Count must be between 0 and 10");
+        }
+
+        List<Question> generatedQuestions = generationService.generateQuestions(prompt, language, count);
+
+        for (Question question : generatedQuestions) {
+            question.setQuestionFrn(FrnGenerator.generateFrn(ResourceType.QUESTION));
+            question.setDeckFrn(deckFrn);
+            question.setCreatedAt(LocalDateTime.now());
+            question.setUpdatedAt(LocalDateTime.now());
+        }
+
+        return questionRepository.saveAll(generatedQuestions);
     }
 
     public List<Question> getAllQuestionsInDeck(String deckFrn, String userFrn) {
