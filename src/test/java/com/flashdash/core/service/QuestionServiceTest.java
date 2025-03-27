@@ -8,6 +8,8 @@ import com.flashdash.core.model.Question;
 import com.flashdash.core.model.Deck;
 import com.flashdash.core.repository.QuestionRepository;
 import com.flashdash.core.service.api.ActivityService;
+import com.p4r1nc3.flashdash.activity.model.LogActivityRequest;
+import com.p4r1nc3.flashdash.core.model.GenerateQuestionsRequest;
 import com.p4r1nc3.flashdash.core.model.QuestionRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,6 +21,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -33,6 +36,9 @@ class QuestionServiceTest {
 
     @MockitoBean
     private ActivityService activityService;
+
+    @MockitoBean
+    private GenerationService generationService;
 
     @MockitoBean
     private DeckService deckService;
@@ -149,6 +155,75 @@ class QuestionServiceTest {
 
         verify(deckService).getDeckByFrn(deck.getDeckFrn(), user.getUserFrn());
         verify(questionRepository, never()).save(any(Question.class));
+    }
+
+    @Test
+    void shouldGenerateQuestionsSuccessfully() {
+        // Arrange
+        GenerateQuestionsRequest generateRequest = TestUtils.createGenerateQuestionsRequest();
+        List<Question> generatedQuestions = Arrays.asList(
+                TestUtils.createQuestion(deck, "Generated Question 1"),
+                TestUtils.createQuestion(deck, "Generated Question 2")
+        );
+
+        generatedQuestions.forEach(q -> q.setDeckFrn(null));
+
+        when(deckService.getDeckByFrn(deck.getDeckFrn(), user.getUserFrn())).thenReturn(deck);
+        when(generationService.generateQuestions(generateRequest)).thenReturn(generatedQuestions);
+
+        // Mock the repository save
+        List<Question> savedQuestions = generatedQuestions.stream()
+                .map(q -> {
+                    Question saved = new Question();
+                    saved.setQuestionFrn(q.getQuestionFrn());
+                    saved.setDeckFrn(deck.getDeckFrn());
+                    saved.setQuestion(q.getQuestion());
+                    saved.setCorrectAnswers(q.getCorrectAnswers());
+                    saved.setIncorrectAnswers(q.getIncorrectAnswers());
+                    saved.setDifficulty(q.getDifficulty());
+                    saved.setCreatedAt(q.getCreatedAt());
+                    saved.setUpdatedAt(q.getUpdatedAt());
+                    return saved;
+                })
+                .collect(Collectors.toList());
+
+        when(questionRepository.saveAll(anyList())).thenReturn(savedQuestions);
+
+        // Act
+        List<Question> result = questionService.generateQuestions(deck.getDeckFrn(), generateRequest, user.getUserFrn());
+
+        // Assert
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getQuestion()).isEqualTo("Generated Question 1");
+        assertThat(result.get(1).getQuestion()).isEqualTo("Generated Question 2");
+
+        // Verify all questions have the deck FRN set
+        assertThat(result).allMatch(q -> q.getDeckFrn().equals(deck.getDeckFrn()));
+
+        // Verify interactions
+        verify(generationService).generateQuestions(generateRequest);
+        verify(questionRepository).saveAll(anyList());
+        verify(activityService).logUserActivity(user.getUserFrn(), deck.getDeckFrn(), LogActivityRequest.ActivityTypeEnum.QUESTIONS_GENERATED);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenGeneratingQuestionsWithInvalidCount() {
+        // Arrange
+        GenerateQuestionsRequest generateRequest = TestUtils.createGenerateQuestionsRequest();
+        generateRequest.setCount(15);
+
+        // Act & Assert
+        assertThatThrownBy(() ->
+                questionService.generateQuestions(deck.getDeckFrn(), generateRequest, user.getUserFrn())
+        )
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E400006)
+                .hasMessageContaining("Count must be between 0 and 10");
+
+        // Verify interactions
+        verify(generationService, never()).generateQuestions(any());
+        verify(questionRepository, never()).saveAll(anyList());
+        verify(activityService, never()).logUserActivity(anyString(), anyString(), any(LogActivityRequest.ActivityTypeEnum.class));
     }
 
     @Test
