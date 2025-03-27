@@ -91,6 +91,15 @@ public class TestUtils {
         return questionRequest;
     }
 
+    public static GenerateQuestionsRequest createGenerateQuestionsRequest() {
+        GenerateQuestionsRequest generateQuestionsRequest = new GenerateQuestionsRequest();
+        generateQuestionsRequest.setCount(8);
+        generateQuestionsRequest.setLanguage("polish");
+        generateQuestionsRequest.setPrompt("Programming in java");
+        generateQuestionsRequest.setDifficulty(GenerateQuestionsRequest.DifficultyEnum.MEDIUM);
+        return generateQuestionsRequest;
+    }
+
     public static Question createQuestion(Deck deck, String content) {
         Question question = new Question();
         question.setQuestionFrn(FrnGenerator.generateFrn(ResourceType.QUESTION));
