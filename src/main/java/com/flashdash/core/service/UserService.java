@@ -110,7 +110,7 @@ public class UserService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String userFrn) throws UsernameNotFoundException {
-        logger.info("Loading user details for email: {}", userFrn);
+        logger.info("Loading user details for userFrn: {}", userFrn);
 
         return userRepository.findByUserFrn(userFrn)
                 .orElseThrow(() -> {

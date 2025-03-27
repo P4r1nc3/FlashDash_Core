@@ -45,10 +45,8 @@ public class UserController {
 
     @PutMapping()
     public ResponseEntity<Void> changePassword(@RequestBody ChangePasswordRequest request) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-
-        userService.changePassword(email, request);
+        String userFrn = getAuthenticatedUser();
+        userService.changePassword(userFrn, request);
         return ResponseEntity.ok().build();
     }
 
