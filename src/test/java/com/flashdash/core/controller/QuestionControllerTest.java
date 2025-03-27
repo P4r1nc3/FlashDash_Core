@@ -8,6 +8,7 @@ import com.flashdash.core.model.Question;
 import com.flashdash.core.model.User;
 import com.flashdash.core.service.QuestionService;
 import com.flashdash.core.utils.EntityToResponseMapper;
+import com.p4r1nc3.flashdash.core.model.GenerateQuestionsRequest;
 import com.p4r1nc3.flashdash.core.model.QuestionRequest;
 import com.p4r1nc3.flashdash.core.model.QuestionResponse;
 import org.junit.jupiter.api.*;
@@ -21,6 +22,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -82,6 +84,59 @@ class QuestionControllerTest {
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertEquals(expectedResponse, responseEntity.getBody());
         verify(questionService, times(1)).addQuestionToDeck(eq(deck.getDeckFrn()), any(QuestionRequest.class), eq(user.getUserFrn()));
+    }
+
+    @Test
+    void generateQuestionsSuccessfully() {
+        // Arrange
+        Deck deck = TestUtils.createDeck(user);
+        GenerateQuestionsRequest request = TestUtils.createGenerateQuestionsRequest();
+
+        List<Question> generatedQuestions = Arrays.asList(
+                TestUtils.createQuestion(deck, "What is Java?"),
+                TestUtils.createQuestion(deck, "Explain inheritance in Java")
+        );
+
+        List<QuestionResponse> expectedResponses = Arrays.asList(
+                new QuestionResponse(),
+                new QuestionResponse()
+        );
+
+        when(questionService.generateQuestions(eq(deck.getDeckFrn()), eq(request), eq(user.getUserFrn())))
+                .thenReturn(generatedQuestions);
+        when(entityToResponseMapper.mapToQuestionResponse(generatedQuestions))
+                .thenReturn(expectedResponses);
+
+        // Act
+        ResponseEntity<List<QuestionResponse>> response = questionController.generateQuestions(deck.getDeckFrn(), request);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(expectedResponses, response.getBody());
+        verify(questionService).generateQuestions(deck.getDeckFrn(), request, user.getUserFrn());
+        verify(entityToResponseMapper).mapToQuestionResponse(generatedQuestions);
+    }
+
+    @Test
+    void generateQuestionsInvalidCountThrowsException() {
+        // Arrange
+        Deck deck = TestUtils.createDeck(user);
+        GenerateQuestionsRequest request = TestUtils.createGenerateQuestionsRequest();
+        // Override count to make it invalid
+        request.setCount(15); // More than allowed (10)
+
+        when(questionService.generateQuestions(eq(deck.getDeckFrn()), eq(request), eq(user.getUserFrn())))
+                .thenThrow(new FlashDashException(ErrorCode.E400006, "Count must be between 0 and 10"));
+
+        // Act & Assert
+        FlashDashException exception = assertThrows(FlashDashException.class, () -> {
+            questionController.generateQuestions(deck.getDeckFrn(), request);
+        });
+
+        assertEquals(ErrorCode.E400006, exception.getErrorCode());
+        assertEquals("Count must be between 0 and 10", exception.getMessage());
+        verify(questionService).generateQuestions(deck.getDeckFrn(), request, user.getUserFrn());
+        verify(entityToResponseMapper, never()).mapToQuestionResponse(any(List.class));
     }
 
     @Test

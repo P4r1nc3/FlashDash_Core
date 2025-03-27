@@ -8,6 +8,7 @@ import com.flashdash.core.service.api.ActivityService;
 import com.flashdash.core.utils.FrnGenerator;
 import com.flashdash.core.utils.ResourceType;
 import com.p4r1nc3.flashdash.activity.model.LogActivityRequest.ActivityTypeEnum;
+import com.p4r1nc3.flashdash.core.model.GenerateQuestionsRequest;
 import com.p4r1nc3.flashdash.core.model.QuestionRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,13 +24,16 @@ public class QuestionService {
     private static final Logger logger = LoggerFactory.getLogger(QuestionService.class);
 
     private final ActivityService activityService;
+    private final GenerationService generationService;
     private final DeckService deckService;
     private final QuestionRepository questionRepository;
 
     public QuestionService(ActivityService activityService,
+                           GenerationService generationService,
                            DeckService deckService,
                            QuestionRepository questionRepository) {
         this.activityService = activityService;
+        this.generationService = generationService;
         this.deckService = deckService;
         this.questionRepository = questionRepository;
     }
@@ -80,6 +84,43 @@ public class QuestionService {
         logger.info("Added question with FRN: {} to deck with FRN: {}", savedQuestion.getQuestionFrn(), deckFrn);
 
         return savedQuestion;
+    }
+
+    public List<Question> generateQuestions(String deckFrn, GenerateQuestionsRequest requestBody, String userFrn) {
+        if (requestBody.getCount() < 0 || requestBody.getCount() > 10) {
+            logger.error("Invalid count value: {}. Count must be between 0 and 10. deckFrn={}, language={}, difficulty={}, prompt='{}'",
+                    requestBody.getCount(),
+                    deckFrn,
+                    requestBody.getLanguage(),
+                    requestBody.getDifficulty(),
+                    requestBody.getPrompt()
+            );
+            throw new FlashDashException(ErrorCode.E400006, "Count must be between 0 and 10");
+        }
+
+        logger.info("Starting question generation: count={}, language={}, difficulty={}, prompt='{}', deckFrn={}",
+                requestBody.getCount(),
+                requestBody.getLanguage(),
+                requestBody.getDifficulty(),
+                requestBody.getPrompt(),
+                deckFrn
+        );
+
+        List<Question> generatedQuestions = generationService.generateQuestions(requestBody);
+
+        for (Question question : generatedQuestions) {
+            question.setQuestionFrn(FrnGenerator.generateFrn(ResourceType.QUESTION));
+            question.setDeckFrn(deckFrn);
+            question.setCreatedAt(LocalDateTime.now());
+            question.setUpdatedAt(LocalDateTime.now());
+        }
+
+        List<Question> savedQuestions = questionRepository.saveAll(generatedQuestions);
+
+        logger.info("Successfully generated and saved {} questions for deckFrn={}", savedQuestions.size(), deckFrn);
+        activityService.logUserActivity(userFrn, deckFrn, ActivityTypeEnum.QUESTIONS_GENERATED);
+
+        return savedQuestions;
     }
 
     public List<Question> getAllQuestionsInDeck(String deckFrn, String userFrn) {

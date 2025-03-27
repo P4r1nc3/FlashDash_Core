@@ -4,6 +4,7 @@ import com.flashdash.core.model.User;
 import com.flashdash.core.model.Question;
 import com.flashdash.core.service.QuestionService;
 import com.flashdash.core.utils.EntityToResponseMapper;
+import com.p4r1nc3.flashdash.core.model.GenerateQuestionsRequest;
 import com.p4r1nc3.flashdash.core.model.QuestionRequest;
 import com.p4r1nc3.flashdash.core.model.QuestionResponse;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +30,15 @@ public class QuestionController {
         String userFrn = getAuthenticatedUser();
         Question newQuestion = questionService.addQuestionToDeck(deckFrn, questionRequest, userFrn);
         return ResponseEntity.ok(entityToResponseMapper.mapToQuestionResponse(newQuestion));
+    }
+
+    @PostMapping("/generate")
+    public ResponseEntity<List<QuestionResponse>> generateQuestions(
+            @PathVariable String deckFrn,
+            @RequestBody GenerateQuestionsRequest generateQuestionsRequest) {
+        String userFrn = getAuthenticatedUser();
+        List<Question> questions = questionService.generateQuestions(deckFrn, generateQuestionsRequest, userFrn);
+        return ResponseEntity.ok(entityToResponseMapper.mapToQuestionResponse(questions));
     }
 
     @GetMapping
