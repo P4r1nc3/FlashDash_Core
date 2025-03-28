@@ -52,9 +52,9 @@ public class EntityToResponseMapper {
         response.setIncorrectAnswers(question.getIncorrectAnswers());
 
         try {
-            response.setDifficulty(QuestionResponse.DifficultyEnum.fromValue(question.getDifficulty()));
+            response.setDifficulty(question.getDifficulty());
         } catch (IllegalArgumentException e) {
-            response.setDifficulty(QuestionResponse.DifficultyEnum.EASY);
+            response.setDifficulty(DifficultyEnum.EASY);
         }
 
         response.setCreatedAt(question.getCreatedAt().atOffset(ZoneOffset.UTC));

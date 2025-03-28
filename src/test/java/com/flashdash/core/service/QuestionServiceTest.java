@@ -9,6 +9,7 @@ import com.flashdash.core.model.Deck;
 import com.flashdash.core.repository.QuestionRepository;
 import com.flashdash.core.service.api.ActivityService;
 import com.p4r1nc3.flashdash.activity.model.LogActivityRequest;
+import com.p4r1nc3.flashdash.core.model.DifficultyEnum;
 import com.p4r1nc3.flashdash.core.model.GenerateQuestionsRequest;
 import com.p4r1nc3.flashdash.core.model.QuestionRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -101,7 +102,7 @@ class QuestionServiceTest {
         requestWithDuplicates.setQuestion("What is Java?");
         requestWithDuplicates.setCorrectAnswers(Arrays.asList("A programming language", "A programming language"));
         requestWithDuplicates.setIncorrectAnswers(Arrays.asList("A type of coffee", "An island"));
-        requestWithDuplicates.setDifficulty(QuestionRequest.DifficultyEnum.MEDIUM);
+        requestWithDuplicates.setDifficulty(DifficultyEnum.MEDIUM);
 
         when(deckService.getDeckByFrn(deck.getDeckFrn(), user.getUserFrn())).thenReturn(deck);
         when(questionRepository.findAllByDeckFrn(deck.getDeckFrn())).thenReturn(List.of());
@@ -122,7 +123,7 @@ class QuestionServiceTest {
         requestWithDuplicates.setQuestion("What is Java?");
         requestWithDuplicates.setCorrectAnswers(Arrays.asList("A programming language"));
         requestWithDuplicates.setIncorrectAnswers(Arrays.asList("A type of coffee", "A type of coffee"));
-        requestWithDuplicates.setDifficulty(QuestionRequest.DifficultyEnum.MEDIUM);
+        requestWithDuplicates.setDifficulty(DifficultyEnum.MEDIUM);
 
         when(deckService.getDeckByFrn(deck.getDeckFrn(), user.getUserFrn())).thenReturn(deck);
         when(questionRepository.findAllByDeckFrn(deck.getDeckFrn())).thenReturn(List.of());
@@ -143,7 +144,7 @@ class QuestionServiceTest {
         requestWithDuplicates.setQuestion("What is Java?");
         requestWithDuplicates.setCorrectAnswers(Arrays.asList("A programming language"));
         requestWithDuplicates.setIncorrectAnswers(Arrays.asList("A type of coffee", "A programming language"));
-        requestWithDuplicates.setDifficulty(QuestionRequest.DifficultyEnum.MEDIUM);
+        requestWithDuplicates.setDifficulty(DifficultyEnum.MEDIUM);
 
         when(deckService.getDeckByFrn(deck.getDeckFrn(), user.getUserFrn())).thenReturn(deck);
         when(questionRepository.findAllByDeckFrn(deck.getDeckFrn())).thenReturn(List.of());
@@ -307,7 +308,7 @@ class QuestionServiceTest {
         updateRequest.setQuestion("What is Spring?"); // Trying to update to a question that already exists
         updateRequest.setCorrectAnswers(Arrays.asList("A framework"));
         updateRequest.setIncorrectAnswers(Arrays.asList("A season"));
-        updateRequest.setDifficulty(QuestionRequest.DifficultyEnum.MEDIUM);
+        updateRequest.setDifficulty(DifficultyEnum.MEDIUM);
 
         when(deckService.getDeckByFrn(deck.getDeckFrn(), user.getUserFrn())).thenReturn(deck);
         when(questionRepository.findByDeckFrnAndQuestionFrn(deck.getDeckFrn(), questionToUpdate.getQuestionFrn()))
@@ -331,7 +332,7 @@ class QuestionServiceTest {
         updateRequest.setQuestion("Updated question");
         updateRequest.setCorrectAnswers(Arrays.asList("Answer 1", "Answer 1")); // Duplicate answers
         updateRequest.setIncorrectAnswers(Arrays.asList("Wrong 1", "Wrong 2"));
-        updateRequest.setDifficulty(QuestionRequest.DifficultyEnum.MEDIUM);
+        updateRequest.setDifficulty(DifficultyEnum.MEDIUM);
 
         when(deckService.getDeckByFrn(deck.getDeckFrn(), user.getUserFrn())).thenReturn(deck);
         when(questionRepository.findByDeckFrnAndQuestionFrn(deck.getDeckFrn(), question.getQuestionFrn()))

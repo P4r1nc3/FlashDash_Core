@@ -87,7 +87,7 @@ public class TestUtils {
         questionRequest.setQuestion("What is Java?");
         questionRequest.setCorrectAnswers(List.of("A programming language", "A platform"));
         questionRequest.setIncorrectAnswers(List.of("A drink", "A city"));
-        questionRequest.setDifficulty(QuestionRequest.DifficultyEnum.MEDIUM);
+        questionRequest.setDifficulty(DifficultyEnum.MEDIUM);
         return questionRequest;
     }
 
@@ -96,7 +96,7 @@ public class TestUtils {
         generateQuestionsRequest.setCount(8);
         generateQuestionsRequest.setLanguage("polish");
         generateQuestionsRequest.setPrompt("Programming in java");
-        generateQuestionsRequest.setDifficulty(GenerateQuestionsRequest.DifficultyEnum.MEDIUM);
+        generateQuestionsRequest.setDifficulty(DifficultyEnum.MEDIUM);
         return generateQuestionsRequest;
     }
 
@@ -107,7 +107,7 @@ public class TestUtils {
         question.setQuestion(content);
         question.setCorrectAnswers(List.of("Correct Answer 1", "Correct Answer 2"));
         question.setIncorrectAnswers(List.of("Incorrect Answer 1", "Incorrect Answer 2"));
-        question.setDifficulty("medium");
+        question.setDifficulty(DifficultyEnum.MEDIUM);
         question.setCreatedAt(LocalDateTime.now());
         question.setUpdatedAt(LocalDateTime.now());
         return question;

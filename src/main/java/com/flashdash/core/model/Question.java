@@ -1,6 +1,7 @@
 package com.flashdash.core.model;
 
 import com.flashdash.core.converter.JsonListConverter;
+import com.p4r1nc3.flashdash.core.model.DifficultyEnum;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -34,7 +35,7 @@ public class Question {
     private List<String> incorrectAnswers = new ArrayList<>();
 
     @Column(name = "difficulty", nullable = false, length = 64)
-    private String difficulty;
+    private DifficultyEnum difficulty;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
