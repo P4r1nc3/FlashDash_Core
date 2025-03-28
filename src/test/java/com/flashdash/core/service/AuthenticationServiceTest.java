@@ -154,7 +154,7 @@ class AuthenticationServiceTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenUserAlreadyExistsDuringRegistration() {
+    void shouldThrowExceptionWhenEmailIsAlreadyTaken() {
         // Arrange
         RegisterRequest registerRequest = TestUtils.createRegisterRequest(user);
         when(userRepository.findByEmail(registerRequest.getEmail())).thenReturn(Optional.of(user));
@@ -165,6 +165,23 @@ class AuthenticationServiceTest {
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E409001);
 
         verify(userRepository).findByEmail(registerRequest.getEmail());
+        verifyNoMoreInteractions(userRepository);
+        verifyNoInteractions(notificationService);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUsernameIsAlreadyTaken() {
+        // Arrange
+        RegisterRequest registerRequest = TestUtils.createRegisterRequest(user);
+        when(userRepository.findByUsername(registerRequest.getUsername())).thenReturn(Optional.of(user));
+
+        // Act & Assert
+        assertThatThrownBy(() -> authenticationService.register(registerRequest))
+                .isInstanceOf(FlashDashException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.E409004);
+
+        verify(userRepository).findByEmail(registerRequest.getEmail());
+        verify(userRepository).findByUsername(registerRequest.getUsername());
         verifyNoMoreInteractions(userRepository);
         verifyNoInteractions(notificationService);
     }

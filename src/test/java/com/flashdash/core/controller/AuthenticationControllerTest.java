@@ -109,7 +109,7 @@ class AuthenticationControllerTest {
     }
 
     @Test
-    public void testRegisterUserAlreadyExists() {
+    public void testRegisterEmailAlreadyExists() {
         // Arrange
         RegisterRequest registerRequest = TestUtils.createRegisterRequest(user);
         String expectedMessage = "User with email already exists. Please use a different email to register.";
@@ -123,6 +123,24 @@ class AuthenticationControllerTest {
                 () -> authenticationController.register(registerRequest)
         );
         assertEquals(ErrorCode.E409001, exception.getErrorCode());
+        assertEquals(expectedMessage, exception.getMessage());
+    }
+
+    @Test
+    public void testRegisterUsernameAlreadyExists() {
+        // Arrange
+        RegisterRequest registerRequest = TestUtils.createRegisterRequest(user);
+        String expectedMessage = "User with username already exists. Please use a different username to register.";
+        doThrow(new FlashDashException(ErrorCode.E409004, expectedMessage))
+                .when(authenticationService)
+                .register(registerRequest);
+
+        // Act & Assert
+        FlashDashException exception = assertThrows(
+                FlashDashException.class,
+                () -> authenticationController.register(registerRequest)
+        );
+        assertEquals(ErrorCode.E409004, exception.getErrorCode());
         assertEquals(expectedMessage, exception.getMessage());
     }
 
