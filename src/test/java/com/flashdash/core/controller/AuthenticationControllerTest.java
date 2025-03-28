@@ -150,11 +150,10 @@ class AuthenticationControllerTest {
         String activationToken = "validActivationToken";
 
         // Act
-        ResponseEntity<String> responseEntity = authenticationController.activateAccount(activationToken);
+        ResponseEntity<Void> responseEntity = authenticationController.activateAccount(activationToken);
 
         // Assert
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals("Account activated successfully!", responseEntity.getBody());
     }
 
     @Test
