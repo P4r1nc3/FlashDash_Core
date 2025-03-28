@@ -4,6 +4,7 @@ import com.flashdash.core.service.AuthenticationService;
 import com.p4r1nc3.flashdash.core.model.AuthenticationResponse;
 import com.p4r1nc3.flashdash.core.model.LoginRequest;
 import com.p4r1nc3.flashdash.core.model.RegisterRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,8 +30,8 @@ public class AuthenticationController {
     }
 
     @PostMapping("/activate")
-    public ResponseEntity<String> activateAccount(@RequestParam String token) {
+    public ResponseEntity<Void> activateAccount(@RequestParam String token) {
         authenticationService.activateAccount(token);
-        return ResponseEntity.ok("Account activated successfully!");
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }
