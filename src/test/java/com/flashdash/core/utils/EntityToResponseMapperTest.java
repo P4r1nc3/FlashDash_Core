@@ -86,7 +86,7 @@ class EntityToResponseMapperTest {
         assertThat(questionResponse.getQuestion()).isEqualTo(question.getQuestion());
         assertThat(questionResponse.getCorrectAnswers()).isEqualTo(question.getCorrectAnswers());
         assertThat(questionResponse.getIncorrectAnswers()).isEqualTo(question.getIncorrectAnswers());
-        assertThat(questionResponse.getDifficulty()).isEqualTo(QuestionResponse.DifficultyEnum.fromValue(question.getDifficulty()));
+        assertThat(questionResponse.getDifficulty()).isEqualTo(question.getDifficulty());
         assertThat(questionResponse.getCreatedAt()).isEqualTo(question.getCreatedAt().atOffset(ZoneOffset.UTC));
         assertThat(questionResponse.getUpdatedAt()).isEqualTo(question.getUpdatedAt().atOffset(ZoneOffset.UTC));
     }
@@ -113,7 +113,7 @@ class EntityToResponseMapperTest {
             assertThat(questionResponses.get(i).getQuestion()).isEqualTo(questions.get(i).getQuestion());
             assertThat(questionResponses.get(i).getCorrectAnswers()).isEqualTo(questions.get(i).getCorrectAnswers());
             assertThat(questionResponses.get(i).getIncorrectAnswers()).isEqualTo(questions.get(i).getIncorrectAnswers());
-            assertThat(questionResponses.get(i).getDifficulty()).isEqualTo(QuestionResponse.DifficultyEnum.fromValue(questions.get(i).getDifficulty()));
+            assertThat(questionResponses.get(i).getDifficulty()).isEqualTo(questions.get(i).getDifficulty());
             assertThat(questionResponses.get(i).getCreatedAt()).isEqualTo(questions.get(i).getCreatedAt().atOffset(ZoneOffset.UTC));
             assertThat(questionResponses.get(i).getUpdatedAt()).isEqualTo(questions.get(i).getUpdatedAt().atOffset(ZoneOffset.UTC));
         }

@@ -75,7 +75,7 @@ public class QuestionService {
         question.setQuestion(questionRequest.getQuestion().trim());
         question.setCorrectAnswers(questionRequest.getCorrectAnswers());
         question.setIncorrectAnswers(questionRequest.getIncorrectAnswers());
-        question.setDifficulty(questionRequest.getDifficulty().name());
+        question.setDifficulty(questionRequest.getDifficulty());
         question.setCreatedAt(LocalDateTime.now());
         question.setUpdatedAt(LocalDateTime.now());
 
@@ -180,7 +180,7 @@ public class QuestionService {
         question.setQuestion(newQuestionText);
         question.setCorrectAnswers(questionRequest.getCorrectAnswers());
         question.setIncorrectAnswers(questionRequest.getIncorrectAnswers());
-        question.setDifficulty(questionRequest.getDifficulty().name());
+        question.setDifficulty(questionRequest.getDifficulty());
         question.setUpdatedAt(LocalDateTime.now());
 
         Question updatedQuestion = questionRepository.save(question);

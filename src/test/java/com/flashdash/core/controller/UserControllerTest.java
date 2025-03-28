@@ -123,7 +123,7 @@ class UserControllerTest {
         // Assert
         assertThat(response).isNotNull();
         assertThat(response.getStatusCodeValue()).isEqualTo(200);
-        verify(userService, times(1)).changePassword(user.getUsername(), request);
+        verify(userService, times(1)).changePassword(user.getUserFrn(), request);
     }
 
     @Test
@@ -134,7 +134,7 @@ class UserControllerTest {
         request.setNewPassword("newPassword");
 
         doThrow(new FlashDashException(ErrorCode.E401002, "Incorrect old password."))
-                .when(userService).changePassword(user.getUsername(), request);
+                .when(userService).changePassword(user.getUserFrn(), request);
 
         // Act & Assert
         FlashDashException exception = assertThrows(
@@ -144,7 +144,7 @@ class UserControllerTest {
 
         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.E401002);
         assertThat(exception.getMessage()).isEqualTo("Incorrect old password.");
-        verify(userService, times(1)).changePassword(user.getUsername(), request);
+        verify(userService, times(1)).changePassword(user.getUserFrn(), request);
     }
 
     @Test
