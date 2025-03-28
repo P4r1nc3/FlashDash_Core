@@ -88,6 +88,10 @@ public class AuthenticationService {
             throw new FlashDashException(ErrorCode.E409001, "User already exists.");
         }
 
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+            throw new FlashDashException(ErrorCode.E409004, "User already exists.");
+        }
+
         String activationToken = UUID.randomUUID().toString();
 
         User user = new User();

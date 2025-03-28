@@ -42,12 +42,40 @@ class UserRepositoryTest {
         assertThat(foundUser.get().getEmail()).isEqualTo(user.getEmail());
         assertThat(foundUser.get().getFirstName()).isEqualTo(user.getFirstName());
         assertThat(foundUser.get().getLastName()).isEqualTo(user.getLastName());
+        assertThat(foundUser.get().getUsername()).isEqualTo(user.getUsername());
     }
 
     @Test
     void shouldReturnEmptyWhenEmailDoesNotExist() {
         // Act
         Optional<User> foundUser = userRepository.findByEmail("nonexistent@example.com");
+
+        // Assert
+        assertThat(foundUser).isNotPresent();
+    }
+
+    @Test
+    void shouldFindUserByUsername() {
+        // Arrange
+        User user = TestUtils.createUser();
+        userRepository.save(user);
+
+        // Act
+        Optional<User> foundUser = userRepository.findByUsername(user.getUsername());
+
+        // Assert
+        assertThat(foundUser).isPresent();
+        assertThat(foundUser.get().getUserFrn()).isEqualTo(user.getUserFrn());
+        assertThat(foundUser.get().getEmail()).isEqualTo(user.getEmail());
+        assertThat(foundUser.get().getFirstName()).isEqualTo(user.getFirstName());
+        assertThat(foundUser.get().getLastName()).isEqualTo(user.getLastName());
+        assertThat(foundUser.get().getUsername()).isEqualTo(user.getUsername());
+    }
+
+    @Test
+    void shouldReturnEmptyWhenUsernameDoesNotExist() {
+        // Act
+        Optional<User> foundUser = userRepository.findByUsername("nonexistentusername");
 
         // Assert
         assertThat(foundUser).isNotPresent();
@@ -68,6 +96,7 @@ class UserRepositoryTest {
         assertThat(foundUser.get().getEmail()).isEqualTo(user.getEmail());
         assertThat(foundUser.get().getFirstName()).isEqualTo(user.getFirstName());
         assertThat(foundUser.get().getLastName()).isEqualTo(user.getLastName());
+        assertThat(foundUser.get().getUsername()).isEqualTo(user.getUsername());
     }
 
     @Test
@@ -124,5 +153,4 @@ class UserRepositoryTest {
         assertThat(foundUsers).hasSize(2);
         assertThat(foundUsers).extracting(User::getUserFrn).containsExactlyInAnyOrder(user1.getUserFrn(), user2.getUserFrn());
     }
-
 }

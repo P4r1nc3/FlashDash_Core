@@ -26,6 +26,7 @@ public enum ErrorCode {
     E409001,
     E409002,
     E409003,
+    E409004,
     // 500 Internal Server Error
     E500001
 }
