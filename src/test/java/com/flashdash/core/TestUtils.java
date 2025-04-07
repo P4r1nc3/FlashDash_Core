@@ -46,6 +46,7 @@ public class TestUtils {
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
         user.setEnabled(true);
+        user.setActivationToken(UUID.randomUUID().toString());
         user.setFriendsFrnList(List.of());
         user.setGamesPlayed(2);
         user.setStrike(1);

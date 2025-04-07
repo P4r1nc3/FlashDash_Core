@@ -49,16 +49,16 @@ public class User implements UserDetails {
     @Column(name = "enabled", nullable = false)
     private boolean enabled;
 
-    @Column(name = "activation_token", unique = true, length = 256)
+    @Column(name = "activation_token", unique = true, nullable = false, length = 256)
     private String activationToken;
 
-    @Column(name = "study_time", nullable = true, length = 256)
+    @Column(name = "study_time", nullable = false, length = 256)
     private Duration studyTime;
 
-    @Column(name = "games_played", nullable = true, length = 256)
+    @Column(name = "games_played", nullable = false, length = 256)
     private int gamesPlayed;
 
-    @Column(name = "points", nullable = true, length = 256)
+    @Column(name = "points", nullable = false, length = 256)
     private int points;
 
     @Column(name = "strike", nullable = false, length = 256)
