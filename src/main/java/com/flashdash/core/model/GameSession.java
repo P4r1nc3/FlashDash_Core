@@ -1,14 +1,10 @@
 package com.flashdash.core.model;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Getter
-@Setter
 @Table(name = "game_sessions")
 public class GameSession {
 
@@ -48,4 +44,92 @@ public class GameSession {
     private String sessionDetails;
 
     public GameSession() {}
+
+    public String getGameSessionFrn() {
+        return gameSessionFrn;
+    }
+
+    public String getUserFrn() {
+        return userFrn;
+    }
+
+    public String getDeckFrn() {
+        return deckFrn;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public int getTotalScore() {
+        return totalScore;
+    }
+
+    public int getCorrectAnswersCount() {
+        return correctAnswersCount;
+    }
+
+    public int getWrongAnswersCount() {
+        return wrongAnswersCount;
+    }
+
+    public int getQuestionCount() {
+        return questionCount;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public String getSessionDetails() {
+        return sessionDetails;
+    }
+
+    public void setGameSessionFrn(String gameSessionFrn) {
+        this.gameSessionFrn = gameSessionFrn;
+    }
+
+    public void setUserFrn(String userFrn) {
+        this.userFrn = userFrn;
+    }
+
+    public void setDeckFrn(String deckFrn) {
+        this.deckFrn = deckFrn;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public void setTotalScore(int totalScore) {
+        this.totalScore = totalScore;
+    }
+
+    public void setCorrectAnswersCount(int correctAnswersCount) {
+        this.correctAnswersCount = correctAnswersCount;
+    }
+
+    public void setWrongAnswersCount(int wrongAnswersCount) {
+        this.wrongAnswersCount = wrongAnswersCount;
+    }
+
+    public void setQuestionCount(int questionCount) {
+        this.questionCount = questionCount;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public void setSessionDetails(String sessionDetails) {
+        this.sessionDetails = sessionDetails;
+    }
 }
