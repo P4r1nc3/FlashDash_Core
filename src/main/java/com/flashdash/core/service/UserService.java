@@ -84,7 +84,7 @@ public class UserService implements UserDetailsService {
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
         activityService.logUserActivity(user.getUserFrn(), user.getUserFrn(), ActivityTypeEnum.ACCOUNT_UPDATED);
-        logger.info("Password successfully changed for userFrn: {}",userFrn);
+        logger.info("Password successfully changed for userFrn: {}", userFrn);
     }
 
     public void deleteUser(String userFrn) {
